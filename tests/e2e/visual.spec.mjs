@@ -43,6 +43,7 @@ test.describe('determinism', () => {
 });
 
 const SHOTS = [
+  { name: 'main-street-evening', scene: 'VILLAGE', setup: () => { TWT.state.flags.introDone = true; T.walkTo(120); } },
   { name: 'black-ram-evening', scene: 'BLACK_RAM_EXTERIOR', setup: () => T.walkTo(300) },
   { name: 'black-ram-night-lantern', scene: 'BLACK_RAM_EXTERIOR', phase: 'NIGHT', setup: () => { T.press('KeyF'); T.walkTo(420); } },
   { name: 'parlor-fire', scene: 'PARLOR', setup: () => { T.talkThrough(); T.walkTo(120); } },

@@ -26,13 +26,16 @@ test.describe('Black Ram Hotel exterior (Tiled)', () => {
     await expectClean(page, errors);
   });
 
-  test('the zone event fires once, and the door enters the existing parlor', async ({ page }) => {
+  test('the zone event fires once; the door stays shut until Finch has been met, then enters the parlor', async ({ page }) => {
     const { errors } = await boot(page, { test: '1', scene: 'BLACK_RAM_EXTERIOR' });
     await page.evaluate(() => T.walkTo(300));
     await step(page, 5);
     expect(await page.evaluate(() => TWT.state.eventsDone)).toContain('HOTEL_STREET_ENTER');
     await page.evaluate(() => T.walkTo(320));
     expect((await info(page)).prompt).toBe('Enter — Black Ram Hotel');
+    await press(page, 'KeyE', 60); // story gate: Finch has not been met
+    expect((await info(page)).scene).toBe('BLACK_RAM_EXTERIOR');
+    await page.evaluate(() => { TWT.state.flags.metFinch = true; T.talkThrough(); });
     await press(page, 'KeyE', 60);
     const s = await info(page);
     expect(s.scene).toBe('PARLOR');

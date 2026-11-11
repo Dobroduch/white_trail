@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 16,
- "nextobjectid": 15,
+ "nextobjectid": 17,
  "backgroundcolor": "#05070c",
  "properties": [
   {
@@ -5529,6 +5529,16 @@
        "name": "spawn",
        "type": "string",
        "value": "fromStreet"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"metFinch\"}"
+      },
+      {
+       "name": "blockedLines",
+       "type": "string",
+       "value": "The constable is still talking to me."
       }
      ]
     },
@@ -5579,12 +5589,22 @@
       {
        "name": "to",
        "type": "string",
-       "value": "VILLAGE"
+       "value": "CREEK"
       },
       {
        "name": "spawn",
        "type": "string",
-       "value": "fromHotel"
+       "value": "fromVillage"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "NIGHT"
+      },
+      {
+       "name": "blockedLines",
+       "type": "string",
+       "value": "The path drops away toward the creek and the old mill. Nothing down there for me tonight."
       }
      ]
     },
@@ -5759,6 +5779,46 @@
        "name": "phase",
        "type": "string",
        "value": "NIGHT"
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "name": "fromWest",
+     "type": "spawn",
+     "class": "spawn",
+     "x": 21,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "fromCreek",
+     "type": "spawn",
+     "class": "spawn",
+     "x": 930,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
       }
      ]
     }

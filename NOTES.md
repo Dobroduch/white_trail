@@ -343,3 +343,15 @@ All other LFOs drive filter frequencies or inner stages, not output gains.
 - The screenshot baselines are specific to this Edge version on Windows. Text rendering differs elsewhere, so other machines need their own baselines.
 - Tile animations, tint colours, infinite maps and non-CSV tile data are unsupported, each with a clear error or warning.
 - `npm run palette:check`: 74 of 81 existing exports contain off-palette (mostly "near") shades from baked lighting and dither. This is reported, not changed.
+
+## 12. Exterior world, Phase 1 — town geography in Tiled (2026-11-11)
+
+**What changed.** The hand-written `VILLAGE` scene is gone. Walking order is now STATION → ROAD → **VILLAGE** (Main Street, `assets/levels/main_street.tmj`, 480 units) → **BLACK_RAM_EXTERIOR** (hotel forecourt, `black_ram_exterior.tmj`, 640 units) → PARLOR; at night the forecourt's east edge leads to CREEK → SAWMILL. Both maps are Tiled-authoritative; the old `paintVillage` code, `VILLAGE_GROUND` and the `nativeArt` entry were deleted.
+
+**Story gates kept:** hotel door needs `metFinch` (blocked line preserved); the creek exit needs NIGHT (same blocked line); Finch meet / watcher events and all dialogue ids are unchanged. `FINCH_MEET` now walks Finch off east (`walkTo 474`, no door sound) instead of into a door that is no longer on this map.
+
+**Pass 1 art.** Main Street's playfield is composed from the existing `town/main.png` cut left of the hotel (cabin, Rusk's store, lamp) plus the woodshed and tiled ground (`tools/make-main-street.mjs` → `assets/export/levels/main_street_playfield.png`; the map is written once, then Tiled owns it). The street seam near x=408 px and the plain middle stretch are placeholders for Pass 2.
+
+**Tests.** `tests/e2e/world.spec.mjs` (geometry, collision/camera bounds, all transitions, story gates, review screenshots in `test-results/world/`), updated interactions/audio specs, new `main-street-evening` baseline, harness `fullRun` extended with the forecourt step.
+
+**Not done yet:** STATION and SAWMILL are still hand-written scenes (their `train`, `ridgeLight` props read painter state; moving them needs those props decoupled first). The MILL signpost from the old street has no visual on the forecourt yet. Maps still unopened in the Tiled app.

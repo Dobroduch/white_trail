@@ -1,6 +1,6 @@
 // Scene definitions: geometry, exits, characters, interactables, lights, weather, and story events.
 // Phase-specific overrides live under `night` and are merged when state.phase === 'NIGHT'.
-import { ROAD_GROUND, VILLAGE_GROUND, CREEK_GROUND, SAWMILL_GROUND } from './painters.js';
+import { ROAD_GROUND, CREEK_GROUND, SAWMILL_GROUND } from './painters.js';
 
 const FLAT = [[0, 150], [2000, 150]];
 
@@ -42,47 +42,15 @@ export const SCENES = {
     events: [{ id: 'ROAD_ENTER', if: { all: [{ notFlag: 'lanternOn' }, { phase: 'EVENING' }] }, script: 'ROAD_ENTER' }],
   },
 
-  VILLAGE: {
-    name: "CROW'S HOLLOW", travel: 12, width: 640, exterior: true, ground: VILLAGE_GROUND, bounds: [4, 636],
-    spawns: { fromRoad: { x: 14, facing: 1 }, fromHotel: { x: 364, facing: 1 }, fromCreek: { x: 626, facing: -1 } },
-    exits: [
-      { side: 'left', to: 'ROAD', spawn: 'fromVillage' },
-      { side: 'right', to: 'CREEK', spawn: 'fromVillage', if: { phase: 'NIGHT' }, blockedLines: ['The path drops away toward the creek and the old mill. Nothing down there for me tonight.'] },
-    ],
-    doors: [
-      { id: 'vl_hoteldoor', x: 364, label: 'Black Ram Hotel', verb: 'Enter', to: 'PARLOR', spawn: 'fromStreet', if: { flag: 'metFinch' }, blockedLines: ['The constable is still talking to me.'] },
-    ],
-    npcs: [
-      { id: 'finch', sprite: 'finch_idle', x: 336, facing: -1, if: { all: [{ notFlag: 'metFinch' }, { phase: 'EVENING' }] }, dialogue: 'FINCH_MEET', name: 'Constable Finch', lantern: true },
-    ],
-    interactables: [
-      { id: 'vl_window', x: 67, y: 120, label: 'Window', variants: [
-        { if: { phase: 'NIGHT' }, lines: ['Dark now, like every window on the street.'] },
-        { if: { flag: 'curtainDrawn' }, lines: ['The curtain is drawn. Whoever was watching would rather I didn\'t see them do it.'] },
-        { if: {}, lines: ['Someone is standing at the window, watching the street.'] },
-      ] },
-      { id: 'vl_store', x: 176, y: 126, label: 'General store', lines: ['Rusk\'s general store. Dark. Through the glass: sacks, barrels, a counter, and an account book left open on it, too far off to read.'] },
-      { id: 'vl_millsign', x: 596, y: 130, label: 'Old sign', lines: ['A weathered board: MILL. It points down the bank toward the creek.'] },
-    ],
-    props: [{ type: 'watcher', id: 'watcher' }],
-    lights: [{ x: 346, y: 118, r: 52, warm: 0.26 }, { x: 307, y: 132, r: 30, warm: 0.14 }, { x: 419, y: 132, r: 30, warm: 0.14 }, { x: 264, y: 110, r: 36, warm: 0.18 }],
-    weather: { snow: 0.7, wind: 0.6, fog: 0.3 }, darkness: 0.64, ambience: 'village',
-    events: [
-      { id: 'VILLAGE_WATCHER', if: { all: [{ notFlag: 'curtainDrawn' }, { phase: 'EVENING' }, { xMin: 44 }, { xMax: 120 }] }, script: 'VILLAGE_WATCHER' },
-      { id: 'FINCH_MEET', if: { all: [{ notFlag: 'metFinch' }, { phase: 'EVENING' }, { xMin: 250 }] }, script: 'FINCH_MEET' },
-    ],
-    night: {
-      lights: [{ x: 403, y: 84, r: 16, warm: 0.08 }],
-      weather: { snow: 0.9, wind: 0.85, fog: 0.4 }, darkness: 0.84, ambience: 'village_night',
-    },
-  },
+  // VILLAGE (Crow's Hollow Main Street) and BLACK_RAM_EXTERIOR (the hotel forecourt) are authored in Tiled:
+  // assets/levels/main_street.tmj and black_ram_exterior.tmj, registered in tiled/levelList.js.
 
   PARLOR: {
     name: 'THE BLACK RAM HOTEL', travel: 1, width: 400, exterior: false, ground: FLAT, bounds: [32, 352],
     spawns: { fromStreet: { x: 40, facing: 1 }, fromStairs: { x: 342, facing: -1 } },
     exits: [],
     doors: [
-      { id: 'pl_front', x: 18, label: 'Front door', verb: 'Go out', to: 'VILLAGE', spawn: 'fromHotel',
+      { id: 'pl_front', x: 18, label: 'Front door', verb: 'Go out', to: 'BLACK_RAM_EXTERIOR', spawn: 'fromHotel',
         if: { any: [{ phase: 'EVENING' }, { flag: 'gableUnbolted' }] }, blockedLines: ['Bolted. Mrs. Gable keeps the key.'] },
       { id: 'pl_stairs', x: 342, label: 'Stairs to the rooms', verb: 'Go up', to: 'ROOM4', spawn: 'fromStairs',
         if: { flag: 'hasRoom4Key' }, blockedLines: ['The rooms are upstairs. I\'ll need a key from Mrs. Gable first.'] },
@@ -149,7 +117,7 @@ export const SCENES = {
   CREEK: {
     name: 'THE CREEK PATH', travel: 6, width: 760, exterior: true, ground: CREEK_GROUND, bounds: [4, 686],
     spawns: { fromVillage: { x: 12, facing: 1 }, fromSawmill: { x: 648, facing: -1 } },
-    exits: [{ side: 'left', to: 'VILLAGE', spawn: 'fromCreek' }],
+    exits: [{ side: 'left', to: 'BLACK_RAM_EXTERIOR', spawn: 'fromCreek' }],
     doors: [{ id: 'ck_bridge', x: 648, label: 'Footbridge', verb: 'Cross', to: 'SAWMILL', spawn: 'fromCreek', minutes: 6 }],
     interactables: [
       { id: 'ck_tracks', x: 116, y: 152, label: 'Tracks', evidence: 'CREEK_TRACKS', important: true },

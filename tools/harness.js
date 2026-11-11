@@ -77,7 +77,9 @@ export function install() {
         return 0;
       });
       check('met Finch', g.state.flags.metFinch && g.state.chars.finch.trust === (finchKind ? 'STEADY' : 'GUARDED'));
-      T.walkTo(364); T.press('KeyE'); T.step(80); T.talkThrough();
+      T.walkTo(476); T.hold('KeyD', 20); T.step(70);
+      check('walked on to the hotel forecourt', g.scene.id === 'BLACK_RAM_EXTERIOR');
+      T.walkTo(320); T.press('KeyE'); T.step(80); T.talkThrough();
       check('entered the Black Ram', g.scene.id === 'PARLOR');
       T.walkTo(258); T.press('KeyE'); pickBy((c) => c.findIndex((t) => t.startsWith('Did you know')) >= 0 ? c.findIndex((t) => t.startsWith('Did you know')) : c.length - 1);
       check('got the key to Room 4', g.state.items.includes('ROOM4_KEY'));
@@ -100,8 +102,8 @@ export function install() {
       T.walkTo(24); T.press('KeyE'); T.step(80); pickBy(() => 1);
       check('Mrs. Gable unbolts the door', g.state.flags.gableUnbolted);
       T.walkTo(32); T.press('KeyE'); T.step(80);
-      check('back on the street at night', g.scene.id === 'VILLAGE' && g.state.phase === 'NIGHT');
-      T.walkTo(636); T.hold('KeyD', 20); T.step(80);
+      check('back on the street at night', g.scene.id === 'BLACK_RAM_EXTERIOR' && g.state.phase === 'NIGHT');
+      T.walkTo(630); T.hold('KeyD', 20); T.step(80);
       check('reached the creek path', g.scene.id === 'CREEK');
       look(116, 2);
       T.walkTo(648); T.press('KeyE'); T.step(80);

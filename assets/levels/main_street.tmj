@@ -1,0 +1,642 @@
+{
+ "type": "map",
+ "version": "1.10",
+ "tiledversion": "1.11.0",
+ "orientation": "orthogonal",
+ "renderorder": "right-down",
+ "width": 45,
+ "height": 17,
+ "tilewidth": 16,
+ "tileheight": 16,
+ "infinite": false,
+ "compressionlevel": -1,
+ "backgroundcolor": "#000000",
+ "nextlayerid": 12,
+ "nextobjectid": 16,
+ "properties": [
+  {
+   "name": "name",
+   "type": "string",
+   "value": "CROW'S HOLLOW"
+  },
+  {
+   "name": "exterior",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "travel",
+   "type": "int",
+   "value": 12
+  },
+  {
+   "name": "ambience",
+   "type": "string",
+   "value": "village"
+  },
+  {
+   "name": "darkness",
+   "type": "float",
+   "value": 0.64
+  },
+  {
+   "name": "snow",
+   "type": "float",
+   "value": 0.7
+  },
+  {
+   "name": "wind",
+   "type": "float",
+   "value": 0.6
+  },
+  {
+   "name": "fog",
+   "type": "float",
+   "value": 0.3
+  },
+  {
+   "name": "night",
+   "type": "string",
+   "value": "{\"darkness\":0.84,\"ambience\":\"village_night\",\"weather\":{\"snow\":0.9,\"wind\":0.85,\"fog\":0.4}}"
+  }
+ ],
+ "tilesets": [],
+ "layers": [
+  {
+   "type": "group",
+   "id": 1,
+   "name": "parallax",
+   "opacity": 1,
+   "visible": true,
+   "x": 0,
+   "y": 0,
+   "layers": [
+    {
+     "type": "imagelayer",
+     "id": 2,
+     "name": "sky_evening",
+     "image": "../export/environments/parallax/town_sky_evening.png",
+     "x": 0,
+     "y": 0,
+     "offsetx": 0,
+     "offsety": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 0,
+     "parallaxy": 1,
+     "repeatx": false,
+     "repeaty": false,
+     "properties": [
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "EVENING"
+      }
+     ]
+    },
+    {
+     "type": "imagelayer",
+     "id": 3,
+     "name": "sky_night",
+     "image": "../export/environments/parallax/town_sky_night.png",
+     "x": 0,
+     "y": 0,
+     "offsetx": 0,
+     "offsety": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 0,
+     "parallaxy": 1,
+     "repeatx": false,
+     "repeaty": false,
+     "properties": [
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "NIGHT"
+      }
+     ]
+    },
+    {
+     "type": "imagelayer",
+     "id": 4,
+     "name": "mountains",
+     "image": "../export/environments/parallax/town_mountains.png",
+     "x": 0,
+     "y": 0,
+     "offsetx": 0,
+     "offsety": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 0.08,
+     "parallaxy": 1,
+     "repeatx": false,
+     "repeaty": false,
+     "properties": []
+    },
+    {
+     "type": "imagelayer",
+     "id": 5,
+     "name": "far_trees",
+     "image": "../export/environments/parallax/town_far_trees.png",
+     "x": 0,
+     "y": 0,
+     "offsetx": 0,
+     "offsety": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 0.3,
+     "parallaxy": 1,
+     "repeatx": false,
+     "repeaty": false,
+     "properties": []
+    },
+    {
+     "type": "imagelayer",
+     "id": 6,
+     "name": "far_rooftops",
+     "image": "../export/environments/parallax/town_far_rooftops.png",
+     "x": 0,
+     "y": 0,
+     "offsetx": 0,
+     "offsety": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 0.5,
+     "parallaxy": 1,
+     "repeatx": false,
+     "repeaty": false,
+     "properties": []
+    },
+    {
+     "type": "imagelayer",
+     "id": 7,
+     "name": "far_lights",
+     "image": "../export/environments/parallax/town_far_lights_evening.png",
+     "x": 0,
+     "y": 0,
+     "offsetx": 0,
+     "offsety": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 0.5,
+     "parallaxy": 1,
+     "repeatx": false,
+     "repeaty": false,
+     "properties": [
+      {
+       "name": "role",
+       "type": "string",
+       "value": "glow"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "EVENING"
+      }
+     ]
+    },
+    {
+     "type": "imagelayer",
+     "id": 8,
+     "name": "street_fog",
+     "image": "../export/environments/parallax/town_fog.png",
+     "x": 0,
+     "y": 0,
+     "offsetx": 0,
+     "offsety": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 1,
+     "parallaxy": 1,
+     "repeatx": false,
+     "repeaty": false,
+     "properties": [
+      {
+       "name": "role",
+       "type": "string",
+       "value": "back"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "name": "buildings",
+   "type": "imagelayer",
+   "image": "../export/levels/main_street_playfield.png",
+   "opacity": 1,
+   "visible": true,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "id": 10,
+   "name": "gameplay",
+   "type": "objectgroup",
+   "draworder": "topdown",
+   "opacity": 1,
+   "visible": true,
+   "x": 0,
+   "y": 0,
+   "objects": [
+    {
+     "id": 1,
+     "name": "walkable",
+     "type": "bounds",
+     "class": "bounds",
+     "x": 6,
+     "y": 200,
+     "width": 708,
+     "height": 40,
+     "rotation": 0,
+     "visible": true,
+     "properties": []
+    },
+    {
+     "id": 2,
+     "name": "street",
+     "type": "ground",
+     "class": "ground",
+     "x": 0,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "properties": [],
+     "polyline": [
+      {
+       "x": 0,
+       "y": 0
+      },
+      {
+       "x": 720,
+       "y": 0
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "name": "fromRoad",
+     "type": "spawn",
+     "class": "spawn",
+     "x": 21,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "name": "fromHotel",
+     "type": "spawn",
+     "class": "spawn",
+     "x": 699,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "name": "westEdge",
+     "type": "exit",
+     "class": "exit",
+     "x": 0,
+     "y": 176,
+     "width": 12,
+     "height": 100,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "side",
+       "type": "string",
+       "value": "left"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "ROAD"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromVillage"
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "name": "eastEdge",
+     "type": "exit",
+     "class": "exit",
+     "x": 708,
+     "y": 176,
+     "width": 12,
+     "height": 100,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "side",
+       "type": "string",
+       "value": "right"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "BLACK_RAM_EXTERIOR"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromWest"
+      }
+     ]
+    },
+    {
+     "id": 7,
+     "name": "vl_window",
+     "type": "interactable",
+     "class": "interactable",
+     "x": 100.5,
+     "y": 180,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Window"
+      },
+      {
+       "name": "variants",
+       "type": "string",
+       "value": "[{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"Dark now, like every window on the street.\"]},{\"if\":{\"flag\":\"curtainDrawn\"},\"lines\":[\"The curtain is drawn. Whoever was watching would rather I didn't see them do it.\"]},{\"if\":{},\"lines\":[\"Someone is standing at the window, watching the street.\"]}]"
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "name": "vl_store",
+     "type": "interactable",
+     "class": "interactable",
+     "x": 264,
+     "y": 189,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "General store"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "Rusk's general store. Dark. Through the glass: sacks, barrels, a counter, and an account book left open on it, too far off to read."
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "name": "ms_lamp",
+     "type": "interactable",
+     "class": "interactable",
+     "x": 395,
+     "y": 168,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Street lamp"
+      },
+      {
+       "name": "variants",
+       "type": "string",
+       "value": "[{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"The lamp is out. It has been out for some time; the glass is frosted over from inside.\"]},{\"if\":{},\"lines\":[\"A street lamp, lit. The only one on this stretch that is.\"]}]"
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "name": "ms_woodshed",
+     "type": "interactable",
+     "class": "interactable",
+     "x": 668,
+     "y": 195,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Woodshed"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "A woodshed, the door barred from outside. Snow lies over the step, unbroken. Nobody has fetched fuel from here today."
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "name": "finch",
+     "type": "npc",
+     "class": "npc",
+     "x": 504,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "finch_idle"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "FINCH_MEET"
+      },
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Constable Finch"
+      },
+      {
+       "name": "lantern",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"notFlag\":\"metFinch\"},{\"phase\":\"EVENING\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "name": "watcher",
+     "type": "prop",
+     "class": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "watcher"
+      },
+      {
+       "name": "id",
+       "type": "string",
+       "value": "watcher"
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "name": "streetLamp",
+     "type": "light",
+     "class": "light",
+     "x": 396,
+     "y": 165,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "r",
+       "type": "float",
+       "value": 54
+      },
+      {
+       "name": "warm",
+       "type": "float",
+       "value": 0.18
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "name": "VILLAGE_WATCHER",
+     "type": "event",
+     "class": "event",
+     "x": 66,
+     "y": 176,
+     "width": 114,
+     "height": 100,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "script",
+       "type": "string",
+       "value": "VILLAGE_WATCHER"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"notFlag\":\"curtainDrawn\"},{\"phase\":\"EVENING\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "name": "FINCH_MEET",
+     "type": "event",
+     "class": "event",
+     "x": 375,
+     "y": 176,
+     "width": 345,
+     "height": 100,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "script",
+       "type": "string",
+       "value": "FINCH_MEET"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"notFlag\":\"metFinch\"},{\"phase\":\"EVENING\"}]}"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "name": "foreground",
+   "type": "imagelayer",
+   "image": "../export/environments/town/front.png",
+   "opacity": 1,
+   "visible": true,
+   "x": 0,
+   "y": 0,
+   "parallaxx": 1.2,
+   "properties": [
+    {
+     "name": "role",
+     "type": "string",
+     "value": "front"
+    }
+   ]
+  }
+ ]
+}

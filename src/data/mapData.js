@@ -23,7 +23,7 @@ export const LOCATIONS = [
   { id: 'village', name: "Crow's Hollow", scenes: ['VILLAGE'], art: 'village', label: [170, 103] },
   // Rusk's store is noted once Silas has walked past its window.
   { id: 'store', name: "Rusk's", scenes: ['VILLAGE'], xMin: 140, xMax: 215, art: 'store', label: [158, 65], minor: true },
-  { id: 'hotel', name: 'Black Ram', scenes: ['PARLOR', 'ROOM4'], art: 'hotel', label: [208, 67] },
+  { id: 'hotel', name: 'Black Ram', scenes: ['BLACK_RAM_EXTERIOR', 'PARLOR', 'ROOM4'], art: 'hotel', label: [208, 67] },
   { id: 'creek', name: 'the creek', scenes: ['CREEK'], art: 'creek', label: [212, 128], minor: true },
   { id: 'sawmill', name: 'old mill', scenes: ['SAWMILL'], art: 'sawmill', label: [271, 99] },
 ];
@@ -31,7 +31,7 @@ export const LOCATIONS = [
 export const PATHS = [
   { id: 'path_station_road', between: ['STATION', 'ROAD'], art: 'path_station_road' },
   { id: 'path_road_village', between: ['ROAD', 'VILLAGE'], art: 'path_road_village' },
-  { id: 'path_village_creek', between: ['VILLAGE', 'CREEK'], art: 'path_village_creek' },
+  { id: 'path_village_creek', between: ['BLACK_RAM_EXTERIOR', 'CREEK'], art: 'path_village_creek' },
   { id: 'path_creek_sawmill', between: ['CREEK', 'SAWMILL'], art: 'path_creek_sawmill' },
 ];
 
@@ -41,6 +41,7 @@ export const POSITION = {
   STATION: { from: [36, 136], to: [66, 136] },
   ROAD: { from: [76, 134], to: [138, 89] },
   VILLAGE: { from: [142, 86], to: [198, 86] },
+  BLACK_RAM_EXTERIOR: { from: [196, 84], to: [214, 84] },
   PARLOR: { at: [177, 78] },
   ROOM4: { at: [177, 70] },
   CREEK: { from: [205, 97], to: [226, 101] },

@@ -53,7 +53,7 @@ test('recorded samples: sfx variants, ambience crossfade, music crossfade', asyn
   expect(r.now).toBe('theme_b');
   expect(r.errors).toEqual([]);
   // entering the parlor (ambience "parlor", no bed) crossfades the village bed out
-  await page.evaluate(() => T.walkTo(320));
+  await page.evaluate(() => { TWT.state.flags.metFinch = true; T.walkTo(320); });
   await press(page, 'KeyE', 60);
   expect(await page.evaluate(() => [...TWT.audio.bank.beds.keys()])).toEqual([]);
   await expectClean(page, errors);

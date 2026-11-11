@@ -14,9 +14,13 @@ Requires **Tiled 1.10 or newer** (<https://www.mapeditor.org>).
 3. In Tiled: *File ▸ Open File or Project* ▸ `assets/levels/the-white-trail.tiled-project`, then open
    `black_ram_exterior.tmj` from the Project panel.
 
-The Black Ram exterior is **not linked into the story yet**: the existing village scene still contains
-the hotel front you walk past. To link it, give an existing scene a door or exit with
-`to: 'BLACK_RAM_EXTERIOR'`.
+## The opening-chapter exteriors (in the story)
+
+Walking order: STATION → ROAD → **VILLAGE** (Crow's Hollow Main Street, `main_street.tmj`) →
+**BLACK_RAM_EXTERIOR** (the hotel forecourt) → PARLOR (the hotel, through the door once Finch has been met) and,
+at night only, east from the forecourt → CREEK → SAWMILL. VILLAGE and BLACK_RAM_EXTERIOR exist only as Tiled
+maps; `scenes.js` holds the other scenes and the links to them. Pass 1 of Main Street composes its playfield
+from the existing painted export (`tools/make-main-street.mjs`); Pass 2 repaints it from tilesets.
 
 ## Update an existing level
 
