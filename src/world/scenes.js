@@ -1,0 +1,201 @@
+// Scene definitions: geometry, exits, characters, interactables, lights, weather, and story events.
+// Phase-specific overrides live under `night` and are merged when state.phase === 'NIGHT'.
+import { ROAD_GROUND, VILLAGE_GROUND, CREEK_GROUND, SAWMILL_GROUND } from './painters.js';
+
+const FLAT = [[0, 150], [2000, 150]];
+
+export const SCENES = {
+  STATION: {
+    name: 'BLACKWOOD STATION', travel: 3, width: 560, exterior: true, ground: FLAT, bounds: [8, 554],
+    spawns: { start: { x: 198, facing: 1 }, fromRoad: { x: 546, facing: -1 } },
+    exits: [{ side: 'right', to: 'ROAD', spawn: 'fromStation', if: { flag: 'talkedConductor' }, blockedScript: 'STATION_BLOCK' }],
+    npcs: [
+      { id: 'conductor', sprite: 'conductor_idle', x: 232, facing: -1, if: { notFlag: 'trainDeparted' }, dialogue: 'CONDUCTOR', name: 'Conductor', lantern: true },
+    ],
+    interactables: [
+      { id: 'st_waiting', x: 354, y: 122, label: 'Waiting room', lines: ['The waiting room is dark. A stove inside, long cold. Nobody waits for trains here anymore.'] },
+      { id: 'st_freight', x: 300, y: 140, label: 'Freight', lines: ['Mail sacks and a crate of lamp oil, addressed to Crow\'s Hollow. Nobody has come down to collect them.'] },
+      { id: 'st_telegraph', x: 429, y: 122, label: 'Telegraph office', lines: ['The telegraph office, shuttered for the storm. A lamp still burns inside.', 'Overhead, the wire runs up the valley. If the storm brings it down, there is no other way to send word out.'] },
+      { id: 'st_timetable', x: 457, y: 120, label: 'Timetable board', lines: ['A chalk timetable. Beside every return train someone has written the same word: PASS?'] },
+    ],
+    props: [{ type: 'train', id: 'train' }],
+    lights: [{ x: 260, y: 107, r: 72, warm: 0.26 }, { x: 429, y: 121, r: 40, warm: 0.2 }],
+    weather: { snow: 0.55, wind: 0.5, fog: 0.2 }, darkness: 0.56, ambience: 'station',
+    events: [
+      { id: 'INTRO', if: { notFlag: 'introDone' }, script: 'INTRO' },
+    ],
+  },
+
+  ROAD: {
+    name: "THE ROAD TO CROW'S HOLLOW", travel: 7, width: 800, exterior: true, ground: ROAD_GROUND, bounds: [4, 796],
+    spawns: { fromStation: { x: 14, facing: 1 }, fromVillage: { x: 786, facing: -1 } },
+    exits: [
+      { side: 'left', to: 'STATION', spawn: 'fromRoad' },
+      { side: 'right', to: 'VILLAGE', spawn: 'fromRoad' },
+    ],
+    interactables: [
+      { id: 'rd_sign', x: 150, y: 124, label: 'Signpost', lines: ['A hand-lettered signpost: CROW\'S HOLLOW. The paint is newer than the post.'] },
+      { id: 'rd_orecar', x: 362, y: 140, label: 'Ore car', lines: ['An ore car, rusted to its rail and half under the drift. The silver gave out here a long time ago. Nobody troubled to haul the car away.'] },
+      { id: 'rd_notice', x: 728, y: 124, label: 'Notice board', evidence: 'ROAD_NOTICE', important: true },
+    ],
+    weather: { snow: 0.8, wind: 0.75, fog: 0.35 }, darkness: 0.74, ambience: 'road',
+    events: [{ id: 'ROAD_ENTER', if: { all: [{ notFlag: 'lanternOn' }, { phase: 'EVENING' }] }, script: 'ROAD_ENTER' }],
+  },
+
+  VILLAGE: {
+    name: "CROW'S HOLLOW", travel: 12, width: 640, exterior: true, ground: VILLAGE_GROUND, bounds: [4, 636],
+    spawns: { fromRoad: { x: 14, facing: 1 }, fromHotel: { x: 364, facing: 1 }, fromCreek: { x: 626, facing: -1 } },
+    exits: [
+      { side: 'left', to: 'ROAD', spawn: 'fromVillage' },
+      { side: 'right', to: 'CREEK', spawn: 'fromVillage', if: { phase: 'NIGHT' }, blockedLines: ['The path drops away toward the creek and the old mill. Nothing down there for me tonight.'] },
+    ],
+    doors: [
+      { id: 'vl_hoteldoor', x: 364, label: 'Black Ram Hotel', verb: 'Enter', to: 'PARLOR', spawn: 'fromStreet', if: { flag: 'metFinch' }, blockedLines: ['The constable is still talking to me.'] },
+    ],
+    npcs: [
+      { id: 'finch', sprite: 'finch_idle', x: 336, facing: -1, if: { all: [{ notFlag: 'metFinch' }, { phase: 'EVENING' }] }, dialogue: 'FINCH_MEET', name: 'Constable Finch', lantern: true },
+    ],
+    interactables: [
+      { id: 'vl_window', x: 67, y: 120, label: 'Window', variants: [
+        { if: { phase: 'NIGHT' }, lines: ['Dark now, like every window on the street.'] },
+        { if: { flag: 'curtainDrawn' }, lines: ['The curtain is drawn. Whoever was watching would rather I didn\'t see them do it.'] },
+        { if: {}, lines: ['Someone is standing at the window, watching the street.'] },
+      ] },
+      { id: 'vl_store', x: 176, y: 126, label: 'General store', lines: ['Rusk\'s general store. Dark. Through the glass: sacks, barrels, a counter, and an account book left open on it, too far off to read.'] },
+      { id: 'vl_millsign', x: 596, y: 130, label: 'Old sign', lines: ['A weathered board: MILL. It points down the bank toward the creek.'] },
+    ],
+    props: [{ type: 'watcher', id: 'watcher' }],
+    lights: [{ x: 346, y: 118, r: 52, warm: 0.26 }, { x: 307, y: 132, r: 30, warm: 0.14 }, { x: 419, y: 132, r: 30, warm: 0.14 }],
+    weather: { snow: 0.7, wind: 0.6, fog: 0.3 }, darkness: 0.64, ambience: 'village',
+    events: [
+      { id: 'VILLAGE_WATCHER', if: { all: [{ notFlag: 'curtainDrawn' }, { phase: 'EVENING' }, { xMin: 44 }, { xMax: 120 }] }, script: 'VILLAGE_WATCHER' },
+      { id: 'FINCH_MEET', if: { all: [{ notFlag: 'metFinch' }, { phase: 'EVENING' }, { xMin: 250 }] }, script: 'FINCH_MEET' },
+    ],
+    night: {
+      lights: [{ x: 403, y: 84, r: 16, warm: 0.08 }],
+      weather: { snow: 0.9, wind: 0.85, fog: 0.4 }, darkness: 0.84, ambience: 'village_night',
+    },
+  },
+
+  PARLOR: {
+    name: 'THE BLACK RAM HOTEL', travel: 1, width: 400, exterior: false, ground: FLAT, bounds: [32, 352],
+    spawns: { fromStreet: { x: 40, facing: 1 }, fromStairs: { x: 342, facing: -1 } },
+    exits: [],
+    doors: [
+      { id: 'pl_front', x: 18, label: 'Front door', verb: 'Go out', to: 'VILLAGE', spawn: 'fromHotel',
+        if: { any: [{ phase: 'EVENING' }, { flag: 'gableUnbolted' }] }, blockedLines: ['Bolted. Mrs. Gable keeps the key.'] },
+      { id: 'pl_stairs', x: 342, label: 'Stairs to the rooms', verb: 'Go up', to: 'ROOM4', spawn: 'fromStairs',
+        if: { flag: 'hasRoom4Key' }, blockedLines: ['The rooms are upstairs. I\'ll need a key from Mrs. Gable first.'] },
+    ],
+    npcs: [
+      { id: 'gable', sprite: 'gable_idle', x: 276, facing: -1, z: 2, if: { phase: 'EVENING' }, dialogue: 'GABLE', name: 'Mrs. Gable' },
+      { id: 'finch', sprite: 'finch_idle', x: 122, facing: 1, if: { all: [{ phase: 'EVENING' }, { flag: 'metFinch' }] }, dialogue: 'FINCH_PARLOR', name: 'Constable Finch' },
+    ],
+    interactables: [
+      { id: 'pl_register', x: 303, y: 128, label: 'Guest register', evidence: 'HOTEL_REGISTER', important: true },
+      { id: 'pl_photo', x: 161, y: 70, label: 'Photograph', lines: ['A photograph of a mine crew — twenty-odd men squinting at the camera in front of an adit. The brass plate beneath it is too tarnished to read.'] },
+      { id: 'pl_fire', x: 84, y: 130, label: 'Fireplace', warm: true, variants: [
+        { if: { phase: 'NIGHT' }, lines: ['Embers. The room has gone cold around them.'] },
+        { if: {}, lines: ['Pine logs, burning well. The first warm air I\'ve breathed since the train.'] },
+      ] },
+      { id: 'pl_patrons', x: 168, y: 128, label: 'Corner table', if: { phase: 'EVENING' }, lines: ['Three men at the corner table. They stopped talking when I came in. One of them hasn\'t touched his drink since.'],
+        again: ['They are not looking at me now. In a room this size, that takes some effort.'] },
+    ],
+    props: [
+      { type: 'fire', args: [84, 148], if: { phase: 'EVENING' } },
+      { type: 'embers', args: [84, 148], if: { phase: 'NIGHT' } },
+      { type: 'patrons', if: { phase: 'EVENING' } },
+      { type: 'deskFront' },
+      { type: 'windowSnow', args: [10, 99, 14, 16] },
+    ],
+    lights: [
+      { x: 122, y: 94, r: 46, warm: 0.16 }, { x: 222, y: 90, r: 46, warm: 0.16 }, { x: 322, y: 94, r: 46, warm: 0.16 }, { x: 253, y: 104, r: 38, warm: 0.12 },
+    ],
+    weather: null, darkness: 0.28, ambient: 'warm', ambience: 'parlor',
+    events: [
+      { id: 'PARLOR_ENTER', if: { all: [{ notFlag: 'parlorEntered' }, { phase: 'EVENING' }] }, script: 'PARLOR_ENTER' },
+      { id: 'GABLE_NIGHT', if: { all: [{ phase: 'NIGHT' }, { notFlag: 'gableNightTalk' }] }, script: 'GABLE_NIGHT' },
+    ],
+    night: {
+      npcs: [
+        { id: 'gable', sprite: 'gable_idle', x: 300, facing: -1, if: {}, dialogue: 'GABLE_NIGHT_AGAIN', name: 'Mrs. Gable', candle: true },
+      ],
+      lights: [], darkness: 0.8, ambience: 'parlor_night',
+    },
+  },
+
+  ROOM4: {
+    name: 'ROOM 4', travel: 1, width: 320, exterior: false, ground: FLAT, bounds: [24, 298],
+    spawns: { fromStairs: { x: 36, facing: 1 } },
+    exits: [],
+    doors: [{ id: 'r4_door', x: 20, label: 'Door', verb: 'Go down', to: 'PARLOR', spawn: 'fromStairs' }],
+    interactables: [
+      { id: 'r4_floor', x: 187, y: 152, label: 'Floorboards', evidence: 'HOTEL_ROOM4_BOARDS' },
+      { id: 'r4_bed', x: 244, y: 130, label: 'Bed', dialogue: 'BED', verb: 'Use' },
+      { id: 'r4_window', x: 156, y: 86, label: 'Window', variants: [
+        { if: { phase: 'NIGHT' }, lines: ['Snow and dark. Nothing moving out there that I can see.'] },
+        { if: {}, lines: ['Snow, driven sideways. Past the roofs the land drops toward the creek; I can just make out the line of it, and the dark shape of the mill beyond.'] },
+      ] },
+      { id: 'r4_wash', x: 108, y: 124, label: 'Washstand', lines: ['Basin and jug. The basin has been scoured so hard the glaze has gone dull.'] },
+      { id: 'r4_wardrobe', x: 61, y: 116, label: 'Wardrobe', lines: ['Empty. It smells of lye and cedar.'] },
+    ],
+    props: [{ type: 'windowSnow', args: [141, 65, 30, 40] }],
+    lights: [{ x: 116, y: 118, r: 74, warm: 0.24 }, { x: 156, y: 86, r: 30, warm: 0 }],
+    weather: null, darkness: 0.4, ambient: 'warm', ambience: 'room4',
+    events: [{ id: 'ROOM4_ENTER', if: { notFlag: 'enteredRoom4' }, do: [{ set: { enteredRoom4: true } }], bark: 'Room 4. Clean. Very clean.' }],
+    night: { lights: [{ x: 116, y: 119, r: 34, warm: 0.14 }, { x: 156, y: 86, r: 30, warm: 0 }], darkness: 0.7 },
+  },
+
+  CREEK: {
+    name: 'THE CREEK PATH', travel: 6, width: 760, exterior: true, ground: CREEK_GROUND, bounds: [4, 686],
+    spawns: { fromVillage: { x: 12, facing: 1 }, fromSawmill: { x: 648, facing: -1 } },
+    exits: [{ side: 'left', to: 'VILLAGE', spawn: 'fromCreek' }],
+    doors: [{ id: 'ck_bridge', x: 648, label: 'Footbridge', verb: 'Cross', to: 'SAWMILL', spawn: 'fromCreek', minutes: 6 }],
+    interactables: [
+      { id: 'ck_tracks', x: 116, y: 152, label: 'Tracks', evidence: 'CREEK_TRACKS', important: true },
+      { id: 'ck_ice', x: 330, y: 166, label: 'Creek', lines: ['The creek is iced at the edges. In the middle the water still moves, black and quick.'] },
+      { id: 'ck_deadfall', x: 680, y: 140, label: 'Deadfall', lines: ['Two pines down across the bank path. No getting through. The prints turn off before it, onto the footbridge.'] },
+    ],
+    weather: { snow: 0.85, wind: 0.9, fog: 0.45 }, darkness: 0.8, ambience: 'creek',
+    events: [{ id: 'CREEK_ENTER', if: {}, script: 'CREEK_ENTER' }],
+  },
+
+  SAWMILL: {
+    name: 'THE OLD SAWMILL', travel: 8, width: 560, exterior: true, ground: SAWMILL_GROUND, bounds: [6, 506],
+    spawns: { fromCreek: { x: 16, facing: 1 } },
+    exits: [{ side: 'left', to: 'CREEK', spawn: 'fromSawmill', scriptIf: { if: { flag: 'ridgeLightSeen' }, script: 'SLICE_END' } }],
+    interactables: [
+      { id: 'sm_saw', x: 196, y: 136, label: 'Saw carriage', lines: ['The saw carriage, a log still clamped on it. Rust has the blade. Nobody has cut timber here in years.'] },
+      { id: 'sm_ledger', x: 256, y: 146, label: 'Ash pit', evidence: 'SAWMILL_LEDGER', important: true, if: { notItem: 'LEDGER' } },
+      { id: 'sm_boots', x: 292, y: 151, label: 'Prints in the sawdust', evidence: 'SAWMILL_BOOTPRINTS', important: true },
+      { id: 'sm_marks', x: 350, y: 132, label: 'Post', evidence: 'SAWMILL_MARKS', important: true },
+      { id: 'sm_rope', x: 371, y: 100, label: 'Rope', evidence: 'SAWMILL_ROPE', important: true },
+      { id: 'sm_body', x: 392, y: 108, label: 'The body', evidence: 'SAWMILL_BODY', important: true, if: { flag: 'foundSheriffBody' } },
+      { id: 'sm_watch', x: 464, y: 150, label: 'Something in the snow', evidence: 'SAWMILL_WATCH', important: true, if: { notItem: 'WATCH' } },
+      { id: 'sm_drag', x: 494, y: 152, label: 'Furrow', evidence: 'SAWMILL_DRAG', important: true },
+    ],
+    props: [
+      { type: 'body' },
+      { type: 'watch', if: { notItem: 'WATCH' } },
+      { type: 'ledger', if: { notItem: 'LEDGER' } },
+      { type: 'ridgeLight', id: 'ridgeLight' },
+    ],
+    // faint snow-glow on the wheel frame so the scene's composition reads even without the lantern
+    lights: [{ x: 392, y: 112, r: 30, strength: 0.4 }, { x: 448, y: 120, r: 40, strength: 0.25 }],
+    weather: { snow: 0.75, wind: 0.8, fog: 0.4 }, darkness: 0.8, ambience: 'sawmill',
+    events: [
+      { id: 'SAWMILL_BODY', if: { all: [{ notFlag: 'foundSheriffBody' }, { xMin: 300 }] }, script: 'SAWMILL_BODY' },
+      { id: 'RIDGE_LIGHT', if: { all: [{ flag: 'foundSheriffBody' }, { notFlag: 'ridgeLightSeen' }, { countAt: { scene: 'SAWMILL', min: 4 } }] }, delay: 1.6, script: 'RIDGE_LIGHT' },
+    ],
+  },
+};
+
+// Global events checked in any scene.
+export const GLOBAL_EVENTS = [
+  { id: 'DEDUCTION_HINT', if: { all: [{ notFlag: 'deductionHintShown' }, { any: [
+    { all: [{ evidence: 'SAWMILL_BODY' }, { evidence: 'SAWMILL_DRAG' }] },
+    { all: [{ evidence: 'SAWMILL_BODY' }, { evidence: 'SAWMILL_ROPE' }] },
+    { all: [{ evidence: 'SAWMILL_MARKS' }, { evidence: 'SAWMILL_LEDGER' }] },
+    { all: [{ evidence: 'T_GABLE_ROOM4' }, { evidence: 'HOTEL_REGISTER' }] },
+  ] }, { noDeductions: true }] }, delay: 2.5, script: 'DEDUCTION_HINT' },
+];

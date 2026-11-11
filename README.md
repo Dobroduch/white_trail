@@ -1,0 +1,88 @@
+# THE WHITE TRAIL
+
+A 2D side-scrolling pixel-art detective mystery. Crow's Hollow, Rocky Mountains, winter 1892.
+
+This repository contains **the first playable vertical slice** (about 10–20 minutes). It covers Silas Vance's arrival at Blackwood Station, the walk into Crow's Hollow, Constable Finch, the Black Ram Hotel and Room 4, the 02:15 scream, and the discovery of Sheriff Nathaniel Hale's body at the old sawmill.
+
+Built with vanilla JavaScript (ES modules), HTML5 Canvas 2D and the Web Audio API. There are no dependencies, no build step and no network assets.
+
+## Running it
+
+The game uses native ES modules, so browsers will not load it from `file://`. Serve the folder over http instead.
+
+**Windows:** double-click `start.bat`. It starts a local server and opens `http://localhost:8080`.
+
+**Any OS (Node.js 18 or newer):**
+
+```bash
+node tools/serve.mjs
+```
+
+Then open <http://localhost:8080> in a desktop browser (Chrome, Edge or Firefox).
+
+Any other static file server also works if you run it from this folder, for example `python -m http.server 8080` or `npx serve`.
+
+Click or press any key on the title screen. Browsers only allow audio to start after a user gesture. Headphones are recommended.
+
+## Controls
+
+| Key | Action |
+|---|---|
+| `A` / `D` or `←` / `→` | Walk |
+| `E` (or `Enter`) | Examine, speak, open, continue dialogue |
+| `F` | Light or shutter the lantern |
+| `Tab` (or `J`) | Notebook / case file |
+| `I` | Inventory (read the telegram, inspect the revolver) |
+| `Esc` | Pause, or close a panel (works during dialogue too) |
+| `1`–`5` or `↑` / `↓` + `E` | Choose a dialogue option |
+
+Inside the notebook, `←` / `→` switch tabs, `↑` / `↓` choose an entry, and `E` marks records to compare on the **Deductions** tab.
+
+The game is keyboard-only; no mouse is needed. There is no jump and no combat in this chapter.
+
+## Saving
+
+Progress is saved automatically to `localStorage` at checkpoints: entering a scene, recording evidence, forming a deduction, and story beats. **Continue** on the title screen resumes from the last checkpoint. **New investigation** (title screen), or **Pause → Restart from the beginning**, wipes the save and starts again from the train.
+
+## Settings
+
+Pause → Settings has volume sliders (master / ambience / effects / music), text speed (including instant), *reduce camera motion* (disables the framing zoom), and optional vignette and scanlines (both off by default).
+
+## Tests
+
+```bash
+node tools/validate.mjs
+```
+
+This checks the data's integrity: every dialogue node, script, evidence ID, deduction pair, scene exit/spawn, item and sprite reference resolves. It also covers the state-model rules (no duplicate evidence, revolver 3/6, serialization).
+
+To run the automated playthrough in the browser, open the game and enter this in the developer console:
+
+```js
+(await import('/tools/harness.js')).install();
+T.fullRun();                                      // ~27 checks, kind-to-Finch branch
+T.fullRun({ finchKind: false, examineAll: false }); // guarded branch, minimal evidence
+```
+
+`T.fullRun()` drives the real input path from the train to the end card and returns PASS/FAIL lines. **It overwrites your save.**
+
+## Project layout
+
+```text
+index.html            entry page (shows a clear message if opened from file://)
+start.bat             Windows launcher
+assets/sprites/       sprites.json — original palette-string pixel art (Silas, cast, props)
+src/main.js           bootstrap, focus/visibility pause
+src/engine/           loop (fixed 60 Hz), display (320×180 + integer scaling + zoom compositor),
+                      camera (exploration / investigation / dialogue framing), input, assets, game
+src/systems/          storyState (flags, conditions, effects), dialogue runner, cutscene runner,
+                      save, survival (lantern, warmth, revolver stub)
+src/world/            scenes (data), painters (procedural pixel-art backgrounds), props,
+                      lighting, weather, paint primitives
+src/data/             evidence, dialogue, scripts (authored beats), notebook data
+src/ui/               HUD, dialogue view, notebook, menus
+src/audio/            Web Audio soundscape (all synthesised)
+tools/                serve.mjs (static server), validate.mjs (data tests), harness.js (browser test driver)
+```
+
+See `NOTES.md` for what is implemented, what was tested, known limitations, and the story assumptions that need the design owner's decision.

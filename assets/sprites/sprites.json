@@ -1,0 +1,309 @@
+{
+  "_comment": "Original pixel-art sprites for THE WHITE TRAIL. Each row is a string; each character is a palette key. '.' is transparent. Sprites face RIGHT; the renderer mirrors them.",
+  "palette": {
+    "k": "#0b0d14",
+    "h": "#2b2420",
+    "H": "#4a3c31",
+    "s": "#c9a084",
+    "S": "#93705b",
+    "b": "#5f5853",
+    "c": "#3a3b4a",
+    "C": "#555a70",
+    "d": "#25252f",
+    "f": "#6b2b25",
+    "F": "#8a3a30",
+    "g": "#29231f",
+    "p": "#2b2e3a",
+    "q": "#1c1e27",
+    "o": "#16120f",
+    "w": "#e2e8f0",
+    "y": "#d97706",
+    "Y": "#fcd34d",
+    "G": "#3a3732",
+    "u": "#27324d",
+    "U": "#3a4a6e",
+    "n": "#c08a2c",
+    "t": "#5a4632",
+    "T": "#7a6146",
+    "m": "#2a1e2a",
+    "M": "#43304a",
+    "a": "#c7beae",
+    "A": "#9d9484",
+    "i": "#9a948f",
+    "I": "#3b2f2a",
+    "x": "#b9b5b1",
+    "X": "#878380",
+    "z": "#cfd6df",
+    "l": "#8b7a55",
+    "v": "#4b4239",
+    "V": "#62584d",
+    "e": "#f1f5f9"
+  },
+  "sprites": {
+    "silas_body": {
+      "rows": [
+        "................",
+        ".....kkkkk......",
+        "....khhhhhk.....",
+        "....khhhhhk.....",
+        "....kHHHHHk.....",
+        "..kkkhhhhhhkkk..",
+        "....kkkkkkkk....",
+        ".....kSsssk.....",
+        ".....kSsksssk...",
+        ".....kSbssk.....",
+        ".....kbbbbk.....",
+        "....kfffFffk....",
+        "...kcffFffCck...",
+        "..kccccfcCCcck..",
+        "..kcdcccccCcck..",
+        "..kcdccccccCck..",
+        "..kcdccccgCcck..",
+        "..kcdcccgggcck..",
+        "..kcdcccccccck..",
+        "..kcdccccccCck..",
+        "..kddcccccccck..",
+        "..kdddccccdcck..",
+        "...kddkkkddkk..."
+      ]
+    },
+    "silas_legs": {
+      "frames": [
+        [
+          "....kqk..kpk....",
+          "....kqk..kpk....",
+          "....kqk..kpk....",
+          "....kok..kok....",
+          "....kook.kook...",
+          "....kkkk.kkkk..."
+        ],
+        [
+          "....kqk.kpk.....",
+          "...kqk...kpk....",
+          "...kqk....kpk...",
+          "..kok......kok..",
+          "..kook.....kook.",
+          "..kkkk.....kkkk."
+        ],
+        [
+          ".....kqkpk......",
+          ".....kqkpk......",
+          "......kqpk......",
+          "......kook......",
+          ".....kkoook.....",
+          "......kkkkk....."
+        ],
+        [
+          "....kpk.kqk.....",
+          "...kpk...kqk....",
+          "...kpk....kqk...",
+          "..kok......kok..",
+          "..kook.....kook.",
+          "..kkkk.....kkkk."
+        ],
+        [
+          ".....kpkqk......",
+          ".....kpkqk......",
+          "......kpqk......",
+          "......kook......",
+          ".....kkoook.....",
+          "......kkkkk....."
+        ]
+      ]
+    },
+    "lantern_on": {
+      "rows": [
+        "..k..",
+        ".k.k.",
+        ".kkk.",
+        "kyYyk",
+        "kYYYk",
+        "kyYyk",
+        ".kkk."
+      ]
+    },
+    "lantern_off": {
+      "rows": [
+        "..k..",
+        ".k.k.",
+        ".kkk.",
+        "kGGGk",
+        "kGbGk",
+        "kGGGk",
+        ".kkk."
+      ]
+    },
+    "candle": {
+      "rows": [
+        ".Y.",
+        ".y.",
+        ".e.",
+        ".e.",
+        "kak"
+      ]
+    },
+    "conductor": {
+      "rows": [
+        "................",
+        "................",
+        ".....kkkkk......",
+        "....kuuuuuk.....",
+        "....kUUUUUk.....",
+        "....kkkkkkkkk...",
+        ".....kssssk.....",
+        ".....kssksk.....",
+        ".....kSsssk.....",
+        ".....kiiiik.....",
+        "....kkuSsuk.....",
+        "...kuuuuuuuk....",
+        "..kuuunuuuUuk...",
+        "..kuuuuuuuUuk...",
+        "..kuuunuuuUuk...",
+        "..kuuuuuuguuk...",
+        "..kuuunuuggUk...",
+        "..kuuuuuuuUuk...",
+        "..kuuunuuuUuk...",
+        "...kuuuuuuuk....",
+        "...kuuuuuuuk....",
+        "...kpppkpppk....",
+        "....kpk.kpk.....",
+        "....kpk.kpk.....",
+        "....kpk.kpk.....",
+        "....kok.kok.....",
+        "....kook.kook...",
+        "....kkkk.kkkk..."
+      ]
+    },
+    "finch": {
+      "rows": [
+        "................",
+        "......kkk.......",
+        ".....khhhk......",
+        ".....khhhk......",
+        "...kkkHHHkkk....",
+        ".....kssssk.....",
+        ".....ksskssk....",
+        ".....kSsssk.....",
+        "......kSsk......",
+        ".....ktttTk.....",
+        "....kttttTTk....",
+        "...kttzttTTk....",
+        "...ktttttTTk....",
+        "...ktttttgTk....",
+        "...ktttttgTk....",
+        "...ktttttttk....",
+        "...ktttttttk....",
+        "...kttttttTk....",
+        "...kttttttTk....",
+        "...kttttttTk....",
+        "...kttkkttTk....",
+        "....kpk.kpk.....",
+        "....kpk.kpk.....",
+        "....kpk.kpk.....",
+        "....kpk.kpk.....",
+        "....kok.kok.....",
+        "....kook.kook...",
+        "....kkkk.kkkk..."
+      ]
+    },
+    "gable": {
+      "rows": [
+        "................",
+        "................",
+        "......kkk.......",
+        ".....kIIIk......",
+        ".....kIIIIk.....",
+        "....kIIiIIk.....",
+        "....kIIsssk.....",
+        "....kIssksk.....",
+        ".....kSsssk.....",
+        "......kssk......",
+        ".....kmmmmk.....",
+        "....kmmmmMMk....",
+        "...kmmaaaaMk....",
+        "...kmmaaaaMk....",
+        "...kmmaaaasMk...",
+        "...kmmaaaaMMk...",
+        "...kmmaaaaMMk...",
+        "...kmmaaaaMMk...",
+        "..kmmmaaaaMMMk..",
+        "..kmmmaaaaMMMk..",
+        "..kmmmaaaaMMMk..",
+        "..kmmmaAAaMMMk..",
+        "..kmmmAAAAMMMk..",
+        ".kmmmmmmmmMMMMk.",
+        ".kmmmmmmmmMMMMk.",
+        ".kmmmmmmmmMMMMk.",
+        ".kmmmmmmmmMMMMk.",
+        ".kkkkkkkkkkkkkk."
+      ]
+    },
+    "patron": {
+      "rows": [
+        "............",
+        "....kkkk....",
+        "...khhhhk...",
+        ".kkkhhhhkkk.",
+        "....kssSk...",
+        "....ksksk...",
+        "....kbbSk...",
+        "...kcccck...",
+        "..kccccCck..",
+        "..kcccccCk..",
+        "..kccccCCk..",
+        "..kccccCCk..",
+        "..kcgggCCk..",
+        "..kcccccck.."
+      ]
+    },
+    "patron_look": {
+      "rows": [
+        "............",
+        "....kkkk....",
+        "...khhhhk...",
+        ".kkkhhhhkkk.",
+        "...kSssk....",
+        "...kSksk....",
+        "...kSbbk....",
+        "...kcccck...",
+        "..kccccCck..",
+        "..kcccccCk..",
+        "..kccccCCk..",
+        "..kccccCCk..",
+        "..kcgggCCk..",
+        "..kcccccck.."
+      ]
+    },
+    "hale_body": {
+      "rows": [
+        ".....ll.....",
+        ".....ll.....",
+        "....kllk....",
+        "...kookok...",
+        "...kookok...",
+        "...kpkkpk...",
+        "...kpkkpk...",
+        "...kpkkpk...",
+        "...kpkkpk...",
+        "...kppppk...",
+        "..kvvvvvvk..",
+        "..kvvvvVvk..",
+        "..kvvzvvVk..",
+        "..kvvvvvVk..",
+        "..kvvvvvVk..",
+        ".kvvvvvvVvk.",
+        ".kvvvvvvVvk.",
+        ".kVvvvvvvVk.",
+        "kvvvvvvvvVVk",
+        ".kkkxxxxkkk.",
+        "...kxXxxk...",
+        "...kxkxxk...",
+        "...kxxxxk...",
+        "...kIIIIk...",
+        "....kIIk....",
+        ".kg......gk.",
+        ".kg......gk."
+      ]
+    }
+  }
+}
