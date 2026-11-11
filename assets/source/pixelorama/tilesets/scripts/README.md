@@ -66,3 +66,14 @@ It uses this tileset plus the Black Ram tileset's snow tiles, so both places sha
 (for example `black_ram_exterior.pxo`), run `eval_gdscript` that loads the PNG and *returns* the `Image` (the canvas resizes
 to fit), then `save_project` with the new path and compare an `export_image` against the PNG. The original `.pxo` on disk is
 untouched.
+
+## Station tileset (`station_exterior`)
+
+Same approach as the sawmill set: `node tools/make-station-tileset.mjs` (helpers shared in `tools/lib/tilekit.mjs`) writes
+`assets/export/tilesets/station_exterior.png`, the Tiled tileset and `tools/data/station_tiles.json`;
+`station_exterior.pxo` is that image imported into Pixelorama (round trip verified pixel-identical). It holds the pitched
+snow roof (`roof_slope_<a>`: one tile per rise, 3 px per tile; right-hand slopes are the same tiles flipped horizontally in
+Tiled), `eave_icicles`, the BLACKWOOD sign, TEL plate, timetable board, freight, `bank_top_*`/`rails` for the track bed,
+and the telegraph pole. The station map also uses the Black Ram tileset's wall, windows, door, lamp, chimney, deck boards
+and snow. `assets/levels/blackwood_station.tmj` was built once by `tools/make-station-level.mjs` and is now edited in Tiled;
+the telegraph wires are an image layer (`assets/export/levels/station_wires.png`, written by that script).

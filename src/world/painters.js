@@ -119,145 +119,8 @@ function footprints(ctx, x0, x1, gAt, seed, col, step = 9) {
 }
 
 // ---------- BLACKWOOD STATION ----------
-// Painted version (Pixelorama layers). Lighting, steam, snow and fog stay dynamic in the engine, so
-// the baked light pools / steam / snowfall layers are intentionally not used here.
-function paintStationPainted(sw, A) {
-  const SPLIT = 147; // deck top: everything above is behind the train prop, everything below in front
-  const slice = (img, w, y0, y1) => {
-    const [c, x] = canvas(w, H);
-    x.drawImage(img, 0, y0, w, y1 - y0, 0, y0, w, y1 - y0);
-    return c;
-  };
-  const full = (img, w) => slice(img, w, 0, H);
-  const back = [
-    nb('station', 'sky', { canvas: full(A.sky, W), factor: 0, z: -100 }),
-    nb('station', 'mountains_far', { canvas: full(A.mountains_far, lw(sw, 0.08)), factor: 0.08, z: -90 }),
-    nb('station', 'mountains_near', { canvas: full(A.mountains_near, lw(sw, 0.2)), factor: 0.2, z: -80 }),
-    nb('station', 'pines', { canvas: full(A.pines, lw(sw, 0.4)), factor: 0.4, z: -70 }),
-    nb('station', 'haze', { canvas: full(A.haze, sw), factor: 1, z: -60 }),
-  ];
-  // native-density Pixelorama station (assets/export/environments/station): track bed behind the
-  // train, platform + station house in front of it, glow and foreground drifts.
-  const NA = nativeArt('STATION');
-  if (NA) {
-    back.push({ canvas: NA.trackbed, factor: 1, z: -50, native: true });
-    return { back, main: { canvas: NA.main, glow: NA.glow, native: true }, front: [{ canvas: NA.front, factor: 1, z: 20, native: true }] };
-  }
-  // track bed, bank and rails (+ shadows above the deck) sit behind the train
-  const [bk, bkx] = canvas(sw, H);
-  bkx.drawImage(slice(A.ground, sw, 0, SPLIT), 0, 0);
-  bkx.drawImage(slice(A.shadows, sw, 0, SPLIT), 0, 0);
-  back.push({ canvas: bk, factor: 1, z: -50 });
-
-  const [m, mx] = canvas(sw, H);
-  mx.drawImage(slice(A.ground, sw, SPLIT, H), 0, 0);
-  mx.drawImage(A.building, 0, 0);
-  mx.drawImage(A.props, 0, 0);
-  mx.drawImage(slice(A.shadows, sw, SPLIT, H), 0, 0);
-  // emissive: lamps + windows. The train's own glow is drawn by the train prop (it moves).
-  const [g, gx] = canvas(sw, H);
-  gx.drawImage(A.emissive, 0, 0);
-  gx.clearRect(0, 95, 232, 60);
-  const [f, fx] = canvas(sw, H);
-  fx.drawImage(A.drifts, 0, 0);
-  return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1, z: 20 }] };
-}
-
-function paintStation(sw) {
-  const A = stationArt();
-  if (A) return paintStationPainted(sw, A);
-  return paintStationProcedural(sw);
-}
-
-function paintStationProcedural(sw) {
-  const back = [
-    sky([PAL.navy, '#0d1220', PAL.purple, '#1d2335', '#2a3143'], 11),
-    mountainLayer(sw, 0.08, 116, 48, 21, '#1b2232', '#5a667d', '#252f40', -90),
-    mountainLayer(sw, 0.2, 134, 30, 33, '#131926', '#3c475b', null, -80),
-    pineLayer(sw, 0.4, 146, 9, 22, 6, 41, '#0d121c', '#2c3546', -70, '#0d121c'),
-  ];
-  const [m, ctx] = canvas(sw, H);
-  const [g, gx] = canvas(sw, H);
-  // track bed + rails (behind platform)
-  rect(ctx, 0, 140, sw, 7, '#10141d');
-  for (let x = 0; x < sw; x += 6) rect(ctx, x, 144, 4, 2, '#2a2019');
-  hline(ctx, 0, sw, 143, PAL.iron2);
-  // platform deck + face
-  planks(ctx, 0, 147, sw, 4, PAL.wood3, PAL.wood1, PAL.wood5, 5, 2);
-  hline(ctx, 0, sw, 147, PAL.snow2);
-  const rng = mulberry32(77);
-  for (let i = 0; i < 70; i++) { const x = Math.floor(rng() * sw); rect(ctx, x, 147, 2 + Math.floor(rng() * 8), 1, PAL.snow3); }
-  rect(ctx, 0, 151, sw, 9, PAL.wood1);
-  for (let x = 4; x < sw; x += 22) rect(ctx, x, 151, 3, 9, PAL.wood2);
-  hline(ctx, 0, sw, 151, PAL.wood4);
-  snowGround(ctx, sw, () => 160, H, 9);
-  // station building
-  const bx = 330, bw = 140, top = 92;
-  siding(ctx, bx, top, bw, 147 - top, PAL.wood2, PAL.wood1, PAL.wood3, 3);
-  // roof
-  for (let i = 0; i < 16; i++) rect(ctx, bx - 8 + i, top - 16 + i, bw + 16 - i * 2, 1, i < 3 ? PAL.snow3 : i < 5 ? PAL.snow1 : '#2a2220');
-  hline(ctx, bx - 8, bx + bw + 8, top - 16, PAL.snow4);
-  rect(ctx, bx - 8, top, bw + 16, 3, PAL.wood1);
-  // canopy over platform edge
-  rect(ctx, bx - 14, 104, bw + 28, 3, PAL.wood1);
-  hline(ctx, bx - 14, bx + bw + 14, 103, PAL.snow3);
-  for (const p of [bx - 10, bx + bw + 9]) rect(ctx, p, 107, 2, 40, PAL.wood1);
-  // sign
-  const sign = 'BLACKWOOD';
-  rect(ctx, bx + 44, 96, signWidth(sign) + 6, 9, PAL.wood0);
-  signText(ctx, sign, bx + 47, 98, PAL.snow3);
-  // windows: waiting room (dark), telegraph office (lit)
-  windowPane(ctx, bx + 16, 112, 16, 18, PAL.wood0, '#141a26', null);
-  windowPane(ctx, bx + 90, 112, 18, 18, PAL.wood0, '#3b2610', PAL.kerosene);
-  windowPane(gx, bx + 90, 112, 18, 18, 'rgba(0,0,0,0)', '#5a3510', PAL.amber);
-  rect(gx, bx + 91, 113, 2, 2, PAL.amberHi);
-  // door
-  rect(ctx, bx + 50, 117, 16, 30, PAL.wood0);
-  rect(ctx, bx + 52, 119, 12, 26, PAL.wood2);
-  px(ctx, bx + 62, 132, PAL.amber);
-  // telegraph office plate
-  rect(ctx, bx + 88, 133, 23, 6, PAL.wood0);
-  signText(ctx, 'TEL', bx + 94, 134, PAL.snow2);
-  // timetable chalkboard
-  rect(ctx, bx + 118, 112, 18, 16, PAL.wood1);
-  rect(ctx, bx + 119, 113, 16, 14, '#162019');
-  for (let i = 0; i < 5; i++) hline(ctx, bx + 121, bx + 121 + 6 + ((i * 5) % 7), 115 + i * 2, '#8c9a90');
-  line(ctx, bx + 121, 125, bx + 133, 124, '#c8d2cc');
-  // freight: crates & sacks
-  rect(ctx, 286, 136, 14, 11, PAL.wood3); rect(ctx, 287, 137, 12, 9, PAL.wood4);
-  line(ctx, 287, 137, 298, 145, PAL.wood2); hline(ctx, 286, 299, 136, PAL.snow3);
-  rect(ctx, 301, 140, 9, 7, '#6b604c'); rect(ctx, 302, 139, 7, 2, '#7d7058'); hline(ctx, 302, 308, 139, PAL.snow3);
-  rect(ctx, 309, 142, 7, 5, '#5f5644');
-  // lamp post
-  rect(ctx, 259, 114, 2, 33, PAL.iron);
-  rect(ctx, 256, 110, 8, 2, PAL.iron);
-  rect(ctx, 256, 104, 8, 6, PAL.iron);
-  rect(ctx, 257, 105, 6, 4, PAL.kerosene);
-  rect(gx, 257, 105, 6, 4, PAL.amber); rect(gx, 259, 106, 2, 2, PAL.amberHi);
-  hline(ctx, 255, 264, 103, PAL.snow3);
-  // telegraph pole + wires
-  rect(ctx, 506, 64, 3, 83, '#1b1510');
-  rect(ctx, 498, 70, 19, 2, '#1b1510');
-  px(ctx, 500, 69, PAL.slate6); px(ctx, 514, 69, PAL.slate6);
-  for (let x = 0; x < 500; x++) {
-    const sag = Math.round(Math.sin((x / 500) * Math.PI) * 8);
-    px(ctx, x, 69 + sag, '#2a3040');
-    px(ctx, x, 72 + sag, '#252a38');
-  }
-  for (let x = 516; x < sw; x++) px(ctx, x, 69 + Math.round(((x - 516) / 60) * 3), '#2a3040');
-  // front: low drifts
-  const [f, fx] = canvas(lw(sw, 1.15), H);
-  const fr = mulberry32(5);
-  for (let x = 0; x < f.width; x += 40 + Math.floor(fr() * 60)) {
-    const w = 20 + Math.floor(fr() * 30);
-    for (let i = 0; i < w; i++) {
-      const hgt = Math.round(Math.sin((i / w) * Math.PI) * 6);
-      vline(fx, x + i, 180 - hgt, 179, '#1a2130');
-      if (hgt > 1) px(fx, x + i, 180 - hgt, '#4a5568');
-    }
-  }
-  return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.15, z: 20 }] };
-}
+// The station is a Tiled map (assets/levels/blackwood_station.tmj, tiles from tilesets/station_exterior + black_ram_exterior).
+// Its train is a prop (props.js) drawn between the map's track-bed layer and its playfield.
 
 // ---------- THE ROAD ----------
 export const ROAD_GROUND = [[0, 150], [120, 148], [260, 152], [400, 149], [540, 151], [680, 148], [800, 150]];
@@ -630,7 +493,7 @@ function paintTitle() {
 }
 
 const PAINTERS = {
-  STATION: paintStation, ROAD: paintRoad, PARLOR: paintParlor,
+  ROAD: paintRoad, PARLOR: paintParlor,
   ROOM4: paintRoom4, CREEK: paintCreek, TITLE: paintTitle,
 };
 

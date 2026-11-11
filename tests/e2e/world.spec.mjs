@@ -10,7 +10,7 @@ import { mkdirSync } from 'node:fs';
 
 // [scene id, phase, expected width (world units), a few x positions that must be walkable and framed]
 const LOCATIONS = [
-  { id: 'STATION', width: 560, spawn: 'start' },
+  { id: 'STATION', width: 576, spawn: 'start' },
   { id: 'VILLAGE', width: 480, spawn: 'fromRoad' },
   { id: 'BLACK_RAM_EXTERIOR', width: 640, spawn: 'fromWest' },
   { id: 'SAWMILL', width: 576, spawn: 'fromCreek' },
@@ -193,6 +193,38 @@ test.describe('Sawmill (tile-built, Pass 2)', () => {
       return { shedWall: alpha(260, 150), shedFloor: alpha(300, 226), beam: alpha(600, 90), wheel: alpha(668, 173), water: alpha(780, 250), rope: alpha(544, 128, 32, 32) * 10 };
     });
     for (const [k, v] of Object.entries(covered)) expect(v, k).toBeGreaterThan(0.2);
+    await expectClean(page, errors);
+  });
+});
+
+test.describe('Station (tile-built, Pass 2)', () => {
+  test('layers: parallax, fog and track bed behind the train, tile playfield with glow, foreground', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'STATION' });
+    await step(page, 2);
+    const L = await page.evaluate(() => {
+      const l = TWT.layers;
+      return { back: l.back.map((b) => [b.name, b.factor, b.z]), main: [l.main.canvas.width, l.main.canvas.height, !!l.main.glow], front: l.front.map((f) => f.name), train: !!(TWT.props || []).length || true };
+    });
+    expect(L.back.map((b) => b[0])).toEqual(['sky', 'mountains_far', 'mountains_near', 'pines', 'haze', 'trackbed']);
+    expect(L.back.map((b) => b[1])).toEqual([0, 0.08, 0.2, 0.4, 1, 1]);
+    expect(L.back.every((b) => b[2] < -5), 'every back layer is behind the train prop (z -5)').toBe(true);
+    expect(L.main).toEqual([864, 272, true]);
+    expect(L.front).toEqual(['foreground']);
+    await expectClean(page, errors);
+  });
+
+  test('a new game still runs the intro: the train pulls in and stops at the platform, over the track bed', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1' });
+    const r = await page.evaluate(() => {
+      TWT.newGame();
+      T.talkThrough([], 3000); // the intro
+      const train = TWT.props.find((p) => p.id === 'train');
+      return { scene: TWT.scene.id, introDone: !!TWT.state.flags.introDone, train: train && train.state };
+    });
+    expect(r).toEqual({ scene: 'STATION', introDone: true, train: 'stopped' });
+    await step(page, 5);
+    const rails = await page.evaluate(() => { const c = TWT.layers.back.find((b) => b.name === 'trackbed').canvas, d = c.getContext('2d').getImageData(0, 213, 16, 4).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n; });
+    expect(rails).toBeGreaterThan(20); // rails and sleepers are painted where the train's wheels run
     await expectClean(page, errors);
   });
 });

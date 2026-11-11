@@ -7,7 +7,6 @@ const SCENES = {
   ROOM4: { dir: 'room4', files: ['main', 'light_evening', 'light_night', 'glow_evening', 'glow_night'] },
   CREEK: { dir: 'creek', files: ['main'] }, // playfield only; parallax layers stay procedural
   ROAD: { dir: 'road', files: ['main'] }, // playfield only; parallax layers stay procedural
-  STATION: { dir: 'station', files: ['trackbed', 'main', 'glow', 'front'] }, // sky/mountains/train stay painted
 };
 
 // Native-density parallax layers (sky, ranges, pine belts, distant roofs, haze, foreground
@@ -15,7 +14,7 @@ const SCENES = {
 // as assets/export/environments/parallax/<scene>_<layer>.png. Loaded one by one: a missing file
 // only drops that layer back to its older painter.
 const PARALLAX = {
-  station: ['sky', 'mountains_far', 'mountains_near', 'pines', 'haze', 'train', 'train_glow'], // train: scripts/train.gd
+  station: ['train', 'train_glow'], // the train prop (scripts/train.gd); the rest of the station is a Tiled map
   town: ['sky_evening', 'sky_night', 'mountains', 'far_trees', 'far_rooftops', 'far_lights_evening', 'fog'],
   road: ['sky', 'mountains_far', 'mountains_near', 'lights', 'lights_glow', 'pines_far', 'pines_near', 'front'],
   creek: ['sky', 'mountains_far', 'mountains_near', 'mill', 'pines', 'front'],

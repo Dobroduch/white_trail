@@ -367,3 +367,15 @@ All other LFOs drive filter frequencies or inner stages, not output gains.
 **Art added** (storytelling and landmarks, no new plot): hanging broken planks and a snow-laden roof with icicles on the shed; a saw carriage with log and rust-eaten blade; the stopped, iced waterwheel as a 6×6 tile block; the frame with braces, rope and rope-scuffed beam; a cordwood stack, stump, broken fence and a MILL board on the approach so the first screen is no longer empty; one set of footprints coming in from the bridge; sawdust floor with boot impressions and the ash pit; the drag furrow on the bank; ice rim and black water.
 
 **Not done:** no recorded audio (the creek/wind synthesis is unchanged), no warm artificial light (the ridge lantern remains the only one, by design), approach fence and footprints are subtle at night darkness. The map is unopened in the Tiled app.
+
+## 14. Station Pass 2 — tile-built (2026-11-11)
+
+**What changed.** `blackwood_station.tmj` is now a 54×17-tile map (864 px = 576 units; the road end gained 16 units, the east exit moved with it) with parallax image layers, a fog band, a **track bed tile layer behind the train**, then deck · wall · structure · roof tile layers, a glow layer (lit telegraph window, lamp flame), the telegraph wires as an image layer and the existing foreground drifts. No painter: `paintStation*` and the `nativeArt` station entries are deleted (only the train sprites are still loaded, by the train prop). New `station_exterior` tileset (64 tiles, palette-exact, `tools/make-station-tileset.mjs`, Pixelorama source `station_exterior.pxo` with a verified round trip); the house reuses Black Ram walls, windows, door, lamp and chimney.
+
+**The train needed no decoupling:** it is a prop drawn at z −5, and every Tiled back layer sits below that (z ≤ −95), so it still runs between the track bed and the platform. Conductor, clue positions, the gate, the intro event and all dialogue are unchanged (68 e2e tests: world specs for layers/train/intro, a new `station-house-evening` baseline, `T.fullRun` unchanged).
+
+**Shared tooling.** The Canvas/registry/writer helpers moved to `tools/lib/tilekit.mjs`; the sawmill tileset regenerates byte-identical.
+
+**Art:** pitched snow roof with eave icicles and a chimney, log walls, the BLACKWOOD board, a dark waiting-room window and the lit telegraph window with its TEL plate, the chalk timetable, freight (lamp-oil crate and mail sacks), the lamp, a snow-crusted ballast bank with rails and sleepers, the pole and wires.
+
+**Not done:** no recorded audio; the platform has no awning (the roof's overhang and icicles stand in for it); the deck is the Black Ram boardwalk tile; not opened in Tiled.
