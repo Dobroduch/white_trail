@@ -239,7 +239,14 @@ export function fireProp(x, y, { embersOnly = false } = {}) {
   const rng = mulberry32(9);
   return {
     z: 1,
-    update(dt) { t += dt; },
+    update(dt, game) {
+      t += dt;
+      // crackle ambience, falling off with the player's distance from the hearth
+      if (game && game.audio && game.player) {
+        const d = Math.abs(game.player.x - x);
+        game.audio.fire(0.12 + 0.88 / (1 + (d / 110) ** 2), { embers: embersOnly });
+      }
+    },
     draw(ctx, camX) {
       const bx = Math.round(x - camX);
       rect(ctx, bx - 8, y - 4, 16, 3, '#2a1a10');

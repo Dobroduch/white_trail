@@ -2,10 +2,11 @@
 // The AudioContext is created only after a user gesture (browser autoplay policy).
 // Buses: master <- { ambience, effects, music }. A generated convolution reverb gives distance.
 
-// WIND_ONLY: the continuous ambience is wind (and its gusts) alone. The other beds — fire roar and
-// crackle, room tone, parlour murmur, water under ice, steam hiss, train rumble, drone, incidental
+// WIND_ONLY: the continuous ambience is wind (and its gusts) alone. The other beds — room tone, parlour murmur, water under ice, steam hiss, train rumble, drone, incidental
 // creaks — are kept in code but silenced, so they can be reintroduced one at a time later.
 // One-shot effects (footsteps, doors, whistle, the 02:15 scream, notebook sounds) are unaffected.
+// The fire is the exception: it is not a preset bed but is driven by fire props (fire(level)),
+// so it plays wherever a fire burns and falls off with the player's distance from it.
 export const WIND_ONLY = true;
 
 const PRESETS = {
@@ -34,6 +35,8 @@ export class Audio {
     this.preset = PRESETS.title;
     this.ambienceKey = 'title';
     this.windDipValue = null;
+    this.fireLevel = 0; this.fireEmbers = false; this.fireApplied = -1;
+    this.popTimer = 1; this.burstTimer = 4;
   }
 
   get ready() { return !!this.ctx; }
@@ -150,12 +153,19 @@ export class Audio {
       src.connect(lp).connect(lp2).connect(swell).connect(muffle).connect(g).connect(this.amb);
       L.wind = { gain: g, muffle, swell, lp };
     }
-    // Fire: low roar (crackles are scheduled as events)
+    // Fire: a low roar plus a soft, fluttering breath of flame (crackles and pops are events).
     {
+      const g = c.createGain(); g.gain.value = 0;
       const src = this.loopSource(this.brown);
       const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260;
-      const g = c.createGain(); g.gain.value = 0;
-      src.connect(lp).connect(g).connect(this.amb);
+      src.connect(lp).connect(g);
+      const src2 = this.loopSource(this.white);
+      const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 850; bp.Q.value = 0.8;
+      this.lfo(0.23, 180, bp.frequency);
+      const flutter = c.createGain(); flutter.gain.value = 0.05; // LFO on an inner stage (see hiss)
+      this.lfo(1.7, 0.02, flutter.gain); this.lfo(0.6, 0.015, flutter.gain);
+      src2.connect(bp).connect(flutter).connect(g);
+      g.connect(this.amb);
       L.fire = { gain: g };
     }
     // Room tone: very low hum of an old building
@@ -226,15 +236,17 @@ export class Audio {
     this.ambienceKey = key;
     this.preset = PRESETS[key] || PRESETS.silence;
     if (!PRESETS[key]) console.warn(`[audio] unknown ambience "${key}"`);
+    if (key !== this.prevAmbienceKey) { this.fireLevel = 0; this.fireApplied = -1; } // left the fire's scene
+    this.prevAmbienceKey = key;
     if (!this.ctx) { this.pendingAmbience = key; return; }
-    let [wind, muffle, fire, room, murmur, water, hiss, drone] = this.preset;
-    if (WIND_ONLY) fire = room = murmur = water = hiss = drone = 0;
+    if (this.fireLevel === 0) { this.layers.fire.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3); this.fireApplied = 0; }
+    let [wind, muffle, , room, murmur, water, hiss, drone] = this.preset;
+    if (WIND_ONLY) room = murmur = water = hiss = drone = 0;
     const t = this.ctx.currentTime, k = instant ? 0.01 : 1.2;
     const L = this.layers;
     const w = this.windDipValue != null ? this.windDipValue : wind;
     L.wind.gain.gain.setTargetAtTime(w, t, k);
     L.wind.muffle.frequency.setTargetAtTime(muffle ? 300 : 2400, t, k * 0.5);
-    L.fire.gain.gain.setTargetAtTime(fire * 0.9, t, k);
     L.room.gain.gain.setTargetAtTime(room * 0.5, t, k);
     L.murmur.gain.gain.setTargetAtTime(murmur * 0.22 * L.murmur.level, t, k);
     L.water.gain.gain.setTargetAtTime(water * 0.16, t, k);
@@ -261,6 +273,12 @@ export class Audio {
     }
   }
 
+  // Called every frame by a fire prop: level 0..1 (already distance-scaled), embers = a dying fire.
+  fire(level, { embers = false } = {}) {
+    this.fireLevel = Math.max(0, Math.min(1, level));
+    this.fireEmbers = embers;
+  }
+
   trainRumble() {
     if (!this.ctx || WIND_ONLY) return;
     const g = this.layers.rumble.gain.gain, t = this.ctx.currentTime;
@@ -272,11 +290,8 @@ export class Audio {
   // per-frame: scheduled incidental sounds
   update(dt, ctxInfo) {
     if (!this.ctx || this.ctx.state !== 'running') return;
-    const [wind, muffle, fire, room, , water] = this.preset;
-    if (!WIND_ONLY && fire > 0.05) {
-      this.crackleTimer -= dt;
-      if (this.crackleTimer <= 0) { this.crackleTimer = 0.04 + Math.random() * 0.35 / fire; this.crackle(fire); }
-    }
+    const [wind, muffle, , room, , water] = this.preset;
+    this.updateFire(dt);
     this.creakTimer -= dt;
     if (!WIND_ONLY && this.creakTimer <= 0) {
       this.creakTimer = 5 + Math.random() * 9;
@@ -317,8 +332,43 @@ export class Audio {
     o.start(t); o.stop(t + a + d + 0.05);
     return o;
   }
-  crackle(level) {
-    this.noise(this.amb, { type: 'highpass', freq: 1800 + Math.random() * 2500, q: 0.7, a: 0.001, d: 0.02 + Math.random() * 0.04, peak: 0.05 + Math.random() * 0.12 * level });
+  updateFire(dt) {
+    const lv = this.fireLevel, em = this.fireEmbers;
+    const bed = lv * (em ? 0.12 : 0.75);
+    if (Math.abs(bed - this.fireApplied) > 0.005) {
+      this.layers.fire.gain.gain.setTargetAtTime(bed, this.ctx.currentTime, 0.25);
+      this.fireApplied = bed;
+    }
+    if (lv < 0.02) return;
+    // fine crackle: a steady scatter of tiny ticks
+    this.crackleTimer -= dt;
+    if (this.crackleTimer <= 0) {
+      this.crackleTimer = em ? 0.25 + Math.random() * 0.9 : 0.03 + Math.random() * 0.16;
+      this.crackle(lv * (em ? 0.45 : 1));
+    }
+    // pops: a resinous knot giving way
+    this.popTimer -= dt;
+    if (this.popTimer <= 0) {
+      this.popTimer = em ? 4 + Math.random() * 8 : 0.6 + Math.random() * 2.4;
+      this.firePop(lv * (em ? 0.35 : 1));
+    }
+    // bursts: a quick run of snaps as a log settles
+    if (!em) {
+      this.burstTimer -= dt;
+      if (this.burstTimer <= 0) {
+        this.burstTimer = 3 + Math.random() * 6;
+        const n = 4 + Math.floor(Math.random() * 7);
+        for (let i = 0; i < n; i++) this.crackle(lv * (0.6 + Math.random() * 0.6), Math.random() * 0.35);
+      }
+    }
+  }
+  crackle(level, when = 0) {
+    this.noise(this.amb, { type: 'highpass', freq: 2000 + Math.random() * 3000, q: 0.7, a: 0.001, d: 0.006 + Math.random() * 0.022, peak: (0.03 + Math.random() * 0.09) * level, when });
+  }
+  firePop(level) {
+    this.noise(this.amb, { type: 'bandpass', freq: 600 + Math.random() * 900, q: 1.4, a: 0.001, d: 0.03 + Math.random() * 0.05, peak: 0.16 * level });
+    this.noise(this.amb, { type: 'lowpass', freq: 220, a: 0.001, d: 0.06, peak: 0.12 * level, buf: this.brown });
+    this.noise(this.amb, { type: 'highpass', freq: 3500, a: 0.001, d: 0.01, peak: 0.06 * level, when: 0.004 });
   }
   // A gust: the wind bed swells and opens up a little, then settles — smooth ramps only.
   gust(level) {
