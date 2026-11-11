@@ -1,15 +1,16 @@
 // Bootstraps the first Tiled example location, the Black Ram Hotel exterior:
-//   assets/export/tilesets/black_ram_exterior.png   placeholder 16×16 tileset, palette colours only
-//   assets/levels/tilesets/black_ram_exterior.tsj    Tiled tileset (JSON) pointing at that PNG
+//   assets/levels/tilesets/black_ram_exterior.tsj    Tiled tileset (JSON) pointing at the tileset PNG
 //   assets/levels/black_ram_exterior.tmj             the starter map (only if it does not exist yet)
 //
-// The tileset is deliberately simple programmer art: it exists so the pipeline can be demonstrated
-// and tested end to end. Replace it by painting assets/source/pixelorama/tilesets/black_ram_exterior.pxo
-// in Pixelorama on the same 16×16 grid and exporting over the PNG — tile indices stay the same, so
-// the map keeps working. After the first run the map belongs to Tiled: edit it there. This script
-// never overwrites the map unless you pass --force (which discards your Tiled edits).
+// The real tileset art is painted in Pixelorama: assets/source/pixelorama/tilesets/black_ram_exterior.pxo
+// (painter script: tilesets/scripts/tilesets.gd), exported to assets/export/tilesets/black_ram_exterior.png.
+// This script also contains the original programmer-art version of that tileset, used only as a
+// bootstrap: it is written ONLY if the PNG does not exist, or with --placeholder-tileset (which
+// overwrites the Pixelorama export). Tile indices are the same in both, so the map works with either.
+// After the first run the map belongs to Tiled: edit it there. This script never overwrites the map
+// unless you pass --force (which discards your Tiled edits).
 //
-//   node tools/make-demo-level.mjs [--force]
+//   node tools/make-demo-level.mjs [--force] [--placeholder-tileset]
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -132,7 +133,11 @@ for (let s = 0; s < 6; s++) {
 TILES.forEach((name, i) => { ox = (i % COLS) * T; oy = Math.floor(i / COLS) * T; painters[name](); });
 
 const out = (rel, data) => { const f = join(root, rel); mkdirSync(dirname(f), { recursive: true }); writeFileSync(f, data); console.log('wrote', rel); };
-out('assets/export/tilesets/black_ram_exterior.png', encodePNG(W, H, img));
+if (!existsSync(join(root, 'assets/export/tilesets/black_ram_exterior.png')) || process.argv.includes('--placeholder-tileset')) {
+  out('assets/export/tilesets/black_ram_exterior.png', encodePNG(W, H, img));
+} else {
+  console.log('kept assets/export/tilesets/black_ram_exterior.png (the Pixelorama export; --placeholder-tileset to overwrite)');
+}
 out('assets/levels/tilesets/black_ram_exterior.tsj', JSON.stringify({
   type: 'tileset', version: '1.10', tiledversion: '1.11.0', name: 'black_ram_exterior',
   tilewidth: T, tileheight: T, columns: COLS, tilecount: TILES.length, margin: 0, spacing: 0,

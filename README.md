@@ -112,7 +112,7 @@ src/world/tiled/      Tiled map loader: tiledMap.js (map → scene data), tiledR
 src/data/palette.js   the central 64-colour palette
 src/audio/            Web Audio soundscape (synthesised) + samples.js (recorded Audacity exports, optional)
 tools/                serve.mjs (static server), validate.mjs (data tests), harness.js (browser test driver),
-                      palette.mjs (palette export/audit), make-demo-level.mjs (Black Ram tileset/map bootstrap)
+                      palette.mjs (palette export/audit), make-demo-level.mjs (Black Ram map bootstrap)
 tests/                unit/ (node --test), e2e/ (Playwright specs and screenshot baselines)
 docs/                 workflow documentation
 ```

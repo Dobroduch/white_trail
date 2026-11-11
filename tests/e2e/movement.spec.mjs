@@ -2,17 +2,28 @@
 import { test, expect } from '@playwright/test';
 import { boot, step, expectClean } from './helpers.mjs';
 
+// Real keyboard on the real-time loop. The key is held until Silas has covered the distance (bounded),
+// instead of for a fixed wall-clock time: under parallel test load the rAF loop can be starved for a
+// few hundred ms, which says nothing about the game. Exact speed is checked in fixed-step mode below.
+async function holdUntil(page, key, cond, arg) {
+  await page.keyboard.down(key);
+  try {
+    await page.waitForFunction(cond, arg, { timeout: 5000, polling: 50 });
+  } finally {
+    await page.keyboard.up(key);
+  }
+}
+
 test('holding D / A walks Silas right and left in real time', async ({ page }) => {
   const { errors } = await boot(page, { scene: 'ROAD', nopause: '1' });
   await page.waitForFunction(() => TWT.canMove());
   const x0 = await page.evaluate(() => TWT.player.x);
-  await page.keyboard.down('KeyD'); await page.waitForTimeout(700); await page.keyboard.up('KeyD');
+  await holdUntil(page, 'KeyD', (x) => TWT.player.x > x + 10, x0);
   const x1 = await page.evaluate(() => TWT.player.x);
   expect(x1 - x0).toBeGreaterThan(10);
   expect(await page.evaluate(() => TWT.player.facing)).toBe(1);
-  await page.keyboard.down('ArrowLeft'); await page.waitForTimeout(500); await page.keyboard.up('ArrowLeft');
-  const x2 = await page.evaluate(() => TWT.player.x);
-  expect(x2).toBeLessThan(x1);
+  await holdUntil(page, 'ArrowLeft', (x) => TWT.player.x < x - 5, x1);
+  expect(await page.evaluate(() => TWT.player.x)).toBeLessThan(x1);
   expect(await page.evaluate(() => TWT.player.facing)).toBe(-1);
   await expectClean(page, errors);
 });

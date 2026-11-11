@@ -124,6 +124,8 @@ Loaded by `NATIVE_SHEETS` in [`src/engine/assets.js`](../src/engine/assets.js).
   `black_ram_exterior.png` is 8 columns × 5 rows = 128×80.
 - Canvas size = `columns × 16` by `rows × 16`. In Pixelorama, set *View ▸ Grid* to 16×16.
 - Export the whole canvas as one PNG (*File ▸ Export ▸ PNG*, 100%) to `assets/export/tilesets/<name>.png`.
+- Example: `assets/source/pixelorama/tilesets/black_ram_exterior.pxo`, painted by
+  `tilesets/scripts/tilesets.gd` (see the README next to it for the tile index table).
 - **Never move existing tiles.** Tiled stores tiles by index, so moving a tile changes every map that
   uses it. Add new tiles at the end (new rows), and repaint in place.
 - Tiles that belong to the emissive layer (lit window panes, lamp flames) are separate tiles that
