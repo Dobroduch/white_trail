@@ -14,14 +14,14 @@ import {
 } from './paint.js';
 import { stationArt } from './stationArt.js';
 import { townArt } from './townArt.js';
-import { nativeArt, nativeLayers } from './nativeArt.js';
+import { nativeArt, nativeLayers, parallaxArt } from './nativeArt.js';
 import { artMode } from './artMode.js';
 
 const cache = new Map();
 export const sceneMeta = {}; // extra data painters expose (e.g. ridge heights)
 
 export function getLayers(sceneId, phase, width) {
-  const key = sceneId + ':' + phase + (artMode.legacy ? ':legacy' : '');
+  const key = sceneId + ':' + phase + (artMode.legacy ? ':legacy' : '') + (artMode.legacyParallax ? ':oldParallax' : '');
   if (!cache.has(key)) {
     const fn = PAINTERS[sceneId];
     if (!fn) {
@@ -39,6 +39,30 @@ export function getLayers(sceneId, phase, width) {
 }
 
 const lw = (sceneW, factor) => Math.ceil(W + (sceneW - W) * factor) + 2;
+
+// Swap a parallax layer for its native-density painting (assets/export/environments/parallax/),
+// keeping factor and z. glowName names the matching emissive layer, if the layer has one.
+function nb(scene, name, layer, glowName) {
+  const img = parallaxArt(scene, name);
+  if (!img) return layer;
+  const glow = glowName ? parallaxArt(scene, glowName) : null;
+  return { ...layer, canvas: img, glow, native: true };
+}
+
+// Top edge of a native layer, per world unit (for props that sit on a painted ridge).
+function nativeHeights(img) {
+  const [, x] = canvas(img.width, img.height);
+  x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, img.width, img.height).data;
+  const out = [];
+  for (let wx = 0; wx < Math.floor(img.width / 1.5); wx++) {
+    const col = Math.min(img.width - 1, Math.round(wx * 1.5));
+    let top = img.height;
+    for (let y = 0; y < img.height; y++) if (d[(y * img.width + col) * 4 + 3] > 12) { top = y; break; }
+    out.push(Math.round(top / 1.5));
+  }
+  return out;
+}
 
 // ---------- shared exterior pieces ----------
 function sky(colors, seed, streaks = true) {
@@ -106,11 +130,11 @@ function paintStationPainted(sw, A) {
   };
   const full = (img, w) => slice(img, w, 0, H);
   const back = [
-    { canvas: full(A.sky, W), factor: 0, z: -100 },
-    { canvas: full(A.mountains_far, lw(sw, 0.08)), factor: 0.08, z: -90 },
-    { canvas: full(A.mountains_near, lw(sw, 0.2)), factor: 0.2, z: -80 },
-    { canvas: full(A.pines, lw(sw, 0.4)), factor: 0.4, z: -70 },
-    { canvas: full(A.haze, sw), factor: 1, z: -60 },
+    nb('station', 'sky', { canvas: full(A.sky, W), factor: 0, z: -100 }),
+    nb('station', 'mountains_far', { canvas: full(A.mountains_far, lw(sw, 0.08)), factor: 0.08, z: -90 }),
+    nb('station', 'mountains_near', { canvas: full(A.mountains_near, lw(sw, 0.2)), factor: 0.2, z: -80 }),
+    nb('station', 'pines', { canvas: full(A.pines, lw(sw, 0.4)), factor: 0.4, z: -70 }),
+    nb('station', 'haze', { canvas: full(A.haze, sw), factor: 1, z: -60 }),
   ];
   // native-density Pixelorama station (assets/export/environments/station): track bed behind the
   // train, platform + station house in front of it, glow and foreground drifts.
@@ -239,9 +263,9 @@ function paintStationProcedural(sw) {
 export const ROAD_GROUND = [[0, 150], [120, 148], [260, 152], [400, 149], [540, 151], [680, 148], [800, 150]];
 function paintRoad(sw) {
   const back = [
-    sky([PAL.navy, '#0b0f1b', PAL.purple, '#191f2e'], 12),
-    mountainLayer(sw, 0.08, 112, 44, 51, '#171d2b', '#4e5a70', '#212a39', -90),
-    mountainLayer(sw, 0.18, 130, 28, 52, '#111622', '#333e52', null, -85),
+    nb('road', 'sky', sky([PAL.navy, '#0b0f1b', PAL.purple, '#191f2e'], 12)),
+    nb('road', 'mountains_far', mountainLayer(sw, 0.08, 112, 44, 51, '#171d2b', '#4e5a70', '#212a39', -90)),
+    nb('road', 'mountains_near', mountainLayer(sw, 0.18, 130, 28, 52, '#111622', '#333e52', null, -85)),
   ];
   // distant village lights
   {
@@ -256,10 +280,10 @@ function paintRoad(sw) {
       for (let k = 0; k < 6; k++) px(ctx, hx - 1 + k * 2, 140 - hh - 1 - (k < 3 ? k : 5 - k), '#0e121c');
       if (r() > 0.35) { px(gctx, hx + 3, 136 - Math.floor(hh / 2), PAL.amber); px(gctx, hx + 4, 136 - Math.floor(hh / 2), PAL.kerosene); }
     }
-    back.push({ canvas: c, glow: gc, factor, z: -78 });
+    back.push(nb('road', 'lights', { canvas: c, glow: gc, factor, z: -78 }, 'lights_glow'));
   }
-  back.push(pineLayer(sw, 0.42, 146, 10, 24, 6, 61, '#0c1019', '#28303f', -70, '#0c1019'));
-  back.push(pineLayer(sw, 0.7, 152, 30, 62, 16, 62, '#090c14', '#2f394b', -60));
+  back.push(nb('road', 'pines_far', pineLayer(sw, 0.42, 146, 10, 24, 6, 61, '#0c1019', '#28303f', -70, '#0c1019')));
+  back.push(nb('road', 'pines_near', pineLayer(sw, 0.7, 152, 30, 62, 16, 62, '#090c14', '#2f394b', -60)));
   const gAt = groundFn(ROAD_GROUND);
   const [m, ctx] = canvas(sw, H);
   const [g] = canvas(sw, H);
@@ -341,7 +365,7 @@ function paintRoad(sw) {
     }
   }
   const NA = nativeArt('ROAD');
-  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [{ canvas: f, factor: 1.3, z: 20 }] };
+  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [nb('road', 'front', { canvas: f, factor: 1.3, z: 20 })] };
   return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.3, z: 20 }] };
 }
 
@@ -356,11 +380,11 @@ function paintVillagePainted(sw, phase, A) {
   const night = phase === 'NIGHT';
   const slice = (img, w) => { const [c, x] = canvas(w, H); x.drawImage(img, 0, 0, w, H, 0, 0, w, H); return c; };
   const back = [
-    { canvas: slice(night ? A.sky_night : A.sky_evening, W), factor: 0, z: -100 },
-    { canvas: slice(A.mountains, lw(sw, 0.08)), factor: 0.08, z: -90 },
-    { canvas: slice(A.far_trees, lw(sw, 0.3)), factor: 0.3, z: -80 },
-    { canvas: slice(A.far_rooftops, lw(sw, 0.5)), glow: night ? null : slice(A.far_lights_evening, lw(sw, 0.5)), factor: 0.5, z: -70 },
-    { canvas: slice(A.fog, sw), factor: 1, z: -60 },
+    nb('town', night ? 'sky_night' : 'sky_evening', { canvas: slice(night ? A.sky_night : A.sky_evening, W), factor: 0, z: -100 }),
+    nb('town', 'mountains', { canvas: slice(A.mountains, lw(sw, 0.08)), factor: 0.08, z: -90 }),
+    nb('town', 'far_trees', { canvas: slice(A.far_trees, lw(sw, 0.3)), factor: 0.3, z: -80 }),
+    nb('town', 'far_rooftops', { canvas: slice(A.far_rooftops, lw(sw, 0.5)), glow: night ? null : slice(A.far_lights_evening, lw(sw, 0.5)), factor: 0.5, z: -70 }, night ? null : 'far_lights_evening'),
+    nb('town', 'fog', { canvas: slice(A.fog, sw), factor: 1, z: -60 }),
   ];
   // native-density Pixelorama street (assets/export/environments/town): buildings, boardwalks and
   // snow, warm pools baked for the evening, per-phase window glow, and the foreground drifts.
@@ -686,9 +710,9 @@ function paintRoom4Procedural(sw, phase) {
 export const CREEK_GROUND = [[0, 150], [200, 153], [420, 156], [600, 157], [760, 157]];
 function paintCreek(sw) {
   const back = [
-    sky(['#05070d', PAL.navy, PAL.purple, '#121725'], 15),
-    mountainLayer(sw, 0.08, 104, 42, 91, '#141a27', '#46526a', '#1c2433', -90),
-    mountainLayer(sw, 0.2, 126, 30, 92, '#0f141f', '#2f394c', null, -85),
+    nb('creek', 'sky', sky(['#05070d', PAL.navy, PAL.purple, '#121725'], 15)),
+    nb('creek', 'mountains_far', mountainLayer(sw, 0.08, 104, 42, 91, '#141a27', '#46526a', '#1c2433', -90)),
+    nb('creek', 'mountains_near', mountainLayer(sw, 0.2, 126, 30, 92, '#0f141f', '#2f394c', null, -85)),
   ];
   // distant sawmill & waterwheel silhouette
   {
@@ -705,9 +729,9 @@ function paintCreek(sw) {
     rect(ctx, mx + 40, 108, 30, 3, col);
     pineRow(ctx, w, 146, 10, 22, 6, 93, '#0c1019', '#232b3a');
     rect(ctx, 0, 146, w, 40, '#0c1019');
-    back.push({ canvas: c, factor, z: -70 });
+    back.push(nb('creek', 'mill', { canvas: c, factor, z: -70 }));
   }
-  back.push(pineLayer(sw, 0.72, 154, 34, 66, 15, 94, '#070a11', '#283244', -60));
+  back.push(nb('creek', 'pines', pineLayer(sw, 0.72, 154, 34, 66, 15, 94, '#070a11', '#283244', -60)));
   const gAt = groundFn(CREEK_GROUND);
   const [m, ctx] = canvas(sw, H);
   const [g] = canvas(sw, H);
@@ -758,7 +782,7 @@ function paintCreek(sw) {
     line(fx, x, 180, x + (fr() > 0.5 ? 2 : -1), 180 - h, '#0a0d14');
   }
   const NA = nativeArt('CREEK');
-  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [{ canvas: f, factor: 1.25, z: 20 }] };
+  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [nb('creek', 'front', { canvas: f, factor: 1.25, z: 20 })] };
   return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.25, z: 20 }] };
 }
 
@@ -766,13 +790,14 @@ function paintCreek(sw) {
 export const SAWMILL_GROUND = [[0, 150], [486, 150], [500, 155], [560, 158]];
 export const RIDGE_FACTOR = 0.22;
 function paintSawmill(sw) {
-  const ridge = mountainLayer(sw, RIDGE_FACTOR, 110, 40, 101, '#0e131e', '#3a4559', '#1a2232', -85);
-  sceneMeta.SAWMILL = { ridgeHeights: ridge.heights };
+  const ridge = nb('sawmill', 'ridge', mountainLayer(sw, RIDGE_FACTOR, 110, 40, 101, '#0e131e', '#3a4559', '#1a2232', -85));
+  // the ridge-light beat stands on the ridge's top edge, so read it from whichever art is in use
+  sceneMeta.SAWMILL = { ridgeHeights: ridge.native ? nativeHeights(ridge.canvas) : ridge.heights };
   const back = [
-    sky(['#05070d', PAL.navy, PAL.purple, '#111624'], 16),
-    mountainLayer(sw, 0.06, 96, 30, 100, '#161c29', '#4a566c', null, -90),
+    nb('sawmill', 'sky', sky(['#05070d', PAL.navy, PAL.purple, '#111624'], 16)),
+    nb('sawmill', 'mountains_far', mountainLayer(sw, 0.06, 96, 30, 100, '#161c29', '#4a566c', null, -90)),
     ridge,
-    pineLayer(sw, 0.45, 146, 10, 26, 7, 102, '#0a0e16', '#252e3e', -70, '#0a0e16'),
+    nb('sawmill', 'pines', pineLayer(sw, 0.45, 146, 10, 26, 7, 102, '#0a0e16', '#252e3e', -70, '#0a0e16')),
   ];
   const gAt = groundFn(SAWMILL_GROUND);
   const [m, ctx] = canvas(sw, H);
@@ -879,7 +904,7 @@ function paintSawmill(sw) {
   }
   // native-density Pixelorama playfield replaces the procedural one (same clue positions)
   const NA = nativeArt('SAWMILL');
-  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [{ canvas: f, factor: 1.2, z: 20 }] };
+  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [nb('sawmill', 'front', { canvas: f, factor: 1.2, z: 20 })] };
   return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.2, z: 20 }] };
 }
 

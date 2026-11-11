@@ -62,6 +62,7 @@ export class Game {
   }
   // comparison captures only (see world/artMode.js)
   setLegacyArt(v) { artMode.legacy = !!v; if (this.mode === 'play') this.reloadScene(); }
+  setLegacyParallax(v) { artMode.legacyParallax = !!v; if (this.mode === 'play') this.reloadScene(); }
   hasSave() { return hasSave(); }
   checkpoint() {
     if (this.mode !== 'play') return;

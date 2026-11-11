@@ -7,6 +7,7 @@ import { mulberry32 } from '../engine/rng.js';
 import { PAL, canvas, rect, px, hline, vline, line, signText } from './paint.js';
 import { sceneMeta, RIDGE_FACTOR } from './painters.js';
 import { stationArt } from './stationArt.js';
+import { parallaxArt } from './nativeArt.js';
 
 // ---------------- Train (Blackwood Station) ----------------
 const TRAIN_STOP = -10;
@@ -102,6 +103,19 @@ export function trainProp() {
     draw(ctx, camX) {
       if (state === 'idle' || state === 'gone' || !trainBody) { drawSteam(ctx, camX); return; }
       const bx = Math.round(x - camX);
+      const N = parallaxArt('station', 'train');
+      if (N) {
+        // native-density train (assets/export/environments/parallax/station_train.png): body at
+        // 1/1.5, then wheels and rods in native px so they turn without world-unit stair steps
+        ctx.drawImage(N, bx, 100, N.width / 1.5, N.height / 1.5);
+        ctx.save();
+        ctx.translate(bx, 100);
+        ctx.scale(2 / 3, 2 / 3);
+        drawNativeRunningGear(ctx, wheel * 1.5);
+        ctx.restore();
+        drawSteam(ctx, camX);
+        return;
+      }
       ctx.drawImage(trainBody, bx, 100);
       // wheels + side rod
       const phase = wheel / 7;
@@ -126,6 +140,8 @@ export function trainProp() {
     glow(ctx, camX) {
       if (state === 'idle' || state === 'gone') return;
       const bx = Math.round(x - camX);
+      const NG = parallaxArt('station', 'train') && parallaxArt('station', 'train_glow');
+      if (NG) { ctx.drawImage(NG, bx, 100, NG.width / 1.5, NG.height / 1.5); return; }
       const A = stationArt();
       if (A) { ctx.drawImage(A.train_glow, bx, 100); return; }
       for (let i = 0; i < 8; i++) { rect(ctx, bx + 112 + i * 11, 113, 7, 8, 'rgba(245,158,11,0.75)'); rect(ctx, bx + 112 + i * 11, 118, 7, 3, PAL.amber); }
@@ -156,6 +172,54 @@ export function trainProp() {
     }
   }
   return prop;
+}
+
+// Native-px running gear for the native train sprite (local native coords; rail at y 69).
+// dist is how far the train has rolled, in native px.
+function nline(ctx, x0, y0, x1, y1, col) {
+  ctx.fillStyle = col;
+  const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
+  for (let i = 0; i <= n; i++) ctx.fillRect(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), 1, 1);
+}
+function nativeWheel(ctx, cx, cy, r, ang, counterweight) {
+  // tire and rim: lit along the top, the flange dark underneath
+  for (let a = 0; a < 72; a++) {
+    const t = (a / 72) * Math.PI * 2;
+    const s = Math.sin(t);
+    ctx.fillStyle = s < -0.55 ? '#6a707d' : s > 0.6 ? '#16181d' : '#3f4450';
+    ctx.fillRect(Math.round(cx + Math.cos(t) * r), Math.round(cy + s * r), 1, 1);
+    ctx.fillStyle = '#22252d';
+    ctx.fillRect(Math.round(cx + Math.cos(t) * (r - 1)), Math.round(cy + s * (r - 1)), 1, 1);
+  }
+  if (counterweight) {
+    for (let a = -9; a <= 9; a++) {
+      const t = ang + Math.PI + a * 0.09;
+      for (let d = r - 5; d <= r - 2; d++) {
+        ctx.fillStyle = '#16181d';
+        ctx.fillRect(Math.round(cx + Math.cos(t) * d), Math.round(cy + Math.sin(t) * d), 1, 1);
+      }
+    }
+  }
+  const spokes = r > 8 ? 10 : 6;
+  for (let k = 0; k < spokes; k++) {
+    const t = ang + (k / spokes) * Math.PI * 2;
+    nline(ctx, cx + Math.cos(t) * 2, cy + Math.sin(t) * 2, cx + Math.cos(t) * (r - 2), cy + Math.sin(t) * (r - 2), '#2e323c');
+  }
+  ctx.fillStyle = '#5a606d'; ctx.fillRect(Math.round(cx) - 1, Math.round(cy) - 1, 3, 3);
+  ctx.fillStyle = '#8a8f99'; ctx.fillRect(Math.round(cx) - 1, Math.round(cy) - 1, 1, 1);
+}
+function drawNativeRunningGear(ctx, dist) {
+  const ang = dist / 10; // driver radius 10 native px: rolls without slipping
+  for (const wx of [33, 54, 75]) nativeWheel(ctx, wx, 58, 10, ang, true);
+  for (const wx of [21, 127, 144, 177, 192, 288, 304]) nativeWheel(ctx, wx, 63, 6, dist / 6, false);
+  // side rod coupling the drivers, main rod back to the crosshead behind the cylinder
+  const rx = Math.cos(ang) * 6, ry = Math.sin(ang) * 6;
+  nline(ctx, 33 + rx, 58 + ry, 75 + rx, 58 + ry, '#8a8f99');
+  nline(ctx, 33 + rx, 59 + ry, 75 + rx, 59 + ry, '#4a505c');
+  const chx = 40 + rx * 0.5;
+  nline(ctx, chx, 48, 54 + rx, 58 + ry, '#5a5f69');
+  ctx.fillStyle = '#6a707d'; ctx.fillRect(Math.round(chx) - 1, 47, 3, 3);
+  for (const wx of [33, 54, 75]) { ctx.fillStyle = '#b08a3a'; ctx.fillRect(Math.round(wx + rx), Math.round(58 + ry), 1, 1); }
 }
 
 function wheelAt(ctx, cx, cy, r, phase) {

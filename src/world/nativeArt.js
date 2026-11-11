@@ -12,6 +12,19 @@ const SCENES = {
   VILLAGE: { dir: 'town', files: ['main', 'light_evening', 'glow_evening', 'glow_night', 'front'] }, // far layers stay painted
 };
 
+// Native-density parallax layers (sky, ranges, pine belts, distant roofs, haze, foreground
+// silhouettes), painted by assets/source/pixelorama/environments/scripts/parallax.gd and exported
+// as assets/export/environments/parallax/<scene>_<layer>.png. Loaded one by one: a missing file
+// only drops that layer back to its older painter.
+const PARALLAX = {
+  station: ['sky', 'mountains_far', 'mountains_near', 'pines', 'haze', 'train', 'train_glow'], // train: scripts/train.gd
+  town: ['sky_evening', 'sky_night', 'mountains', 'far_trees', 'far_rooftops', 'far_lights_evening', 'fog'],
+  road: ['sky', 'mountains_far', 'mountains_near', 'lights', 'lights_glow', 'pines_far', 'pines_near', 'front'],
+  creek: ['sky', 'mountains_far', 'mountains_near', 'mill', 'pines', 'front'],
+  sawmill: ['sky', 'mountains_far', 'ridge', 'pines', 'front'],
+};
+const para = {};
+
 const art = {};
 
 function loadImage(url) {
@@ -33,7 +46,17 @@ export async function loadNativeSceneArt(base = 'assets/export/environments/') {
       console.error(`[nativeArt] ${id}: ${err.message}. Falling back to the previous painter.`);
     }
   }));
+  await Promise.all(Object.entries(PARALLAX).flatMap(([scene, names]) => names.map(async (n) => {
+    try {
+      para[`${scene}/${n}`] = await loadImage(`${base}parallax/${scene}_${n}.png`);
+    } catch (err) {
+      console.error(`[nativeArt] parallax ${scene}/${n}: ${err.message}. That layer keeps its previous painter.`);
+    }
+  })));
 }
+
+// A native parallax layer image, or null (missing, or legacy art mode).
+export function parallaxArt(scene, name) { return artMode.legacy || artMode.legacyParallax ? null : para[`${scene}/${name}`] || null; }
 
 import { artMode } from './artMode.js';
 // Compose a native scene's layers for a story phase: main + light_<phase> baked together, and
