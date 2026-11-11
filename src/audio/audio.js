@@ -35,7 +35,7 @@ export class Audio {
     this.preset = PRESETS.title;
     this.ambienceKey = 'title';
     this.windDipValue = null;
-    this.fireLevel = 0; this.fireEmbers = false; this.fireApplied = -1;
+    this.fireLevel = 0; this.fireEmbers = false;
     this.popTimer = 1; this.burstTimer = 4;
   }
 
@@ -153,21 +153,6 @@ export class Audio {
       src.connect(lp).connect(lp2).connect(swell).connect(muffle).connect(g).connect(this.amb);
       L.wind = { gain: g, muffle, swell, lp };
     }
-    // Fire: a low roar plus a soft, fluttering breath of flame (crackles and pops are events).
-    {
-      const g = c.createGain(); g.gain.value = 0;
-      const src = this.loopSource(this.brown);
-      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260;
-      src.connect(lp).connect(g);
-      const src2 = this.loopSource(this.white);
-      const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 850; bp.Q.value = 0.8;
-      this.lfo(0.23, 180, bp.frequency);
-      const flutter = c.createGain(); flutter.gain.value = 0.05; // LFO on an inner stage (see hiss)
-      this.lfo(1.7, 0.02, flutter.gain); this.lfo(0.6, 0.015, flutter.gain);
-      src2.connect(bp).connect(flutter).connect(g);
-      g.connect(this.amb);
-      L.fire = { gain: g };
-    }
     // Room tone: very low hum of an old building
     {
       const src = this.loopSource(this.brown);
@@ -236,10 +221,9 @@ export class Audio {
     this.ambienceKey = key;
     this.preset = PRESETS[key] || PRESETS.silence;
     if (!PRESETS[key]) console.warn(`[audio] unknown ambience "${key}"`);
-    if (key !== this.prevAmbienceKey) { this.fireLevel = 0; this.fireApplied = -1; } // left the fire's scene
+    if (key !== this.prevAmbienceKey) this.fireLevel = 0; // left the fire's scene
     this.prevAmbienceKey = key;
     if (!this.ctx) { this.pendingAmbience = key; return; }
-    if (this.fireLevel === 0) { this.layers.fire.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3); this.fireApplied = 0; }
     let [wind, muffle, , room, murmur, water, hiss, drone] = this.preset;
     if (WIND_ONLY) room = murmur = water = hiss = drone = 0;
     const t = this.ctx.currentTime, k = instant ? 0.01 : 1.2;
@@ -333,12 +317,8 @@ export class Audio {
     return o;
   }
   updateFire(dt) {
+    // crackles only — no continuous noise bed (it read as rubbing/scuffing)
     const lv = this.fireLevel, em = this.fireEmbers;
-    const bed = lv * (em ? 0.12 : 0.75);
-    if (Math.abs(bed - this.fireApplied) > 0.005) {
-      this.layers.fire.gain.gain.setTargetAtTime(bed, this.ctx.currentTime, 0.25);
-      this.fireApplied = bed;
-    }
     if (lv < 0.02) return;
     // fine crackle: a steady scatter of tiny ticks
     this.crackleTimer -= dt;
