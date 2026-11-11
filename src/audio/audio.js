@@ -48,7 +48,12 @@ export class Audio {
       console.warn('[audio] could not create AudioContext:', err.message);
       return;
     }
-    const c = this.ctx;
+    this.init(this.ctx);
+  }
+
+  // Builds the whole graph on a given context (an OfflineAudioContext works too — used by tests).
+  init(c) {
+    this.ctx = c;
     this.master = c.createGain();
     const comp = c.createDynamicsCompressor();
     comp.threshold.value = -14; comp.ratio.value = 3;
@@ -81,14 +86,26 @@ export class Audio {
   }
 
   // ---------- buffers ----------
+  // Seamlessly looping noise: the tail is generated past the end and cross-faded (equal power)
+  // into the head, so the loop point has no discontinuity (a seam would click every cycle).
   noiseBuffer(kind) {
-    const c = this.ctx, len = c.sampleRate * 3;
+    const c = this.ctx, len = c.sampleRate * 8, fade = Math.floor(c.sampleRate * 0.5);
+    const raw = new Float32Array(len + fade);
+    let last = 0;
+    for (let i = 0; i < raw.length; i++) {
+      const w = Math.random() * 2 - 1;
+      if (kind === 'brown') { last = (last + 0.02 * w) / 1.02; raw[i] = last * 3.5; } else raw[i] = w;
+    }
+    if (kind === 'brown') { // remove DC drift so head and tail sit around the same level
+      let mean = 0; for (let i = 0; i < raw.length; i++) mean += raw[i];
+      mean /= raw.length; for (let i = 0; i < raw.length; i++) raw[i] -= mean;
+    }
     const b = c.createBuffer(1, len, c.sampleRate);
     const d = b.getChannelData(0);
-    let last = 0;
-    for (let i = 0; i < len; i++) {
-      const w = Math.random() * 2 - 1;
-      if (kind === 'brown') { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w;
+    d.set(raw.subarray(0, len));
+    for (let i = 0; i < fade; i++) {
+      const t = i / fade;
+      d[i] = raw[i] * Math.sin(t * Math.PI / 2) + raw[len + i] * Math.cos(t * Math.PI / 2);
     }
     return b;
   }
@@ -103,9 +120,8 @@ export class Audio {
   }
   loopSource(buf) {
     const s = this.ctx.createBufferSource();
-    s.buffer = buf; s.loop = true;
-    s.loopStart = Math.random() * 1.5;
-    s.start(0, Math.random() * 2);
+    s.buffer = buf; s.loop = true; // whole-buffer loop: the seam is cross-faded
+    s.start(0, Math.random() * buf.duration);
     return s;
   }
   lfo(freq, depth, target) {
@@ -120,21 +136,19 @@ export class Audio {
   buildAmbience() {
     const c = this.ctx;
     const L = (this.layers = {});
-    // Wind: brown noise, slowly breathing low-pass, plus a thin whistling band.
+    // Wind: one smooth, low roar — seamless brown noise through a gentle 24 dB/oct low-pass whose
+    // cutoff drifts very slowly. Gusts are slow swells of this same bed (no narrow-band noise, no
+    // whistle layer: those read as scuffing/rubbing).
     {
       const src = this.loopSource(this.brown);
-      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520; lp.Q.value = 0.7;
-      this.lfo(0.07, 260, lp.frequency);
-      const muffle = c.createBiquadFilter(); muffle.type = 'lowpass'; muffle.frequency.value = 2400;
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 420; lp.Q.value = 0.5;
+      const lp2 = c.createBiquadFilter(); lp2.type = 'lowpass'; lp2.frequency.value = 900; lp2.Q.value = 0.5;
+      this.lfo(0.031, 110, lp.frequency);
+      const swell = c.createGain(); swell.gain.value = 1;
+      const muffle = c.createBiquadFilter(); muffle.type = 'lowpass'; muffle.frequency.value = 2400; muffle.Q.value = 0.5;
       const g = c.createGain(); g.gain.value = 0;
-      src.connect(lp).connect(muffle).connect(g).connect(this.amb);
-      const src2 = this.loopSource(this.white);
-      const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 760; bp.Q.value = 9;
-      this.lfo(0.05, 180, bp.frequency);
-      const g2 = c.createGain(); g2.gain.value = 0.05;
-      this.lfo(0.11, 0.04, g2.gain);
-      src2.connect(bp).connect(g2).connect(muffle);
-      L.wind = { gain: g, muffle, gust: g2 };
+      src.connect(lp).connect(lp2).connect(swell).connect(muffle).connect(g).connect(this.amb);
+      L.wind = { gain: g, muffle, swell, lp };
     }
     // Fire: low roar (crackles are scheduled as events)
     {
@@ -302,15 +316,15 @@ export class Audio {
   crackle(level) {
     this.noise(this.amb, { type: 'highpass', freq: 1800 + Math.random() * 2500, q: 0.7, a: 0.001, d: 0.02 + Math.random() * 0.04, peak: 0.05 + Math.random() * 0.12 * level });
   }
+  // A gust: the wind bed swells and opens up a little, then settles — smooth ramps only.
   gust(level) {
     const c = this.ctx, t = c.currentTime;
-    const s = c.createBufferSource(); s.buffer = this.white;
-    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 6;
-    f.frequency.setValueAtTime(500, t); f.frequency.linearRampToValueAtTime(900 + Math.random() * 300, t + 1.6); f.frequency.linearRampToValueAtTime(450, t + 3.6);
-    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.07 * level, t + 1.4); g.gain.linearRampToValueAtTime(0.0001, t + 3.8);
-    s.connect(f).connect(g).connect(this.amb);
-    s.start(t, Math.random(), 4);
+    const W = this.layers.wind;
+    const peak = 1 + 0.35 * level + Math.random() * 0.15;
+    W.swell.gain.cancelScheduledValues(t);
+    W.swell.gain.setValueAtTime(W.swell.gain.value, t);
+    W.swell.gain.linearRampToValueAtTime(peak, t + 2.2);
+    W.swell.gain.linearRampToValueAtTime(1, t + 5.5);
   }
 
   sfx(name, opt = {}) {

@@ -210,3 +210,16 @@ Nothing here resolves a Part IX question. Wherever a line needed a detail the GD
 - **Regression:** both scripted full playthroughs pass at 3.4× (27 + 27 checks), with no runtime errors, and `validate.mjs` passes.
 - **Audio:** with ambience set to each scene and the sting and rumble triggered, every non-wind layer stays at gain 0.
 - **Fullscreen not verified:** the embedded test browser refuses the Fullscreen API ("Permissions check failed"). The keypress handler fires and calls `requestFullscreen`, but the actual switch must be checked in a normal browser.
+
+## 7. Update — wind-only ambience, smoothed (2026-11-11)
+
+**Cause of the background scuffing.** The ambient noise beds were 3-second buffers looped from a random `loopStart`. Brown noise drifts, so each loop seam jumped by about 13× a normal sample step — a click every 1.5–3 seconds. The wind also had a narrow-band white-noise "whistle" with a wobbling gain, and its gusts were bandpass-swept white noise; both read as rubbing.
+
+**Fix** (`src/audio/audio.js`):
+- Noise buffers are now 8 seconds long, DC-corrected, and their tail is cross-faded into their head (equal power), so the loop has no seam.
+- The wind is a single low bed: brown noise through a 24 dB/oct low-pass with a very slow cutoff drift.
+- Gusts are smooth volume swells of that same bed.
+- The whistle layer is removed.
+- Every other continuous layer stays off (`WIND_ONLY`).
+
+**Tested.** A 12-second offline render of the creek and parlor ambience, measured by sample steps: the largest step is 1.2–1.3× the 99.9th percentile (no click outliers). The live graph builds with no errors in any scene, and the full playthrough passes. **The result has not been listened to.**
