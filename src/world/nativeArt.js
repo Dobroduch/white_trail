@@ -9,6 +9,7 @@ const SCENES = {
   CREEK: { dir: 'creek', files: ['main'] }, // playfield only; parallax layers stay procedural
   ROAD: { dir: 'road', files: ['main'] }, // playfield only; parallax layers stay procedural
   STATION: { dir: 'station', files: ['trackbed', 'main', 'glow', 'front'] }, // sky/mountains/train stay painted
+  VILLAGE: { dir: 'town', files: ['main', 'light_evening', 'glow_evening', 'glow_night', 'front'] }, // far layers stay painted
 };
 
 const art = {};

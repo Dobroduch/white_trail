@@ -362,6 +362,15 @@ function paintVillagePainted(sw, phase, A) {
     { canvas: slice(A.far_rooftops, lw(sw, 0.5)), glow: night ? null : slice(A.far_lights_evening, lw(sw, 0.5)), factor: 0.5, z: -70 },
     { canvas: slice(A.fog, sw), factor: 1, z: -60 },
   ];
+  // native-density Pixelorama street (assets/export/environments/town): buildings, boardwalks and
+  // snow, warm pools baked for the evening, per-phase window glow, and the foreground drifts.
+  const NA = nativeArt('VILLAGE');
+  if (NA) {
+    const L = nativeLayers(NA, phase);
+    L.back = back;
+    L.front = [{ canvas: NA.front, factor: 1.2, z: 20, native: true }];
+    return L;
+  }
   const [m, mx] = canvas(sw, H);
   for (const k of ['buildings', 'ground', 'props', 'shadows']) mx.drawImage(A[k], 0, 0, sw, H, 0, 0, sw, H);
   const [g, gx] = canvas(sw, H);
