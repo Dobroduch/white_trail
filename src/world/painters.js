@@ -11,6 +11,8 @@ import {
   PAL, canvas, rect, px, hline, vline, line, ditherGradient, ditherFill, mountains, pine, pineRow,
   snowGround, planks, siding, windowPane, signText, signWidth,
 } from './paint.js';
+import { stationArt } from './stationArt.js';
+import { townArt } from './townArt.js';
 
 const cache = new Map();
 export const sceneMeta = {}; // extra data painters expose (e.g. ridge heights)
@@ -90,7 +92,50 @@ function footprints(ctx, x0, x1, gAt, seed, col, step = 9) {
 }
 
 // ---------- BLACKWOOD STATION ----------
+// Painted version (Pixelorama layers). Lighting, steam, snow and fog stay dynamic in the engine, so
+// the baked light pools / steam / snowfall layers are intentionally not used here.
+function paintStationPainted(sw, A) {
+  const SPLIT = 147; // deck top: everything above is behind the train prop, everything below in front
+  const slice = (img, w, y0, y1) => {
+    const [c, x] = canvas(w, H);
+    x.drawImage(img, 0, y0, w, y1 - y0, 0, y0, w, y1 - y0);
+    return c;
+  };
+  const full = (img, w) => slice(img, w, 0, H);
+  const back = [
+    { canvas: full(A.sky, W), factor: 0, z: -100 },
+    { canvas: full(A.mountains_far, lw(sw, 0.08)), factor: 0.08, z: -90 },
+    { canvas: full(A.mountains_near, lw(sw, 0.2)), factor: 0.2, z: -80 },
+    { canvas: full(A.pines, lw(sw, 0.4)), factor: 0.4, z: -70 },
+    { canvas: full(A.haze, sw), factor: 1, z: -60 },
+  ];
+  // track bed, bank and rails (+ shadows above the deck) sit behind the train
+  const [bk, bkx] = canvas(sw, H);
+  bkx.drawImage(slice(A.ground, sw, 0, SPLIT), 0, 0);
+  bkx.drawImage(slice(A.shadows, sw, 0, SPLIT), 0, 0);
+  back.push({ canvas: bk, factor: 1, z: -50 });
+
+  const [m, mx] = canvas(sw, H);
+  mx.drawImage(slice(A.ground, sw, SPLIT, H), 0, 0);
+  mx.drawImage(A.building, 0, 0);
+  mx.drawImage(A.props, 0, 0);
+  mx.drawImage(slice(A.shadows, sw, SPLIT, H), 0, 0);
+  // emissive: lamps + windows. The train's own glow is drawn by the train prop (it moves).
+  const [g, gx] = canvas(sw, H);
+  gx.drawImage(A.emissive, 0, 0);
+  gx.clearRect(0, 95, 232, 60);
+  const [f, fx] = canvas(sw, H);
+  fx.drawImage(A.drifts, 0, 0);
+  return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1, z: 20 }] };
+}
+
 function paintStation(sw) {
+  const A = stationArt();
+  if (A) return paintStationPainted(sw, A);
+  return paintStationProcedural(sw);
+}
+
+function paintStationProcedural(sw) {
   const back = [
     sky([PAL.navy, '#0d1220', PAL.purple, '#1d2335', '#2a3143'], 11),
     mountainLayer(sw, 0.08, 116, 48, 21, '#1b2232', '#5a667d', '#252f40', -90),
@@ -290,7 +335,42 @@ function paintRoad(sw) {
 
 // ---------- CROW'S HOLLOW (main street) ----------
 export const VILLAGE_GROUND = [[0, 150], [556, 150], [600, 154], [640, 157]];
+
+// Painted version (Pixelorama layers). Structure (buildings, ground, props, shadows) is one `main`
+// canvas; lit windows and lamps live on the separate `glow` canvas (drawn by the engine's emissive
+// pass, which cuts out characters standing in front of them). Evening and night differ only in the
+// sky, the far lights and the glow layers.
+function paintVillagePainted(sw, phase, A) {
+  const night = phase === 'NIGHT';
+  const slice = (img, w) => { const [c, x] = canvas(w, H); x.drawImage(img, 0, 0, w, H, 0, 0, w, H); return c; };
+  const back = [
+    { canvas: slice(night ? A.sky_night : A.sky_evening, W), factor: 0, z: -100 },
+    { canvas: slice(A.mountains, lw(sw, 0.08)), factor: 0.08, z: -90 },
+    { canvas: slice(A.far_trees, lw(sw, 0.3)), factor: 0.3, z: -80 },
+    { canvas: slice(A.far_rooftops, lw(sw, 0.5)), glow: night ? null : slice(A.far_lights_evening, lw(sw, 0.5)), factor: 0.5, z: -70 },
+    { canvas: slice(A.fog, sw), factor: 1, z: -60 },
+  ];
+  const [m, mx] = canvas(sw, H);
+  for (const k of ['buildings', 'ground', 'props', 'shadows']) mx.drawImage(A[k], 0, 0, sw, H, 0, 0, sw, H);
+  const [g, gx] = canvas(sw, H);
+  if (night) {
+    gx.drawImage(A.windows_night, 0, 0, sw, H, 0, 0, sw, H);
+  } else {
+    gx.drawImage(A.windows_evening, 0, 0, sw, H, 0, 0, sw, H);
+    gx.drawImage(A.lamps, 0, 0, sw, H, 0, 0, sw, H);
+  }
+  const [f, fx] = canvas(lw(sw, 1.2), H);
+  fx.drawImage(A.drifts, 0, 0);
+  return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.2, z: 20 }] };
+}
+
 function paintVillage(sw, phase) {
+  const A = townArt();
+  if (A) return paintVillagePainted(sw, phase, A);
+  return paintVillageProcedural(sw, phase);
+}
+
+function paintVillageProcedural(sw, phase) {
   const night = phase === 'NIGHT';
   const back = [
     sky(night ? ['#06080f', PAL.navy, PAL.purple, '#151a28'] : [PAL.navy, '#0d1220', PAL.purple, '#1b2131'], 13),

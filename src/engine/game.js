@@ -1,5 +1,5 @@
 // Game orchestration: modes, scenes, update order, render passes, overlays and checkpoints.
-import { Display, VIEW_W, VIEW_H, WORLD_SCALE, FB_W, FB_H, FB_SCALE, FB_PER_WORLD, UI_W, UI_H, UI_SCALE, snapN } from './display.js';
+import { Display, makeCanvas, VIEW_W, VIEW_H, WORLD_SCALE, FB_W, FB_H, FB_SCALE, FB_PER_WORLD, UI_W, UI_H, UI_SCALE, snapN } from './display.js';
 import { Camera } from './camera.js';
 import { getLayers } from '../world/painters.js';
 import { SCENES, GLOBAL_EVENTS } from '../world/scenes.js';
@@ -597,12 +597,13 @@ export class Game {
     for (const b of L.back) ctx.drawImage(b.canvas, layerX(b), 0);
     // world drawables sorted by depth
     const list = [];
-    for (const p of this.props) if (p.draw) list.push({ z: p.z || 0, fn: () => p.draw(ctx, camX, this) });
-    list.push({ z: 0, fn: () => ctx.drawImage(L.main.canvas, -camX, 0) });
-    for (const n of this.npcs) list.push({ z: n.z, fn: () => n.draw(ctx, camX) });
-    if (this.mode === 'play') list.push({ z: 10, fn: () => this.player.draw(ctx, camX, this.state.lanternOn) });
+    // Each drawable takes the target context so the emissive pass can re-draw the same silhouettes as masks.
+    for (const p of this.props) if (p.draw) list.push({ z: p.z || 0, fn: (c) => p.draw(c, camX, this) });
+    list.push({ z: 0, fn: (c) => c.drawImage(L.main.canvas, -camX, 0) });
+    for (const n of this.npcs) list.push({ z: n.z, fn: (c) => n.draw(c, camX) });
+    if (this.mode === 'play') list.push({ z: 10, fn: (c) => this.player.draw(c, camX, this.state.lanternOn) });
     list.sort((a, b) => a.z - b.z);
-    for (const it of list) it.fn();
+    for (const it of list) it.fn(ctx);
     this.weather.drawBreath(ctx, camX);
     nativeT();
     this.weather.draw(ctx, true);
@@ -617,9 +618,7 @@ export class Game {
     }
     // emissive pixels
     worldT();
-    for (const b of L.back) if (b.glow) ctx.drawImage(b.glow, layerX(b), 0);
-    if (L.main.glow) ctx.drawImage(L.main.glow, -camX, 0);
-    for (const p of this.props) if (p.glow) p.glow(ctx, camX, this);
+    this.drawEmissive(ctx, list, L, layerX, camX, worldT);
     nativeT();
     this.weather.draw(ctx, false);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -656,6 +655,41 @@ export class Game {
     for (const o of this.overlays) o.draw(out);
     out.restore();
     out.imageSmoothingEnabled = false;
+  }
+
+  // Emissive pass (lit windows, flames, lamps). It runs after the lighting pass so it stays bright, but
+  // every glow belongs to a depth plane: parallax back layers are the farthest, the playfield glow is
+  // z 0, and a prop's glow sits at the prop's own z. Whatever the depth-sorted pass drew in FRONT of a
+  // glow's plane (characters, nearer props, the playfield itself for far-back glows) is cut out of it,
+  // so Silas standing before a fireplace or window is no longer painted over by that light.
+  drawEmissive(ctx, list, L, layerX, camX, worldT) {
+    const planes = new Map(); // plane z -> [fn(ctx)]
+    const add = (z, fn) => { if (!planes.has(z)) planes.set(z, []); planes.get(z).push(fn); };
+    for (const b of L.back) if (b.glow) add(-Infinity, (c) => c.drawImage(b.glow, layerX(b), 0));
+    if (L.main.glow) add(0, (c) => c.drawImage(L.main.glow, -camX, 0));
+    for (const p of this.props) if (p.glow) add(p.z || 0, (c) => p.glow(c, camX, this));
+    for (const [z, fns] of planes) {
+      const inFront = list.filter((it) => it.z > z);
+      if (!inFront.length) { for (const fn of fns) fn(ctx); continue; }
+      if (!this.glowBuf) {
+        this.glowBuf = makeCanvas(FB_W, FB_H);
+        this.glowBuf.getContext('2d').imageSmoothingEnabled = false;
+      }
+      const b = this.glowBuf.getContext('2d');
+      b.setTransform(1, 0, 0, 1, 0, 0);
+      b.globalCompositeOperation = 'source-over';
+      b.globalAlpha = 1;
+      b.clearRect(0, 0, FB_W, FB_H);
+      b.setTransform(FB_PER_WORLD, 0, 0, FB_PER_WORLD, -Math.round(this.camera.sub * FB_PER_WORLD), 0);
+      for (const fn of fns) fn(b);
+      b.globalCompositeOperation = 'destination-out';
+      for (const it of inFront) it.fn(b);
+      b.globalCompositeOperation = 'source-over';
+      b.globalAlpha = 1;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(this.glowBuf, 0, 0);
+      worldT();
+    }
   }
 
   drawCard(ctx) {

@@ -6,12 +6,15 @@ import { drawSprite } from '../engine/assets.js';
 import { mulberry32 } from '../engine/rng.js';
 import { PAL, canvas, rect, px, hline, vline, line, signText } from './paint.js';
 import { sceneMeta, RIDGE_FACTOR } from './painters.js';
+import { stationArt } from './stationArt.js';
 
 // ---------------- Train (Blackwood Station) ----------------
 const TRAIN_STOP = -10;
 export const COACH_DOOR_OFFSET = 208;
 let trainBody = null;
 function buildTrain() {
+  const A = stationArt();
+  if (A) return A.train; // painted sprite (wheels are drawn by the prop so they can turn)
   const [c, ctx] = canvas(220, 52);
   const Y = (y) => y - 100; // author in world y (rail at 146) -> local
   // cowcatcher
@@ -102,18 +105,29 @@ export function trainProp() {
       ctx.drawImage(trainBody, bx, 100);
       // wheels + side rod
       const phase = wheel / 7;
-      const drv = [32, 48];
-      for (const wx of drv) wheelAt(ctx, bx + wx, 139, 7, phase);
-      wheelAt(ctx, bx + 18, 143, 3, phase * 2.3);
-      for (const wx of [80, 94, 116, 130, 190, 204]) wheelAt(ctx, bx + wx, 143, 3, phase * 2.3);
       const rx = Math.round(Math.cos(phase) * 4), ry = Math.round(Math.sin(phase) * 4);
-      line(ctx, bx + 32 + rx, 139 + ry, bx + 48 + rx, 139 + ry, '#8a8f99');
-      line(ctx, bx + 32 + rx, 139 + ry, bx + 22, 133, '#5a5f69');
+      if (stationArt()) {
+        // painted train: three drivers, a lead truck and six carriage/tender trucks
+        for (const wx of [22, 36, 50]) wheelAt(ctx, bx + wx, 139, 7, phase);
+        wheelAt(ctx, bx + 14, 142, 4, phase * 1.8);
+        for (const wx of [85, 96, 118, 128, 192, 203]) wheelAt(ctx, bx + wx, 142, 4, phase * 1.8);
+        line(ctx, bx + 22 + rx, 139 + ry, bx + 50 + rx, 139 + ry, '#8a8f99');
+        line(ctx, bx + 22 + rx, 139 + ry, bx + 14, 133, '#5a5f69');
+      } else {
+        const drv = [32, 48];
+        for (const wx of drv) wheelAt(ctx, bx + wx, 139, 7, phase);
+        wheelAt(ctx, bx + 18, 143, 3, phase * 2.3);
+        for (const wx of [80, 94, 116, 130, 190, 204]) wheelAt(ctx, bx + wx, 143, 3, phase * 2.3);
+        line(ctx, bx + 32 + rx, 139 + ry, bx + 48 + rx, 139 + ry, '#8a8f99');
+        line(ctx, bx + 32 + rx, 139 + ry, bx + 22, 133, '#5a5f69');
+      }
       drawSteam(ctx, camX);
     },
     glow(ctx, camX) {
       if (state === 'idle' || state === 'gone') return;
       const bx = Math.round(x - camX);
+      const A = stationArt();
+      if (A) { ctx.drawImage(A.train_glow, bx, 100); return; }
       for (let i = 0; i < 8; i++) { rect(ctx, bx + 112 + i * 11, 113, 7, 8, 'rgba(245,158,11,0.75)'); rect(ctx, bx + 112 + i * 11, 118, 7, 3, PAL.amber); }
       rect(ctx, bx + 56, 114, 10, 8, 'rgba(217,119,6,0.7)');
       rect(ctx, bx + 6, 113, 2, 5, PAL.amberHi);

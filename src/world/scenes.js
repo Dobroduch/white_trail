@@ -65,7 +65,7 @@ export const SCENES = {
       { id: 'vl_millsign', x: 596, y: 130, label: 'Old sign', lines: ['A weathered board: MILL. It points down the bank toward the creek.'] },
     ],
     props: [{ type: 'watcher', id: 'watcher' }],
-    lights: [{ x: 346, y: 118, r: 52, warm: 0.26 }, { x: 307, y: 132, r: 30, warm: 0.14 }, { x: 419, y: 132, r: 30, warm: 0.14 }],
+    lights: [{ x: 346, y: 118, r: 52, warm: 0.26 }, { x: 307, y: 132, r: 30, warm: 0.14 }, { x: 419, y: 132, r: 30, warm: 0.14 }, { x: 264, y: 110, r: 36, warm: 0.18 }],
     weather: { snow: 0.7, wind: 0.6, fog: 0.3 }, darkness: 0.64, ambience: 'village',
     events: [
       { id: 'VILLAGE_WATCHER', if: { all: [{ notFlag: 'curtainDrawn' }, { phase: 'EVENING' }, { xMin: 44 }, { xMax: 120 }] }, script: 'VILLAGE_WATCHER' },

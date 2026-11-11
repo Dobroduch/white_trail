@@ -4,6 +4,8 @@ import { Input } from './engine/input.js';
 import { Loop } from './engine/loop.js';
 import { loadSprites, assetErrors } from './engine/assets.js';
 import { Game } from './engine/game.js';
+import { loadStationArt } from './world/stationArt.js';
+import { loadTownArt } from './world/townArt.js';
 import { Audio } from './audio/audio.js';
 import { loadSettings } from './systems/save.js';
 import { PauseMenu } from './ui/menus.js';
@@ -18,6 +20,8 @@ async function boot() {
   const audio = new Audio(settings);
 
   await loadSprites();
+  await loadStationArt();
+  await loadTownArt();
   if (assetErrors().length) console.warn(`[boot] ${assetErrors().length} asset problem(s); see errors above. The game will continue with fallbacks.`);
 
   const game = new Game({ display, input, audio, settings });
