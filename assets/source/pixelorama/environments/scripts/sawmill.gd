@@ -14,28 +14,13 @@ func gy(x):
 	return int(round(y * 1.5))
 
 func ground():
-	for x in range(W):
-		var top = gy(x)
-		for y in range(top, H):
-			var d = y - top
-			var c = C("#a3b4be")
-			if d == 0:
-				c = C("#d3dce0")
-			elif d < 3:
-				c = C("#a3b4be") if hs(x, y, 3) > 0.2 else C("#d3dce0")
-			else:
-				var t = hs(x, y, 4)
-				c = C("#7d8aa0") if t > 0.55 else C("#6a7890")
-				if d > 18:
-					c = C("#52677d") if t > 0.5 else C("#5d6a80")
-				if hs(x, y, 19) < 0.03 and d > 4:
-					c = C("#304661")
-			p(x, y, c)
-	# wind ripples in the drifts
-	for k in range(40):
+	snowfield(Callable(self, "gy"), 0, W, H, 7)
+	# shallow wind scours
+	for k in range(30):
 		var x0 = int(hs(k, 1, 5) * W)
-		var y0 = gy(x0) + 4 + int(hs(k, 2, 5) * 30)
-		hl(x0, x0 + 6 + int(hs(k, 3, 5) * 14), y0, C("#8e9bb0"))
+		var y0 = gy(x0) + 6 + int(hs(k, 2, 5) * 26)
+		hl(x0, x0 + 5 + int(hs(k, 3, 5) * 12), y0, C("#52677d"))
+		hl(x0 + 1, x0 + 4 + int(hs(k, 3, 5) * 12), y0 - 1, C("#a3b4be"))
 
 func creek():
 	for x in range(729, W):

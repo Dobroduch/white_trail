@@ -114,3 +114,51 @@ func pine(cx, base, h, w, body, lite, snow, seed):
 				c = snow
 			p(cx + i, base - h + k, c)
 	vl(cx, base - 3, base, C("#1a120d"))
+
+# Sculpted snow between a ground line (gyc: Callable x -> y) and ybot. Low-frequency drift
+# mounds get a lit windward face and a cold shadowed lee, a crisp crust line, sparkle, and
+# darker compacted snow lower down, so the lantern has form to catch instead of a flat fill.
+func snowfield(gyc, x0, x1, ybot, seed):
+	for x in range(int(x0), int(x1)):
+		var top = int(gyc.call(x))
+		var m = sin(x * 0.045 + seed) * 0.6 + sin(x * 0.017 + seed * 2.0) * 0.4
+		var slope = cos(x * 0.045 + seed) * 0.6 * 0.045 + cos(x * 0.017 + seed * 2.0) * 0.4 * 0.017
+		for y in range(top, int(ybot)):
+			var d = y - top
+			var t = hs(x, y, seed)
+			var c
+			if d == 0:
+				c = C("#e4e9f0") if t > 0.3 else C("#d3dce0")
+			elif d < 3:
+				c = C("#c8d1de") if t > 0.4 else C("#a3b4be")
+			else:
+				var depth = float(d) / max(1.0, ybot - top)
+				var lit = slope > 0.004
+				var shade = slope < -0.004
+				if depth < 0.35:
+					c = C("#a3b4be") if lit else (C("#7d8aa0") if shade else C("#8e9bb0"))
+				elif depth < 0.7:
+					c = C("#8e9bb0") if lit else (C("#5d6a80") if shade else C("#7d8aa0"))
+				else:
+					c = C("#6a7890") if not shade else C("#52677d")
+				if t < 0.18:
+					c = c.lerp(C("#52677d"), 0.4)
+				elif t > 0.9:
+					c = c.lerp(C("#c8d1de"), 0.4)
+				# drift crests: a thin bright crust where a mound peaks
+				if abs(d - int(6 + m * 5)) == 0 and lit:
+					c = C("#c8d1de")
+			if t < 0.006 and d > 0:
+				c = C("#f1f5f9")
+			p(x, y, c)
+
+# Boot prints along the ground line: heel + toe dents with a lit rim on the far edge.
+func bootprints(gyc, x0, x1, step, seed, dent):
+	var x = x0
+	var k = 0
+	while x < x1:
+		var y = int(gyc.call(x)) + 3 + (k % 2) * 3
+		r(x, y, 5, 2, dent); p(x + 5, y, dent); p(x - 1, y + 1, dent)
+		hl(x, x + 4, y - 1, C("#c8d1de"))
+		x += step + int(hs(k, 0, seed) * 3)
+		k += 1

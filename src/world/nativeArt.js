@@ -6,6 +6,9 @@ const SCENES = {
   PARLOR: { dir: 'parlor', files: ['main', 'light_evening', 'glow_evening'] },
   ROOM4: { dir: 'room4', files: ['main', 'light_evening', 'light_night', 'glow_evening', 'glow_night'] },
   SAWMILL: { dir: 'sawmill', files: ['main'] }, // playfield only; parallax ridge stays procedural
+  CREEK: { dir: 'creek', files: ['main'] }, // playfield only; parallax layers stay procedural
+  ROAD: { dir: 'road', files: ['main'] }, // playfield only; parallax layers stay procedural
+  STATION: { dir: 'station', files: ['trackbed', 'main', 'glow', 'front'] }, // sky/mountains/train stay painted
 };
 
 const art = {};

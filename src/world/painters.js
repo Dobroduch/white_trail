@@ -112,6 +112,13 @@ function paintStationPainted(sw, A) {
     { canvas: full(A.pines, lw(sw, 0.4)), factor: 0.4, z: -70 },
     { canvas: full(A.haze, sw), factor: 1, z: -60 },
   ];
+  // native-density Pixelorama station (assets/export/environments/station): track bed behind the
+  // train, platform + station house in front of it, glow and foreground drifts.
+  const NA = nativeArt('STATION');
+  if (NA) {
+    back.push({ canvas: NA.trackbed, factor: 1, z: -50, native: true });
+    return { back, main: { canvas: NA.main, glow: NA.glow, native: true }, front: [{ canvas: NA.front, factor: 1, z: 20, native: true }] };
+  }
   // track bed, bank and rails (+ shadows above the deck) sit behind the train
   const [bk, bkx] = canvas(sw, H);
   bkx.drawImage(slice(A.ground, sw, 0, SPLIT), 0, 0);
@@ -333,6 +340,8 @@ function paintRoad(sw) {
       if (fr() > 0.5) px(fx, bx + (side < 0 ? 1 : len - 2), y + 2, '#05070c');
     }
   }
+  const NA = nativeArt('ROAD');
+  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [{ canvas: f, factor: 1.3, z: 20 }] };
   return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.3, z: 20 }] };
 }
 
@@ -739,6 +748,8 @@ function paintCreek(sw) {
     const h = 6 + Math.floor(fr() * 12);
     line(fx, x, 180, x + (fr() > 0.5 ? 2 : -1), 180 - h, '#0a0d14');
   }
+  const NA = nativeArt('CREEK');
+  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [{ canvas: f, factor: 1.25, z: 20 }] };
   return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.25, z: 20 }] };
 }
 
