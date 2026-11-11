@@ -36,13 +36,13 @@ export class NPC {
     const y = snapN(this.y);
     const bob = this.moving ? (Math.floor(this.t * 6) % 2) : 0;
     drawSprite(ctx, this.sprite, this.moving ? 0 : Math.floor(this.t / 1.3) % 2, x, y - bob, this.facing);
-    if (this.lantern) drawSprite(ctx, 'lantern_on', 0, x + this.facing * 5, y - 3 - bob, this.facing);
-    if (this.candle) drawSprite(ctx, 'candle', 0, x + this.facing * 5, y - 13, this.facing);
+    if (this.lantern) drawSprite(ctx, 'lantern_on', 0, x + this.facing * 5, y - 4 - bob, this.facing); // hangs from the held-out hand
+    if (this.candle) drawSprite(ctx, 'candle', 0, x + this.facing * 2, y - 13, this.facing); // held in the folded hands
   }
   lights() {
     if (this.hidden) return [];
     if (this.lantern) return [{ x: this.x + this.facing * 5, y: this.y - 12, r: 36, warm: 0.22, world: true }];
-    if (this.candle) return [{ x: this.x + this.facing * 5, y: this.y - 17, r: 30 + Math.round(Math.sin(this.t * 9)), warm: 0.2, world: true }];
+    if (this.candle) return [{ x: this.x + this.facing * 2, y: this.y - 17, r: 30 + Math.round(Math.sin(this.t * 9)), warm: 0.2, world: true }];
     return [];
   }
 }

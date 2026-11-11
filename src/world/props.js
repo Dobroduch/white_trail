@@ -288,9 +288,10 @@ export function patronsProp() {
       const bx = Math.round(-camX);
       const looking = game.state.flags.parlorEntered && (game.time - (game.parlorEnterAt || 0)) < 9;
       const talk = Math.floor(t * 1.3) % 4 === 0;
+      // three different men: A (miner), B (clerk), C (teamster, always watching the door)
       drawSprite(ctx, looking ? 'patron_look' : 'patron', 0, bx + 146, 141, 1);
-      drawSprite(ctx, looking ? 'patron_look' : 'patron', 0, bx + 166, 140, looking ? -1 : (talk ? -1 : 1));
-      drawSprite(ctx, 'patron_look', 0, bx + 184, 141, -1);
+      drawSprite(ctx, looking ? 'patron_b_look' : 'patron_b', 0, bx + 166, 140, looking ? -1 : (talk ? -1 : 1));
+      drawSprite(ctx, 'patron_c_look', 0, bx + 184, 141, -1);
       // table in front of them
       rect(ctx, bx + 136, 136, 54, 3, PAL.wood4); hline(ctx, bx + 136, bx + 189, 136, PAL.wood5);
       rect(ctx, bx + 160, 139, 4, 11, PAL.wood1); rect(ctx, bx + 154, 148, 16, 2, PAL.wood1);

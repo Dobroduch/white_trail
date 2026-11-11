@@ -140,7 +140,7 @@ export const NATIVE_SHEETS = [
   { url: 'assets/export/characters/conductor.png', fw: 26, fh: 42, anchor: 11, sprites: { conductor_idle: [0, 1] } },
   { url: 'assets/export/characters/finch.png', fw: 26, fh: 42, anchor: 10.5, sprites: { finch_idle: [0, 1] } },
   { url: 'assets/export/characters/gable.png', fw: 26, fh: 42, anchor: 11, sprites: { gable_idle: [0, 1] } },
-  { url: 'assets/export/characters/patron.png', fw: 18, fh: 21, anchor: 8.5, sprites: { patron: [0], patron_look: [1] } },
+  { url: 'assets/export/characters/patron.png', fw: 18, fh: 21, anchor: 8.5, sprites: { patron: [0], patron_look: [1], patron_b: [2], patron_b_look: [3], patron_c: [4], patron_c_look: [5] } },
   { url: 'assets/export/characters/hale_body.png', fw: 18, fh: 40, anchor: 9, sprites: { hale_body: [0] } },
 ];
 
@@ -149,7 +149,7 @@ function loadImage(url) {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`could not load ${url}`));
-    img.src = url + '?v=2';
+    img.src = url + '?v=4';
   });
 }
 

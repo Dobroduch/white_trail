@@ -77,9 +77,9 @@ export class Silas {
     // lantern carried at his side, swinging with the stride
     const swing = moving ? Math.round(Math.sin(this.walkT * Math.PI / 2)) : 0;
     const native = getSprite('lantern_on').native;
-    // native lantern hangs from the gloved hand (hand at ~10 world units above the boots)
-    const lx = x + this.facing * (native ? 3.3 : 4) + swing;
-    drawSprite(ctx, lanternOn ? 'lantern_on' : 'lantern_off', 0, lx, y - (native ? 2 : 7), this.facing);
+    // native lantern hangs from the gloved hand (the redrawn hand closes at ~10.7 world units above the boots, 4.7 ahead of the body)
+    const lx = x + this.facing * (native ? 4.7 : 4) + swing;
+    drawSprite(ctx, lanternOn ? 'lantern_on' : 'lantern_off', 0, lx, y - (native ? 3.3 : 7), this.facing);
   }
 
   lanternPos() { return { x: this.x + this.facing * 3.5, y: this.y - 7 }; }
