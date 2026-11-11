@@ -333,7 +333,8 @@ export function deskFrontProp() {
 }
 
 // ---------------- Village: the watcher at the window ----------------
-export function watcherProp() {
+export function watcherProp(wx = 60, wy = 114) {
+  // (wx, wy): top-left of the 14×14 lit pane in world units. The Tiled map passes it (prop args) so it follows the cabin window.
   let closedAt = null;
   return {
     z: 1,
@@ -341,29 +342,29 @@ export function watcherProp() {
       if (game.state.flags.curtainDrawn && closedAt === null) closedAt = game.time;
     },
     draw(ctx, camX, game) {
-      const bx = Math.round(60 - camX);
+      const bx = Math.round(wx - camX);
       if (game.state.phase === 'NIGHT') return;
       if (!game.state.flags.curtainDrawn) {
         // silhouette of a head and shoulders against the lamp
-        rect(ctx, bx + 4, 119, 5, 5, '#140f0c'); rect(ctx, bx + 3, 124, 7, 4, '#140f0c');
+        rect(ctx, bx + 4, wy + 5, 5, 5, '#140f0c'); rect(ctx, bx + 3, wy + 10, 7, 4, '#140f0c');
       }
     },
     glow(ctx, camX, game) {
       if (game.state.phase === 'NIGHT') return;
-      const bx = Math.round(60 - camX);
+      const bx = Math.round(wx - camX);
       const closed = game.state.flags.curtainDrawn;
       const k = closed ? Math.min(1, (game.time - closedAt) / 0.8) : 0;
       if (closed && k >= 1) return;
       ctx.globalAlpha = 1 - k;
-      rect(ctx, bx, 114, 14, 14, 'rgba(217,119,6,0.55)');
-      rect(ctx, bx, 123, 14, 5, PAL.amber);
-      if (!closed) { rect(ctx, bx + 4, 119, 5, 5, '#140f0c'); rect(ctx, bx + 3, 124, 7, 4, '#140f0c'); }
-      vline(ctx, bx + 7, 114, 127, 'rgba(0,0,0,0.6)'); hline(ctx, bx, bx + 13, 120, 'rgba(0,0,0,0.6)');
+      rect(ctx, bx, wy, 14, 14, 'rgba(217,119,6,0.55)');
+      rect(ctx, bx, wy + 9, 14, 5, PAL.amber);
+      if (!closed) { rect(ctx, bx + 4, wy + 5, 5, 5, '#140f0c'); rect(ctx, bx + 3, wy + 10, 7, 4, '#140f0c'); }
+      vline(ctx, bx + 7, wy, wy + 13, 'rgba(0,0,0,0.6)'); hline(ctx, bx, bx + 13, wy + 6, 'rgba(0,0,0,0.6)');
       ctx.globalAlpha = 1;
     },
     lights(game) {
       if (game.state.phase === 'NIGHT' || (game.state.flags.curtainDrawn && game.time - closedAt > 0.8)) return [];
-      return [{ x: 67, y: 121, r: 26, warm: 0.15 }];
+      return [{ x: wx + 7, y: wy + 7, r: 26, warm: 0.15 }];
     },
   };
 }
@@ -511,7 +512,7 @@ export function ridgeLightProp() {
 
 export const PROP_FACTORIES = {
   train: trainProp, fire: fireProp, embers: (x, y) => fireProp(x, y, { embersOnly: true }),
-  patrons: patronsProp, deskFront: deskFrontProp, watcher: watcherProp, windowSnow: windowSnowProp,
+  patrons: patronsProp, deskFront: deskFrontProp, watcher: (x, y) => watcherProp(x, y), windowSnow: windowSnowProp,
   lamp: lampLight, body: bodyProp, watch: watchProp, ledger: ledgerProp, ridgeLight: ridgeLightProp,
 };
 void signText;

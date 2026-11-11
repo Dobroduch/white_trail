@@ -228,3 +228,40 @@ test.describe('Station (tile-built, Pass 2)', () => {
     await expectClean(page, errors);
   });
 });
+
+test.describe('Main Street (tile-built, Pass 2)', () => {
+  test('layers come from the map; the street is painted where the story needs it', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'VILLAGE' });
+    await step(page, 2);
+    const r = await page.evaluate(() => {
+      const l = TWT.layers, c = l.main.canvas, x = c.getContext('2d');
+      const alpha = (px, py, w = 8, h = 8) => { const d = x.getImageData(px, py, w, h).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n / (w * h); };
+      return { main: [c.width, c.height, !!l.main.glow], cabinWall: alpha(40, 170), watcherWindow: alpha(88, 170), storeSign: alpha(300, 130), storeWindow: alpha(260, 185), shedDoor: alpha(640, 190), street: alpha(500, 230), front: l.front.map((f) => f.name) };
+    });
+    expect(r.main).toEqual([720, 272, true]);
+    for (const k of ['cabinWall', 'watcherWindow', 'storeSign', 'storeWindow', 'shedDoor', 'street']) expect(r[k], k).toBeGreaterThan(0.5);
+    expect(r.front).toEqual(['foreground']);
+    await expectClean(page, errors);
+  });
+
+  test('the street lamp is lit in the evening and out at night, and its light follows', async ({ page }) => {
+    const ev = await boot(page, { test: '1', scene: 'VILLAGE' });
+    expect(await page.evaluate(() => TWT.scene.lights.map((l) => Math.round(l.x)))).toContain(264);
+    await expectClean(page, ev.errors);
+    const nt = await boot(page, { test: '1', scene: 'VILLAGE', phase: 'NIGHT' });
+    expect(await page.evaluate(() => TWT.scene.lights.length)).toBe(0);
+    await page.evaluate(() => T.walkTo(264));
+    expect((await info(page)).prompt).toBe('Examine — Street lamp');
+    await expectClean(page, nt.errors);
+  });
+
+  test("the watcher's silhouette sits inside the cabin window", async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'VILLAGE' });
+    await page.evaluate(() => { TWT.state.flags.introDone = true; });
+    const pos = await page.evaluate(() => { const p = TWT.props.find((q) => q.id === 'watcher'); return p ? p.lights(TWT) : null; });
+    // lit pane centre (world units) lies inside the 32×32 px window tile at native x 80–111, y 160–191
+    expect(pos[0].x * 1.5).toBeGreaterThan(80); expect(pos[0].x * 1.5).toBeLessThan(112);
+    expect(pos[0].y * 1.5).toBeGreaterThan(160); expect(pos[0].y * 1.5).toBeLessThan(192);
+    await expectClean(page, errors);
+  });
+});

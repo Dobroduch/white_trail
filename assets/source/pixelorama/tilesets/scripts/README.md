@@ -77,3 +77,14 @@ Tiled), `eave_icicles`, the BLACKWOOD sign, TEL plate, timetable board, freight,
 and the telegraph pole. The station map also uses the Black Ram tileset's wall, windows, door, lamp, chimney, deck boards
 and snow. `assets/levels/blackwood_station.tmj` was built once by `tools/make-station-level.mjs` and is now edited in Tiled;
 the telegraph wires are an image layer (`assets/export/levels/station_wires.png`, written by that script).
+
+## Main Street tileset (`main_street_exterior`)
+
+`node tools/make-main-street-tileset.mjs` writes `main_street_exterior.png`, the Tiled tileset and `tools/data/main_street_tiles.json`;
+`main_street_exterior.pxo` is that image imported into Pixelorama (round trip verified pixel-identical). It holds clapboard siding
+for the false-front store, the RUSK GEN'L STORE board, the cracked shop window, dark plank doors, the barred woodshed door and
+window, rutted street snow and footprints, porch posts. `assets/levels/main_street.tmj` (built once by
+`tools/make-main-street-level.mjs`, now edited in Tiled) combines four tilesets: Black Ram (logs, windows, lamp, boardwalk,
+snow), station (the pitched snow roof), sawmill (fence, barrel, crate, planks, cordwood) and this one. The watcher prop takes its
+window position from the map (prop `args` = top-left of the lit pane in world units), so moving the window means editing that
+property in Tiled.

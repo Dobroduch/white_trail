@@ -379,3 +379,13 @@ All other LFOs drive filter frequencies or inner stages, not output gains.
 **Art:** pitched snow roof with eave icicles and a chimney, log walls, the BLACKWOOD board, a dark waiting-room window and the lit telegraph window with its TEL plate, the chalk timetable, freight (lamp-oil crate and mail sacks), the lamp, a snow-crusted ballast bank with rails and sleepers, the pole and wires.
 
 **Not done:** no recorded audio; the platform has no awning (the roof's overhang and icicles stand in for it); the deck is the Black Ram boardwalk tile; not opened in Tiled.
+
+## 15. Main Street Pass 2 — tile-built (2026-11-12)
+
+**What changed.** `main_street.tmj` (480 units, 45×17 tiles) is now built from tiles instead of the stitched crop of the old painted town (that crop, its generator `make-main-street.mjs` and `main_street_playfield.png` are deleted). It combines four tilesets (Black Ram, station, sawmill, new `main_street_exterior`, 48 tiles, palette-exact, Pixelorama source with a verified round trip): the log cabin with a pitched snow roof, chimney and the watcher's window; Rusk's clapboard false-front store with the lettered board, cracked shop window (a counter, sacks, the account book left open), awning with icicles and a dark door; the street lamp (lit in the evening, glow layer tagged EVENING); rutted street snow, one set of prints heading east, a hitching rail, a stump, cordwood; and the barred woodshed with its window.
+
+**Fixes found on the way.** The street-lamp light shone at night although the lamp is out; it is now tagged EVENING. The watcher prop had its window position hard-coded in `props.js` and sat off the new window; it now takes its position from the map (`args` [57,110]), so geometry lives in Tiled. Both have tests.
+
+**Unchanged:** every interactable, the Finch and watcher events, exits, spawns, gates and dialogue (the objects layer was kept). Visual baseline `main-street-evening` was regenerated on purpose.
+
+**Not done:** recorded audio; the east end still ends at the woodshed rather than showing the way toward the hotel (the forecourt screen takes over at the edge); not opened in Tiled.
