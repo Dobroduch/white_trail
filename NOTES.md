@@ -223,3 +223,16 @@ Nothing here resolves a Part IX question. Wherever a line needed a detail the GD
 - Every other continuous layer stays off (`WIND_ONLY`).
 
 **Tested.** A 12-second offline render of the creek and parlor ambience, measured by sample steps: the largest step is 1.2–1.3× the 99.9th percentile (no click outliers). The live graph builds with no errors in any scene, and the full playthrough passes. **The result has not been listened to.**
+
+## 8. Fix — the constant "shhh… shhh…" (2026-11-11)
+
+**Cause.** The station's steam-hiss layer had its output gain set to 0, but a 0.3 Hz LFO was connected straight to that gain parameter. An LFO adds to a parameter's value, so the gain swung between −0.03 and +0.03, playing high-passed white noise in a slow pulse in **every scene**. `WIND_ONLY` couldn't silence it, because the preset only sets the base value.
+
+**Fix.** The LFO now drives an inner `pulse` stage; the controlled output gain sits after it and is a real zero.
+
+**Verified with an AnalyserNode on the master bus** (live game, real key gesture):
+- With the wind muted, output is 0.00000 RMS in the station, parlor, creek and sawmill.
+- The wind alone puts 99.4% of its energy below 600 Hz and 0.00% above 1.5 kHz.
+- The full playthrough passes.
+
+All other LFOs drive filter frequencies or inner stages, not output gains.

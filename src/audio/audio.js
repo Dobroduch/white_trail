@@ -192,9 +192,13 @@ export class Audio {
     {
       const src = this.loopSource(this.white);
       const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3200;
+      // The pulsing LFO sits on an inner stage. It must never drive the controlled output gain
+      // directly: an LFO added to a gain of 0 swings it to ±depth, which played this hiss
+      // ("shhh… shhh…") in every scene even though the layer was set to silent.
+      const pulse = c.createGain(); pulse.gain.value = 0.7;
+      this.lfo(0.3, 0.3, pulse.gain);
       const g = c.createGain(); g.gain.value = 0;
-      this.lfo(0.3, 0.03, g.gain);
-      src.connect(hp).connect(g).connect(this.amb);
+      src.connect(hp).connect(pulse).connect(g).connect(this.amb);
       L.hiss = { gain: g };
     }
     // Train rumble (envelope driven)
