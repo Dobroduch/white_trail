@@ -6,7 +6,7 @@ const FLAT = [[0, 150], [2000, 150]];
 
 export const SCENES = {
   STATION: {
-    name: 'BLACKWOOD STATION', travel: 3, width: 560, exterior: true, ground: FLAT, bounds: [8, 554],
+    name: 'BLACKWOOD STATION', travel: 3, width: 560, exterior: true, surface: 'wood', ground: FLAT, bounds: [8, 554],
     spawns: { start: { x: 198, facing: 1 }, fromRoad: { x: 546, facing: -1 } },
     exits: [{ side: 'right', to: 'ROAD', spawn: 'fromStation', if: { flag: 'talkedConductor' }, blockedScript: 'STATION_BLOCK' }],
     npcs: [

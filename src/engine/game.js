@@ -364,7 +364,12 @@ export class Game {
     }
   }
 
-  footstep() { this.audio.sfx(this.scene.exterior ? 'stepSnow' : 'stepWood', { vol: 0.8 }); }
+  // Surface under Silas: snow outdoors, wood/hard indoors (scene.surface overrides, e.g. the station platform).
+  footstep() {
+    const s = this.scene;
+    const surface = s.surface || (s.exterior ? 'snow' : 'wood');
+    this.audio.sfx(surface === 'snow' ? 'stepSnow' : 'stepWood', { vol: 0.55 });
+  }
 
   // ---------------- interaction ----------------
   interactables() {

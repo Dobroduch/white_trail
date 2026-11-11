@@ -337,15 +337,18 @@ export class Audio {
     const fx = this.fx;
     switch (name) {
       case 'stepSnow': {
-        const p = 0.9 + Math.random() * 0.25;
-        this.noise(fx, { type: 'bandpass', freq: 1500 * p, q: 0.9, a: 0.004, d: 0.09, peak: 0.12 * vol });
-        this.noise(fx, { type: 'highpass', freq: 3500 * p, q: 0.5, a: 0.01, d: 0.05, peak: 0.05 * vol, when: 0.02 });
-        this.noise(fx, { type: 'lowpass', freq: 220, a: 0.003, d: 0.07, peak: 0.12 * vol, buf: this.brown });
+        // Soft, muffled crunch: slow attack, no bright top end.
+        const p = 0.85 + Math.random() * 0.3;
+        this.noise(fx, { type: 'bandpass', freq: 900 * p, q: 0.7, a: 0.018, d: 0.14, peak: 0.07 * vol });
+        this.noise(fx, { type: 'lowpass', freq: 160, a: 0.01, d: 0.1, peak: 0.07 * vol, buf: this.brown });
         break;
       }
       case 'stepWood': {
-        this.noise(fx, { type: 'lowpass', freq: 380 + Math.random() * 80, a: 0.002, d: 0.08, peak: 0.25 * vol, buf: this.brown });
-        this.noise(fx, { type: 'bandpass', freq: 2200, q: 2, a: 0.001, d: 0.02, peak: 0.04 * vol });
+        // Harder surface: a short dull knock with a faint hollow tone and a tiny tick.
+        const p = 0.92 + Math.random() * 0.16;
+        this.noise(fx, { type: 'lowpass', freq: 520 * p, a: 0.001, d: 0.07, peak: 0.2 * vol, buf: this.brown });
+        this.tone(fx, { type: 'sine', freq: 135 * p, freqEnd: 90, a: 0.001, d: 0.09, peak: 0.07 * vol });
+        this.noise(fx, { type: 'bandpass', freq: 2400 * p, q: 2.5, a: 0.001, d: 0.015, peak: 0.03 * vol });
         break;
       }
       case 'whistle': {
