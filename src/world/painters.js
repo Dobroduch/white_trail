@@ -5,7 +5,8 @@
 // "glow" canvases are emissive pixels drawn after the lighting pass (lit windows, lamps).
 // Painters author in WORLD units (1 canvas pixel = 1 world unit = legacy density). W×H here is the
 // world-unit view the camera frames (VIEW_W×VIEW_H = 320×180), not a screen resolution.
-import { VIEW_W as W, VIEW_H as H } from '../engine/display.js';
+// W is the WIDEST view the responsive display can show, so every parallax layer covers any window.
+import { MAX_VIEW_W as W, VIEW_H as H } from '../engine/display.js';
 import { mulberry32 } from '../engine/rng.js';
 import {
   PAL, canvas, rect, px, hline, vline, line, ditherGradient, ditherFill, mountains, pine, pineRow,
@@ -13,12 +14,14 @@ import {
 } from './paint.js';
 import { stationArt } from './stationArt.js';
 import { townArt } from './townArt.js';
+import { nativeArt, nativeLayers } from './nativeArt.js';
+import { artMode } from './artMode.js';
 
 const cache = new Map();
 export const sceneMeta = {}; // extra data painters expose (e.g. ridge heights)
 
 export function getLayers(sceneId, phase, width) {
-  const key = sceneId + ':' + phase;
+  const key = sceneId + ':' + phase + (artMode.legacy ? ':legacy' : '');
   if (!cache.has(key)) {
     const fn = PAINTERS[sceneId];
     if (!fn) {
@@ -505,7 +508,13 @@ function paintVillageProcedural(sw, phase) {
 }
 
 // ---------- BLACK RAM HOTEL PARLOR ----------
+// Native-density Pixelorama art (assets/export/environments/parlor) when available. Layers are
+// flagged `native` so the renderer draws them at 1/WORLD_SCALE (each art pixel = one native pixel).
 function paintParlor(sw, phase) {
+  const A = nativeArt('PARLOR');
+  return A ? nativeLayers(A, phase) : paintParlorProcedural(sw, phase);
+}
+function paintParlorProcedural(sw, phase) {
   const night = phase === 'NIGHT';
   const [m, ctx] = canvas(sw, H);
   const [g, gx] = canvas(sw, H);
@@ -589,6 +598,10 @@ function paintParlor(sw, phase) {
 
 // ---------- ROOM 4 ----------
 function paintRoom4(sw, phase) {
+  const A = nativeArt('ROOM4');
+  return A ? nativeLayers(A, phase) : paintRoom4Procedural(sw, phase);
+}
+function paintRoom4Procedural(sw, phase) {
   const night = phase === 'NIGHT';
   const [m, ctx] = canvas(sw, H);
   const [g, gx] = canvas(sw, H);
@@ -844,6 +857,9 @@ function paintSawmill(sw) {
     const h = 5 + Math.floor(fr() * 10);
     line(fx, x, 180, x + 1, 180 - h, '#090c13');
   }
+  // native-density Pixelorama playfield replaces the procedural one (same clue positions)
+  const NA = nativeArt('SAWMILL');
+  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [{ canvas: f, factor: 1.2, z: 20 }] };
   return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.2, z: 20 }] };
 }
 

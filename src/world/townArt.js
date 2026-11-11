@@ -30,4 +30,5 @@ export async function loadTownArt(base = 'assets/backgrounds/town/') {
 }
 
 // Returns the loaded painted layers, or null if unavailable.
-export function townArt() { return art; }
+import { artMode } from './artMode.js';
+export function townArt() { return artMode.legacy ? null : art; }

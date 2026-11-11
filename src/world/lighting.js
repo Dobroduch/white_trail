@@ -6,15 +6,18 @@
 // `sub` is the camera's sub-unit remainder.
 import { NATIVE_W, NATIVE_H, WORLD_SCALE, makeCanvas } from '../engine/display.js';
 
-const dark = makeCanvas(NATIVE_W, NATIVE_H);
-const dctx = dark.getContext('2d');
-const glow = makeCanvas(NATIVE_W, NATIVE_H);
-const gctx = glow.getContext('2d');
+let dark, dctx, glow, gctx;
+function ensureBuffers() {
+  if (dark && dark.width === NATIVE_W) return;
+  dark = makeCanvas(NATIVE_W, NATIVE_H); dctx = dark.getContext('2d');
+  glow = makeCanvas(NATIVE_W, NATIVE_H); gctx = glow.getContext('2d');
+}
 
 const BANDS = [[0, 1], [0.42, 1], [0.42, 0.72], [0.66, 0.72], [0.66, 0.42], [0.84, 0.42], [0.84, 0.16], [1, 0]];
 
 // ctx: the framebuffer context with an identity transform.
 export function renderLighting(ctx, lights, ambient, sub = 0) {
+  ensureBuffers();
   const toN = (L, rk) => ({
     x: Math.round((L.x - sub) * WORLD_SCALE),
     y: Math.round(L.y * WORLD_SCALE),

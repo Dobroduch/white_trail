@@ -34,7 +34,7 @@ export const SCRIPTS = {
     { log: 'Arrived at Blackwood Station in the snow.' },
     { checkpoint: true },
     { control: true },
-    { hint: 'A / D or arrows — walk.   E — examine, speak.   Tab — notebook.', dur: 9 },
+    { hint: 'A / D or arrows — walk.   E — examine, speak.   N — notebook.   M — map.', dur: 9 },
   ],
 
   STATION_BLOCK: [
@@ -150,7 +150,7 @@ export const SCRIPTS = {
     { char: { hale: { found: true } } },
     { checkpoint: true },
     { control: true },
-    { hint: 'Look carefully. Each thing you examine is written into your notebook (Tab).', dur: 9 },
+    { hint: 'Look carefully. Each thing you examine is written into your notebook (N).', dur: 9 },
   ],
 
   RIDGE_LIGHT: [
@@ -185,6 +185,6 @@ export const SCRIPTS = {
   DEDUCTION_HINT: [
     { ambient: true },
     { set: { deductionHintShown: true } },
-    { hint: 'Some of what you have seen may connect. Notebook (Tab) → Deductions.', dur: 9 },
+    { hint: 'Some of what you have seen may connect. Notebook (N) → Deductions.', dur: 9 },
   ],
 };

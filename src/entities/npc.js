@@ -36,7 +36,7 @@ export class NPC {
     const y = snapN(this.y);
     const bob = this.moving ? (Math.floor(this.t * 6) % 2) : 0;
     drawSprite(ctx, this.sprite, this.moving ? 0 : Math.floor(this.t / 1.3) % 2, x, y - bob, this.facing);
-    if (this.lantern) drawSprite(ctx, 'lantern_on', 0, x + this.facing * 5, y - 8 - bob, this.facing);
+    if (this.lantern) drawSprite(ctx, 'lantern_on', 0, x + this.facing * 5, y - 3 - bob, this.facing);
     if (this.candle) drawSprite(ctx, 'candle', 0, x + this.facing * 5, y - 13, this.facing);
   }
   lights() {

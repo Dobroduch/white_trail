@@ -1,6 +1,7 @@
 // Game orchestration: modes, scenes, update order, render passes, overlays and checkpoints.
-import { Display, makeCanvas, VIEW_W, VIEW_H, WORLD_SCALE, FB_W, FB_H, FB_SCALE, FB_PER_WORLD, UI_W, UI_H, UI_SCALE, snapN } from './display.js';
+import { Display, makeCanvas, VIEW_W, VIEW_H, WORLD_SCALE, FB_W, FB_H, FB_SCALE, FB_PER_WORLD, UI_W, UI_H, UI_SCALE, UI_OX, UI_OY, UI_DEV, UI_LEFT, UI_RIGHT, UI_TOP, UI_BOTTOM, nativeToUI, snapN } from './display.js';
 import { Camera } from './camera.js';
+import { artMode } from '../world/artMode.js';
 import { getLayers } from '../world/painters.js';
 import { SCENES, GLOBAL_EVENTS } from '../world/scenes.js';
 import { PROP_FACTORIES } from '../world/props.js';
@@ -15,7 +16,9 @@ import { Cutscene } from '../systems/cutscene.js';
 import { LANTERN, toggleLantern, updateLantern, updateWarmth } from '../systems/survival.js';
 import { EVIDENCE } from '../data/evidence.js';
 import { ITEMS } from '../data/notebookData.js';
-import { HUD } from '../ui/hud.js';
+import { HUD, hudButtonAt } from '../ui/hud.js';
+import { MapView } from '../ui/mapView.js';
+import { discoverAt, discoverPath, ensureMapState } from '../systems/exploration.js';
 import { DialogueView } from '../ui/dialogueView.js';
 import { Notebook } from '../ui/notebook.js';
 import { TitleMenu, PauseMenu, SettingsMenu, ControlsHelp, Confirm, Inventory, DocumentView, EndCard } from '../ui/menus.js';
@@ -57,6 +60,8 @@ export class Game {
     this.audio.applyVolumes();
     if (persist) saveSettings(this.settings);
   }
+  // comparison captures only (see world/artMode.js)
+  setLegacyArt(v) { artMode.legacy = !!v; if (this.mode === 'play') this.reloadScene(); }
   hasSave() { return hasSave(); }
   checkpoint() {
     if (this.mode !== 'play') return;
@@ -152,6 +157,16 @@ export class Game {
     this.eventTimers = {};
     this.exitCooldown = 0.4;
     this.camera.setMode('exploration');
+    this.explore();
+  }
+
+  // ---------------- exploration map ----------------
+  explore() {
+    if (this.mode !== 'play') return;
+    ensureMapState(this.state);
+    const found = discoverAt(this.state, this.scene.id, this.player.x);
+    for (const name of found) this.hud.toasts.push({ head: 'Drawn on my map', text: name, t: 0 });
+    if (found.length) this.checkpointSoon = true;
   }
 
   // Re-apply scene data after a story phase change, keeping Silas where he is.
@@ -182,6 +197,7 @@ export class Game {
     tr.t += dt;
     if (!tr.swapped && tr.t >= 0.42) {
       tr.swapped = true;
+      if (discoverPath(this.state, this.scene.id, tr.to)) this.checkpointSoon = true;
       advanceTime(this.state, tr.minutes != null ? tr.minutes : SCENES[tr.to].travel != null ? SCENES[tr.to].travel : 2);
       this.loadScene(tr.to, tr.spawn);
       this.hud.showLabel(this.scene, this.state);
@@ -253,7 +269,8 @@ export class Game {
     if (act === 'back' || act === 'close' || act === 'resume') { this.popOverlay(); this.audio.resume(); return; }
     if (o instanceof PauseMenu) {
       if (act === 'notebook') { this.notebook.open(); this.pushOverlay(this.notebookOverlay()); }
-      else if (act === 'inventory') this.pushOverlay(new Inventory(this));
+      else if (act === 'inventory') { const inv = new Inventory(this); inv.panelKind = 'inventory'; this.pushOverlay(inv); }
+      else if (act === 'map') this.pushOverlay(new MapView(this));
       else if (act === 'settings') this.pushOverlay(new SettingsMenu(this));
       else if (act === 'controls') this.pushOverlay(new ControlsHelp(this));
       else if (act === 'restart') this.pushOverlay(new Confirm(this, 'Restart from the train? All progress will be lost.', 'confirmRestart'));
@@ -268,7 +285,41 @@ export class Game {
   }
   notebookOverlay() {
     const nb = this.notebook;
-    return { update: (input) => nb.update(input), draw: (ctx) => nb.draw(ctx), isNotebook: true };
+    return { update: (input) => nb.update(input), draw: (ctx) => nb.draw(ctx), isNotebook: true, panelKind: 'notebook' };
+  }
+
+  // Notebook / Inventory / Map: three separate panels with their own buttons and keys. Only one is
+  // open at a time; asking for another switches to it, asking for the open one closes it.
+  canOpenPanel() { return this.mode === 'play' && !this.dialogue.active && !this.transition && !this.cutsceneBlocking(); }
+  openPanel(kind) {
+    const cur = this.overlay;
+    const curKind = cur && cur.panelKind;
+    if (cur && !curKind) return false; // pause menu, telegram, confirm... stay on top
+    if (curKind) {
+      this.popOverlay();
+      if (curKind === kind) { this.audio.sfx('page'); return true; }
+    } else if (!this.canOpenPanel()) return false;
+    if (kind === 'notebook') { this.notebook.open(); this.pushOverlay(this.notebookOverlay()); }
+    else if (kind === 'inventory') { const inv = new Inventory(this); inv.panelKind = 'inventory'; this.pushOverlay(inv); }
+    else if (kind === 'map') this.pushOverlay(new MapView(this));
+    this.audio.sfx('page');
+    return true;
+  }
+  // HUD button clicks (UI units); consumed before world clicks so they never move Silas.
+  handleHudButtons() {
+    const input = this.input;
+    if (this.mode !== 'play') { this.hoverButton = null; return; }
+    const l = input.pointer && this.display.clientToUI(input.pointer.x, input.pointer.y);
+    const hov = l && hudButtonAt(l.x, l.y);
+    this.hoverButton = hov ? hov.kind : null;
+    if (!input.clicks.length) return;
+    input.clicks = input.clicks.filter((c) => {
+      const u = this.display.clientToUI(c.x, c.y);
+      const b = u && hudButtonAt(u.x, u.y);
+      if (!b) return true;
+      this.openPanel(b.kind);
+      return false;
+    });
   }
 
   // ---------------- per-step update ----------------
@@ -294,7 +345,14 @@ export class Game {
 
     if (input.anyPressed) this.audio.unlock();
 
+    this.handleHudButtons();
     const ov = this.overlay;
+    if (ov && ov.panelKind) {
+      // switching straight from one panel to another (N / I / M)
+      for (const k of ['notebook', 'inventory', 'map']) {
+        if (k !== ov.panelKind && input.pressed(k)) { this.openPanel(k); return; }
+      }
+    }
     if (ov) {
       const act = ov.update(input);
       if (act) this.handleOverlayAction(act);
@@ -307,8 +365,9 @@ export class Game {
     // global keys
     if (input.pressed('pause')) { this.pushOverlay(new PauseMenu(this)); return; } // also pauses mid-dialogue
     const free = !this.dialogue.active && !this.transition && !this.cutsceneBlocking();
-    if (input.pressed('notebook') && free) { this.notebook.open(); this.pushOverlay(this.notebookOverlay()); return; }
-    if (input.pressed('inventory') && free) { this.pushOverlay(new Inventory(this)); return; }
+    if (input.pressed('notebook') && free) { this.openPanel('notebook'); return; }
+    if (input.pressed('inventory') && free) { this.openPanel('inventory'); return; }
+    if (input.pressed('map') && free) { this.openPanel('map'); return; }
     if (input.pressed('lantern') && this.playerControl && !this.dialogue.active) {
       if (toggleLantern(this.state)) this.audio.sfx(this.state.lanternOn ? 'lanternOn' : 'lanternOff');
     }
@@ -350,6 +409,7 @@ export class Game {
     for (const n of this.npcs) n.update(dt, this);
     for (const p of this.props) p.update && p.update(dt, this);
     this.camera.update(dt, this.player);
+    this.explore();
     this.weather.update(dt, this.camera.pos, this.windOverride);
     this.hud.update(dt);
     updateLantern(this.state, dt);
@@ -409,7 +469,7 @@ export class Game {
     const cam = this.camera;
     const fo = cam.screenFocus();
     const pr = Display.projectZoom((wx - cam.pos) * WORLD_SCALE, wy * WORLD_SCALE, cam.zoom, fo.x, fo.y);
-    return { x: pr.x / UI_SCALE, y: pr.y / UI_SCALE };
+    return nativeToUI(pr.x, pr.y);
   }
   // Draw-x (in the sub-translated world pass, world units) of a parallax layer with this factor.
   // Every parallax layer and anything attached to one (e.g. the ridge lantern) must use this.
@@ -451,9 +511,9 @@ export class Game {
     if (input.pointer && this.canMove()) {
       const p = this.pointerToWorld(input.pointer.x, input.pointer.y);
       const hot = p && this.hotspotAt(p.x, p.y);
-      canvas.style.cursor = hot ? 'pointer' : 'default';
+      canvas.style.cursor = hot || this.hoverButton ? 'pointer' : 'default';
       this.hover = hot;
-    } else { this.hover = null; canvas.style.cursor = 'default'; }
+    } else { this.hover = null; canvas.style.cursor = this.hoverButton ? 'pointer' : 'default'; }
     // finish a walk-then-interact started by a click
     if (this.pendingClick && this.player.autoTarget == null) {
       const target = this.pendingClick; this.pendingClick = null;
@@ -585,6 +645,9 @@ export class Game {
     const viewT = () => ctx.setTransform(F, 0, 0, F, 0, 0);
     const nativeT = () => ctx.setTransform(FB_SCALE, 0, 0, FB_SCALE, 0, 0);
     const L = this.layers;
+    // native-density layers (Pixelorama scene art) are drawn at 1/WORLD_SCALE so 1 art px = 1 native px
+    const blit = (c, img, x, native) => (native ? c.drawImage(img, x, 0, img.width / WORLD_SCALE, img.height / WORLD_SCALE) : c.drawImage(img, x, 0));
+    this.blit = blit;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.globalCompositeOperation = 'source-over';
@@ -594,12 +657,12 @@ export class Game {
     worldT();
     const lx = new Map(); // parallax factor -> draw x (computed once per frame)
     const layerX = (layer) => { if (!lx.has(layer.factor)) lx.set(layer.factor, this.layerX(layer.factor)); return lx.get(layer.factor); };
-    for (const b of L.back) ctx.drawImage(b.canvas, layerX(b), 0);
+    for (const b of L.back) blit(ctx, b.canvas, layerX(b), b.native);
     // world drawables sorted by depth
     const list = [];
     // Each drawable takes the target context so the emissive pass can re-draw the same silhouettes as masks.
     for (const p of this.props) if (p.draw) list.push({ z: p.z || 0, fn: (c) => p.draw(c, camX, this) });
-    list.push({ z: 0, fn: (c) => c.drawImage(L.main.canvas, -camX, 0) });
+    list.push({ z: 0, fn: (c) => blit(c, L.main.canvas, -camX, L.main.native) });
     for (const n of this.npcs) list.push({ z: n.z, fn: (c) => n.draw(c, camX) });
     if (this.mode === 'play') list.push({ z: 10, fn: (c) => this.player.draw(c, camX, this.state.lanternOn) });
     list.sort((a, b) => a.z - b.z);
@@ -608,7 +671,7 @@ export class Game {
     nativeT();
     this.weather.draw(ctx, true);
     worldT();
-    for (const f of L.front) ctx.drawImage(f.canvas, layerX(f), 0);
+    for (const f of L.front) blit(ctx, f.canvas, layerX(f), f.native);
     viewT();
     this.weather.drawFog(ctx, cam.pos);
     // lighting (rendered at native resolution)
@@ -642,10 +705,11 @@ export class Game {
     }
     // fade
     if (this.fade.v > 0.001) { out.fillStyle = `rgba(3,4,8,${this.fade.v})`; out.fillRect(0, 0, OW, OH); }
-    // UI in UI layout units (device px per UI unit; may be fractional in sharp-fit mode)
-    const S = OW / UI_W;
+    // UI in UI layout units (device px per UI unit; may be fractional). The 320×180 layout frame is
+    // centred horizontally; HUD pieces anchor to the real screen edges via UI_LEFT / UI_RIGHT.
+    const S = UI_DEV;
     out.save();
-    out.setTransform(S, 0, 0, S, 0, 0);
+    out.setTransform(S, 0, 0, S, UI_OX * S, UI_OY * S);
     out.imageSmoothingEnabled = true;
     if (this.card) this.drawCard(out);
     if (this.mode === 'play') {
@@ -653,6 +717,8 @@ export class Game {
       this.dialogueView.draw(out);
     }
     for (const o of this.overlays) o.draw(out);
+    // the panel buttons stay on top of an open panel, so one click switches Notebook / Inventory / Map
+    if (this.mode === 'play' && this.overlay && this.overlay.panelKind) this.hud.drawButtons(out);
     out.restore();
     out.imageSmoothingEnabled = false;
   }
@@ -665,13 +731,14 @@ export class Game {
   drawEmissive(ctx, list, L, layerX, camX, worldT) {
     const planes = new Map(); // plane z -> [fn(ctx)]
     const add = (z, fn) => { if (!planes.has(z)) planes.set(z, []); planes.get(z).push(fn); };
-    for (const b of L.back) if (b.glow) add(-Infinity, (c) => c.drawImage(b.glow, layerX(b), 0));
-    if (L.main.glow) add(0, (c) => c.drawImage(L.main.glow, -camX, 0));
+    const blit = this.blit;
+    for (const b of L.back) if (b.glow) add(-Infinity, (c) => blit(c, b.glow, layerX(b), b.native));
+    if (L.main.glow) add(0, (c) => blit(c, L.main.glow, -camX, L.main.native));
     for (const p of this.props) if (p.glow) add(p.z || 0, (c) => p.glow(c, camX, this));
     for (const [z, fns] of planes) {
       const inFront = list.filter((it) => it.z > z);
       if (!inFront.length) { for (const fn of fns) fn(ctx); continue; }
-      if (!this.glowBuf) {
+      if (!this.glowBuf || this.glowBuf.width !== FB_W) {
         this.glowBuf = makeCanvas(FB_W, FB_H);
         this.glowBuf.getContext('2d').imageSmoothingEnabled = false;
       }
@@ -693,7 +760,7 @@ export class Game {
   }
 
   drawCard(ctx) {
-    ctx.fillStyle = '#030408'; ctx.fillRect(0, 0, UI_W, UI_H);
+    ctx.fillStyle = '#030408'; ctx.fillRect(UI_LEFT, UI_TOP, UI_RIGHT - UI_LEFT, UI_BOTTOM - UI_TOP);
     font(ctx, this.card.lines[0].length < 8 ? 11 : 7);
     this.card.lines.forEach((l, i) => text(ctx, l, UI_W / 2, 92 + i * 12, UI.bone, 'center'));
   }

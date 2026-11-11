@@ -32,6 +32,7 @@ export function newState() {
       clara: { alive: true, location: 'UNKNOWN' },
     },
     eventsDone: [],
+    map: { visited: [], paths: [] }, // Silas's own map: places he has been, ways he has walked
     timeline: [], // { t: 'HH:MM', text } — written by story beats at the in-game time they happen
     consequences: { shotsFired: 0, peopleKilled: [], peopleWounded: [], threatsMade: [] },
   };

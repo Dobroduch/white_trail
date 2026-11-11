@@ -29,4 +29,5 @@ export async function loadStationArt(base = 'assets/backgrounds/station/') {
 }
 
 // Returns the loaded painted layers, or null if unavailable.
-export function stationArt() { return art; }
+import { artMode } from './artMode.js';
+export function stationArt() { return artMode.legacy ? null : art; }

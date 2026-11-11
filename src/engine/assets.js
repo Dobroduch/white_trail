@@ -1,7 +1,8 @@
 // Asset loading: pixel-art sprites are stored as palette strings in assets/sprites/sprites.json
 // and rasterised to canvases at startup. Missing/malformed assets log a clear console error and
 // fall back to a deliberate silhouette so the game never fails silently.
-import { makeCanvas, snapN } from './display.js';
+import { makeCanvas, snapN, WORLD_SCALE } from './display.js';
+import { artMode } from '../world/artMode.js';
 
 const sprites = new Map(); // name -> { frames: [canvas], flipped: [canvas], w, h }
 let palette = {};
@@ -127,7 +128,55 @@ function fallback(name) {
   return sprites.get(name);
 }
 
+// ---------------- native-density PNG sprite sheets (authored in Pixelorama) ----------------
+// assets/export/characters/*.png — 1 image pixel = 1 NATIVE pixel (2/3 of a world unit), so these
+// carry 1.5x the detail of the legacy palette-string sprites at the same on-screen size. Each sheet is
+// a horizontal strip of equal frames. `anchor` is the native-px column of the character's centre of
+// mass when facing right (mirrored when facing left), so turning around never makes the body jump.
+// A missing sheet logs an error and the legacy sprite stays in use.
+export const NATIVE_SHEETS = [
+  { url: 'assets/export/characters/silas_vance.png', fw: 28, fh: 42, anchor: 12, sprites: { silas_idle: [0, 1], silas_walk: [2, 3, 4, 5] } },
+  { url: 'assets/export/characters/lantern.png', fw: 9, fh: 12, anchor: 4.5, sprites: { lantern_on: [0], lantern_off: [1] } },
+  { url: 'assets/export/characters/conductor.png', fw: 26, fh: 42, anchor: 11, sprites: { conductor_idle: [0, 1] } },
+  { url: 'assets/export/characters/finch.png', fw: 26, fh: 42, anchor: 10.5, sprites: { finch_idle: [0, 1] } },
+  { url: 'assets/export/characters/gable.png', fw: 26, fh: 42, anchor: 11, sprites: { gable_idle: [0, 1] } },
+  { url: 'assets/export/characters/patron.png', fw: 18, fh: 21, anchor: 8.5, sprites: { patron: [0], patron_look: [1] } },
+];
+
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`could not load ${url}`));
+    img.src = url + '?v=2';
+  });
+}
+
+export async function loadNativeSheets(defs = NATIVE_SHEETS) {
+  await Promise.all(defs.map(async (d) => {
+    let img;
+    try { img = await loadImage(d.url); } catch (err) {
+      const msg = `[assets] ${err.message}; keeping the legacy sprite(s) ${Object.keys(d.sprites).join(', ')}.`;
+      console.error(msg); errors.push(msg); return;
+    }
+    const cut = (i) => {
+      const c = makeCanvas(d.fw, d.fh);
+      c.getContext('2d').drawImage(img, i * d.fw, 0, d.fw, d.fh, 0, 0, d.fw, d.fh);
+      return c;
+    };
+    for (const [name, idx] of Object.entries(d.sprites)) {
+      const frames = idx.map(cut);
+      if (sprites.has(name)) sprites.set(name + '@legacy', sprites.get(name));
+      sprites.set(name, {
+        frames, flipped: frames.map(flip), native: true,
+        w: d.fw / WORLD_SCALE, h: d.fh / WORLD_SCALE, ax: d.anchor / WORLD_SCALE,
+      });
+    }
+  }));
+}
+
 export function getSprite(name) {
+  if (artMode.legacy && sprites.has(name + '@legacy')) return sprites.get(name + '@legacy');
   return sprites.get(name) || fallback(name);
 }
 
@@ -139,5 +188,11 @@ export function drawSprite(ctx, name, frame, x, y, facing = 1) {
   const s = getSprite(name);
   const list = facing < 0 ? s.flipped : s.frames;
   const img = list[((frame % list.length) + list.length) % list.length];
+  if (s.native) {
+    // native sheet: 1 image px = 1 native px; anchored on the body, mirrored with the facing
+    const ax = facing < 0 ? s.w - s.ax : s.ax;
+    ctx.drawImage(img, snapN(x - ax), snapN(y - s.h), s.w, s.h);
+    return;
+  }
   ctx.drawImage(img, snapN(x - s.w / 2), snapN(y - s.h));
 }

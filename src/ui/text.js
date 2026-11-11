@@ -3,8 +3,8 @@
 // units fixed across the 480×270 migration keeps every panel and font at its previous apparent size;
 // text is rendered as vector glyphs at device resolution, so it is as sharp as the display allows.
 // New UI that should sit on the native pixel grid can multiply native coordinates by 1 / UI_SCALE.
-import { UI_W, UI_H, UI_SCALE } from '../engine/display.js';
-export { UI_W, UI_H, UI_SCALE };
+import { UI_W, UI_H, UI_SCALE, UI_OX, UI_LEFT, UI_RIGHT, UI_TOP, UI_BOTTOM } from '../engine/display.js';
+export { UI_W, UI_H, UI_SCALE, UI_OX, UI_LEFT, UI_RIGHT, UI_TOP, UI_BOTTOM };
 export const UI_CX = UI_W / 2;
 export const SERIF = "Georgia, 'Times New Roman', Times, serif";
 export const UI = {

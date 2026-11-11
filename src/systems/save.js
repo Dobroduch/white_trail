@@ -32,6 +32,7 @@ export function loadGame() {
     const merged = Object.assign(base, s);
     merged.flags = Object.assign(base.flags, s.flags || {});
     merged.chars = Object.assign(newState().chars, s.chars || {});
+    merged.map = { visited: [...((s.map && s.map.visited) || [])], paths: [...((s.map && s.map.paths) || [])] };
     // A character recorded dead stays dead, whatever defaults say.
     for (const [id, c] of Object.entries(s.chars || {})) if (c && c.alive === false) merged.chars[id].alive = false;
     return merged;
