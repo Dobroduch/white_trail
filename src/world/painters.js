@@ -928,3 +928,8 @@ const PAINTERS = {
   STATION: paintStation, ROAD: paintRoad, VILLAGE: paintVillage, PARLOR: paintParlor,
   ROOM4: paintRoom4, CREEK: paintCreek, SAWMILL: paintSawmill, TITLE: paintTitle,
 };
+
+// Data-driven scenes (Tiled maps, see world/tiled/levels.js) register their own layer builder.
+export function registerPainter(sceneId, fn) { PAINTERS[sceneId] = fn; clearLayerCache(sceneId); }
+// Drop cached layers (all phases) so the next getLayers() rebuilds them, e.g. after a map reload.
+export function clearLayerCache(sceneId) { for (const k of [...cache.keys()]) if (k.split(':')[0] === sceneId) cache.delete(k); }

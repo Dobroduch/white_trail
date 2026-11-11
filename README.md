@@ -4,7 +4,7 @@ A 2D side-scrolling pixel-art detective mystery. Crow's Hollow, Rocky Mountains,
 
 This repository contains **the first playable vertical slice** (about 10–20 minutes). It covers Silas Vance's arrival at Blackwood Station, the walk into Crow's Hollow, Constable Finch, the Black Ram Hotel and Room 4, the 02:15 scream, and the discovery of Sheriff Nathaniel Hale's body at the old sawmill.
 
-Built with vanilla JavaScript (ES modules), HTML5 Canvas 2D and the Web Audio API. There are no dependencies, no build step and no network assets.
+Built with vanilla JavaScript (ES modules), HTML5 Canvas 2D and the Web Audio API. There are no runtime dependencies, no build step and no network assets (Playwright is a development-only dependency for the tests).
 
 ## Running it
 
@@ -58,15 +58,16 @@ Choose between them in Pause → Settings → Display scaling. Resizing the wind
 
 ## Settings
 
-Pause → Settings has volume sliders (master / ambience / effects / music), text speed (including instant), *reduce camera motion* (disables the framing zoom), and optional vignette and scanlines (both off by default).
+Pause → Settings has volume sliders (master / ambience / effects, with footsteps and interaction sub-mixes / music), text speed (including instant), *reduce camera motion* (disables the framing zoom), and optional vignette and scanlines (both off by default).
 
 ## Tests
 
 ```bash
-node tools/validate.mjs
+npm install   # once; installs @playwright/test and uses your installed Microsoft Edge
+npm test      # data validation + unit tests + Playwright browser tests
 ```
 
-This checks the data's integrity: every dialogue node, script, evidence ID, deduction pair, scene exit/spawn, item and sprite reference resolves. It also covers the state-model rules (no duplicate evidence, revolver 3/6, serialization).
+`node tools/validate.mjs` (also `npm run validate`) checks the data's integrity: every dialogue node, script, evidence ID, deduction pair, scene exit/spawn, item and sprite reference resolves, including the scenes built from Tiled maps. It also covers the state-model rules (no duplicate evidence, revolver 3/6, serialization). The Playwright suite covers startup, movement, interactions (including both full playthroughs), resizing, UI, audio, the Tiled loader and deterministic screenshots. See [docs/TESTING.md](docs/TESTING.md).
 
 To run the automated playthrough in the browser, open the game and enter this in the developer console:
 
@@ -80,9 +81,23 @@ T.fullRun({ finchKind: false, examineAll: false }); // guarded branch, minimal e
 
 ## Project layout
 
+## Asset and level workflow
+
+Art is made in **Pixelorama** (sources in `assets/source/pixelorama/`, PNG exports in `assets/export/`), levels in **Tiled** (`assets/levels/*.tmj`), sound in **Audacity** (sources in `assets/source/audacity/`, Ogg exports in `assets/export/audio/`). All of them use the central palette in `src/data/palette.js` (exported for editors to `assets/palette/`). Nothing needs building: save or export, then refresh the browser.
+
+- [docs/ASSET_PIPELINE.md](docs/ASSET_PIPELINE.md): directories, palette (Lospec), Pixelorama sprite sheet and tileset conventions
+- [docs/TILED_LEVELS.md](docs/TILED_LEVELS.md): creating and updating a level in Tiled, with the object and property reference
+- [docs/AUDIO.md](docs/AUDIO.md): buses, volume, transitions, adding Audacity exports
+- [docs/TESTING.md](docs/TESTING.md): test commands, deterministic mode, screenshot baselines
+
+The first Tiled location is the Black Ram Hotel exterior. Open it directly with <http://localhost:8080/?scene=BLACK_RAM_EXTERIOR>. It is not linked into the story yet.
+
 ```text
 index.html            entry page (shows a clear message if opened from file://)
 start.bat             Windows launcher
+package.json          npm scripts (start, test, validate, palette…); dev dependency: @playwright/test
+assets/levels/        Tiled project, maps (.tmj) and tilesets (.tsj)
+assets/palette/       generated palette files for the editors (.gpl / .hex / .png)
 assets/sprites/       sprites.json — original palette-string pixel art (Silas, cast, props)
 src/main.js           bootstrap, focus/visibility pause
 src/engine/           loop (fixed 60 Hz), display (480×270 native, resolution constants + scaling + zoom compositor),
@@ -93,8 +108,13 @@ src/world/            scenes (data), painters (procedural pixel-art backgrounds)
                       lighting, weather, paint primitives
 src/data/             evidence, dialogue, scripts (authored beats), notebook data
 src/ui/               HUD, dialogue view, notebook, menus
-src/audio/            Web Audio soundscape (all synthesised)
-tools/                serve.mjs (static server), validate.mjs (data tests), harness.js (browser test driver)
+src/world/tiled/      Tiled map loader: tiledMap.js (map → scene data), tiledRender.js (layers), levels.js / levelList.js (registry)
+src/data/palette.js   the central 64-colour palette
+src/audio/            Web Audio soundscape (synthesised) + samples.js (recorded Audacity exports, optional)
+tools/                serve.mjs (static server), validate.mjs (data tests), harness.js (browser test driver),
+                      palette.mjs (palette export/audit), make-demo-level.mjs (Black Ram tileset/map bootstrap)
+tests/                unit/ (node --test), e2e/ (Playwright specs and screenshot baselines)
+docs/                 workflow documentation
 ```
 
 See `NOTES.md` for what is implemented, what was tested, known limitations, and the story assumptions that need the design owner's decision.

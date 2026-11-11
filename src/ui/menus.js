@@ -104,6 +104,8 @@ export class SettingsMenu {
       { key: 'master', label: 'Master volume', val: pct(s.master), kind: 'vol' },
       { key: 'ambience', label: 'Ambience volume', val: pct(s.ambience), kind: 'vol' },
       { key: 'effects', label: 'Effects volume', val: pct(s.effects), kind: 'vol' },
+      { key: 'footsteps', label: '   Footsteps', val: pct(s.footsteps), kind: 'vol' },
+      { key: 'interaction', label: '   Interaction sounds', val: pct(s.interaction), kind: 'vol' },
       { key: 'music', label: 'Music volume', val: pct(s.music), kind: 'vol' },
       { key: 'textSpeed', label: 'Text speed', val: s.textSpeed, kind: 'enum', opts: ['slow', 'normal', 'fast', 'instant'] },
       { key: 'reducedMotion', label: 'Reduce camera motion', val: s.reducedMotion ? 'on' : 'off', kind: 'bool' },
@@ -138,7 +140,7 @@ export class SettingsMenu {
     panel(ctx, 66, 16, 188, 152, UI.panel, UI.edgeHi);
     font(ctx, 6.4); spaced(ctx, 'SETTINGS', UI_CX, 30, UI.bone, 2, 'center');
     this.rows().forEach((r, i) => {
-      const y = 43 + i * 10;
+      const y = 42 + i * 9; // 13 rows fit above the footer
       const sel = i === this.sel;
       font(ctx, 5.6);
       if (sel) { ctx.fillStyle = UI.amber; ctx.fillRect(76, y - 3, 3, 1.2); }

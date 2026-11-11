@@ -1,0 +1,68 @@
+GIMP Palette
+Name: The White Trail
+Columns: 8
+#
+  9  13  22	navy
+ 15  21  36	navy2
+ 22  30  46	navy3
+ 11  13  20	ink
+ 23  16  38	purple
+ 33  24  58	purple2
+ 67  48  74	dusk
+ 28  36  52	slate0
+ 35  45  63	slate1
+ 43  54  73	slate2
+ 51  65  85	slate
+ 71  85 105	slate4
+100 116 139	slate5
+148 163 184	slate6
+203 213 225	slate7
+241 245 249	bone
+ 57  70 106	haze0
+ 77  93 127	haze1
+177 191 202	haze2
+ 93 106 128	snow0
+125 138 160	snow1
+163 175 194	snow2
+200 209 222	snow3
+228 233 240	snow4
+ 26  18  13	wood0
+ 42  28  20	wood1
+ 59  42  30	wood2
+ 78  56  38	wood3
+ 99  72  50	wood4
+122  90  62	wood5
+ 36  39  46	iron
+ 58  63  74	iron2
+ 61  56  52	stone0
+ 86  80  73	stone1
+ 99  92  85	stone2
+ 90  96 109	stone3
+141 133 116	stone4
+ 91  52  35	rust
+180  83   9	ember
+217 119   6	kerosene
+245 158  11	amber
+252 211  77	amberHi
+166  92  44	flame0
+181 110  34	flame1
+214 138  63	flame2
+224 160  74	flame3
+230 182 108	flame4
+252 211 107	flame5
+255 241 200	flame6
+ 94  70  28	brass0
+138 106  42	brass1
+160 122  58	brass2
+ 42  33  24	paperInk
+ 90  74  56	paperInkDim
+179 162 124	paperRule
+196 182 148	paper2
+216 204 176	paper
+181 171 146	linen0
+200 191 168	linen1
+228 220 196	linen2
+243 237 220	linen3
+153  27  27	crimson
+ 74  16  16	crimsonDark
+127  29  29	inkRed

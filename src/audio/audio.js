@@ -61,8 +61,12 @@ export class Audio {
     const comp = c.createDynamicsCompressor();
     comp.threshold.value = -14; comp.ratio.value = 3;
     this.master.connect(comp).connect(c.destination);
+    // Buses: master <- ambience | music | effects <- (footsteps | interaction). Each has its own
+    // volume setting; changes are smoothed (setTargetAtTime) so sliders never click.
     this.amb = c.createGain(); this.amb.connect(this.master);
     this.fx = c.createGain(); this.fx.connect(this.master);
+    this.steps = c.createGain(); this.steps.connect(this.fx);
+    this.interact = c.createGain(); this.interact.connect(this.fx);
     this.mus = c.createGain(); this.mus.connect(this.master);
     this.reverb = c.createConvolver();
     this.reverb.buffer = this.impulse(3.2, 2.6);
@@ -73,6 +77,26 @@ export class Audio {
     this.applyVolumes();
     this.buildAmbience();
     this.setAmbience(this.pendingAmbience, true);
+    this.decodeBank();
+  }
+
+  // ---------- recorded audio (samples.js) ----------
+  attachBank(bank) { this.bank = bank; if (this.ctx) this.decodeBank(); }
+  async decodeBank() {
+    const b = this.bank;
+    if (!b || b.decoded || b.decoding || !this.ctx) return;
+    b.decoding = true;
+    await b.decode(this.ctx);
+    // apply whatever was requested before the files were ready
+    this.setAmbience(this.ambienceKey, false);
+    if (this.musicId) this.playMusic(this.musicId);
+  }
+
+  // Scene music (recorded tracks only). null fades out. Smooth crossfade between tracks.
+  playMusic(id, fade = 2.5) {
+    this.musicId = id || null;
+    if (!this.ctx || !this.bank) return false;
+    return this.bank.playMusic(this.ctx, this.mus, this.musicId, fade);
   }
 
   suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend(); }
@@ -85,6 +109,8 @@ export class Audio {
     this.master.gain.setTargetAtTime(s.master, t, 0.05);
     this.amb.gain.setTargetAtTime(s.ambience, t, 0.05);
     this.fx.gain.setTargetAtTime(s.effects, t, 0.05);
+    this.steps.gain.setTargetAtTime(s.footsteps != null ? s.footsteps : 1, t, 0.05);
+    this.interact.gain.setTargetAtTime(s.interaction != null ? s.interaction : 1, t, 0.05);
     this.mus.gain.setTargetAtTime(s.music, t, 0.05);
   }
 
@@ -227,6 +253,11 @@ export class Audio {
     let [wind, muffle, , room, murmur, water, hiss, drone] = this.preset;
     if (WIND_ONLY) room = murmur = water = hiss = drone = 0;
     const t = this.ctx.currentTime, k = instant ? 0.01 : 1.2;
+    // a recorded ambience bed for this key crossfades in; with replaceSynth it stands in for the synth beds
+    if (this.bank && this.bank.decoded) {
+      this.bank.setAmbience(this.ctx, this.amb, key, instant ? 0.05 : 2.4);
+      if (this.bank.replacesSynth(key)) wind = room = murmur = water = hiss = drone = 0;
+    }
     const L = this.layers;
     const w = this.windDipValue != null ? this.windDipValue : wind;
     L.wind.gain.gain.setTargetAtTime(w, t, k);
@@ -241,7 +272,8 @@ export class Audio {
   windDip(v) {
     this.windDipValue = v;
     if (!this.ctx) return;
-    const target = v != null ? v : this.preset[0];
+    const synthOff = this.bank && this.bank.replacesSynth(this.ambienceKey);
+    const target = synthOff ? 0 : v != null ? v : this.preset[0];
     this.layers.wind.gain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.8);
   }
 
@@ -364,7 +396,8 @@ export class Audio {
   sfx(name, opt = {}) {
     if (!this.ctx || this.ctx.state !== 'running') return;
     const vol = opt.vol != null ? opt.vol : 1;
-    const fx = this.fx;
+    const fx = name.startsWith('step') ? this.steps : this.interact; // footsteps vs. interaction/UI bus
+    if (this.bank && this.bank.play(this.ctx, fx, name, vol)) return; // recorded version, if any
     switch (name) {
       case 'stepSnow': {
         // Soft, muffled crunch: slow attack, no bright top end.
@@ -500,6 +533,8 @@ export class Audio {
   music(kind) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
+    // a recorded stinger/cue with this id replaces the synthesised one (one-shot on the music bus)
+    if (this.bank && this.bank.play(this.ctx, this.mus, kind, 1, 'music')) return;
     if (kind === 'sting') {
       // a low struck bell and a swell of the drone
       for (const [mult, peak, d] of [[1, 0.09, 4.5], [2.76, 0.04, 3.2], [5.4, 0.02, 2.0], [0.5, 0.06, 5]]) {

@@ -2,17 +2,9 @@
 import { BAYER4, mulberry32, noise1 } from '../engine/rng.js';
 import { makeCanvas } from '../engine/display.js';
 
-export const PAL = {
-  navy: '#090d16', navy2: '#0f1524', navy3: '#161e2e',
-  slate0: '#1c2434', slate1: '#232d3f', slate2: '#2b3649', slate: '#334155', slate4: '#475569',
-  slate5: '#64748b', slate6: '#94a3b8', slate7: '#cbd5e1', bone: '#f1f5f9',
-  purple: '#171026', purple2: '#21183a',
-  amber: '#f59e0b', kerosene: '#d97706', amberHi: '#fcd34d', ember: '#b45309',
-  crimson: '#991b1b', crimsonDark: '#4a1010',
-  wood0: '#1a120d', wood1: '#2a1c14', wood2: '#3b2a1e', wood3: '#4e3826', wood4: '#634832', wood5: '#7a5a3e',
-  snow0: '#5d6a80', snow1: '#7d8aa0', snow2: '#a3afc2', snow3: '#c8d1de', snow4: '#e4e9f0',
-  ink: '#0b0d14', iron: '#24272e', iron2: '#3a3f4a', rust: '#5b3423',
-};
+// The painters' palette now lives in the central palette definition (same values).
+import { PAL } from '../data/palette.js';
+export { PAL };
 
 export function canvas(w, h) {
   const c = makeCanvas(w, h);

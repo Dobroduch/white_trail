@@ -94,6 +94,16 @@ export class Game {
     this.state = newState();
     this.startPlay('STATION', 'start');
   }
+  // Development/test entry point (?scene=ID): a fresh investigation placed directly in a scene,
+  // with the opening already played. Does not touch the save until the first checkpoint.
+  startAt(sceneId, { phase = 'EVENING', spawn = null, flags = {} } = {}) {
+    if (!SCENES[sceneId]) { console.error(`[game] ?scene=${sceneId}: no such scene`); return false; }
+    this.state = newState();
+    this.state.phase = phase;
+    Object.assign(this.state.flags, { introDone: true }, flags);
+    this.startPlay(sceneId, spawn);
+    return true;
+  }
   continueGame() {
     const s = loadGame();
     if (!s) { this.newGame(); return; }
@@ -155,6 +165,7 @@ export class Game {
     this.camera.snap(px, def.width);
     this.weather.configure(def.weather, this.camera.pos, true);
     this.audio.setAmbience(def.ambience);
+    this.audio.playMusic(def.music || null); // recorded scene music, crossfaded (none = fade out)
     this.eventTimers = {};
     this.exitCooldown = 0.4;
     this.camera.setMode('exploration');

@@ -1,0 +1,112 @@
+{
+    "automappingRulesFile": "",
+    "commands": [],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [],
+    "propertyTypes": [
+        {
+            "id": 1, "name": "spawn", "type": "class", "useAs": ["object"], "color": "#ff55ff7f", "drawFill": true,
+            "members": [
+                { "name": "facing", "type": "int", "value": 1 }
+            ]
+        },
+        {
+            "id": 2, "name": "bounds", "type": "class", "useAs": ["object"], "color": "#4055aaff", "drawFill": true,
+            "members": []
+        },
+        {
+            "id": 3, "name": "ground", "type": "class", "useAs": ["object"], "color": "#ffe4e9f0", "drawFill": false,
+            "members": []
+        },
+        {
+            "id": 4, "name": "exit", "type": "class", "useAs": ["object"], "color": "#ffff5555", "drawFill": true,
+            "members": [
+                { "name": "side", "type": "string", "value": "" },
+                { "name": "to", "type": "string", "value": "" },
+                { "name": "spawn", "type": "string", "value": "" },
+                { "name": "if", "type": "string", "value": "" },
+                { "name": "phase", "type": "string", "value": "" },
+                { "name": "blockedLines", "type": "string", "value": "" },
+                { "name": "blockedScript", "type": "string", "value": "" }
+            ]
+        },
+        {
+            "id": 5, "name": "door", "type": "class", "useAs": ["object"], "color": "#ffffaa00", "drawFill": true,
+            "members": [
+                { "name": "label", "type": "string", "value": "" },
+                { "name": "verb", "type": "string", "value": "Enter" },
+                { "name": "to", "type": "string", "value": "" },
+                { "name": "spawn", "type": "string", "value": "" },
+                { "name": "minutes", "type": "int", "value": 1 },
+                { "name": "if", "type": "string", "value": "" },
+                { "name": "phase", "type": "string", "value": "" },
+                { "name": "blockedLines", "type": "string", "value": "" }
+            ]
+        },
+        {
+            "id": 6, "name": "interactable", "type": "class", "useAs": ["object"], "color": "#ff7fd4ff", "drawFill": true,
+            "members": [
+                { "name": "label", "type": "string", "value": "" },
+                { "name": "lines", "type": "string", "value": "" },
+                { "name": "again", "type": "string", "value": "" },
+                { "name": "variants", "type": "string", "value": "" },
+                { "name": "evidence", "type": "string", "value": "" },
+                { "name": "dialogue", "type": "string", "value": "" },
+                { "name": "verb", "type": "string", "value": "" },
+                { "name": "important", "type": "bool", "value": false },
+                { "name": "warm", "type": "bool", "value": false },
+                { "name": "radius", "type": "float", "value": 0 },
+                { "name": "if", "type": "string", "value": "" },
+                { "name": "phase", "type": "string", "value": "" }
+            ]
+        },
+        {
+            "id": 7, "name": "npc", "type": "class", "useAs": ["object"], "color": "#ffb388ff", "drawFill": true,
+            "members": [
+                { "name": "label", "type": "string", "value": "" },
+                { "name": "sprite", "type": "string", "value": "" },
+                { "name": "dialogue", "type": "string", "value": "" },
+                { "name": "facing", "type": "int", "value": -1 },
+                { "name": "z", "type": "int", "value": 8 },
+                { "name": "lantern", "type": "bool", "value": false },
+                { "name": "candle", "type": "bool", "value": false },
+                { "name": "if", "type": "string", "value": "" },
+                { "name": "phase", "type": "string", "value": "" }
+            ]
+        },
+        {
+            "id": 8, "name": "light", "type": "class", "useAs": ["object"], "color": "#fff59e0b", "drawFill": false,
+            "members": [
+                { "name": "r", "type": "float", "value": 60 },
+                { "name": "warm", "type": "float", "value": 0 },
+                { "name": "strength", "type": "float", "value": 1 },
+                { "name": "phase", "type": "string", "value": "" }
+            ]
+        },
+        {
+            "id": 9, "name": "prop", "type": "class", "useAs": ["object"], "color": "#ffaaaaaa", "drawFill": true,
+            "members": [
+                { "name": "propType", "type": "string", "value": "" },
+                { "name": "args", "type": "string", "value": "" },
+                { "name": "id", "type": "string", "value": "" },
+                { "name": "if", "type": "string", "value": "" },
+                { "name": "phase", "type": "string", "value": "" }
+            ]
+        },
+        {
+            "id": 10, "name": "event", "type": "class", "useAs": ["object"], "color": "#ff00ffff", "drawFill": false,
+            "members": [
+                { "name": "script", "type": "string", "value": "" },
+                { "name": "bark", "type": "string", "value": "" },
+                { "name": "delay", "type": "float", "value": 0 },
+                { "name": "do", "type": "string", "value": "" },
+                { "name": "if", "type": "string", "value": "" },
+                { "name": "phase", "type": "string", "value": "" }
+            ]
+        }
+    ]
+}

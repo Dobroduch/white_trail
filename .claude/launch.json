@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["tools/serve.mjs", "8080"],
       "port": 8080
+    },
+    {
+      "name": "the-white-trail-alt",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["tools/serve.mjs", "8093"],
+      "port": 8093
     }
   ]
 }

@@ -1,0 +1,21 @@
+{
+  "name": "the-white-trail",
+  "private": true,
+  "version": "0.1.0",
+  "description": "THE WHITE TRAIL — browser 2D pixel-art mystery adventure (vanilla ES modules, no build step).",
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs 8080",
+    "validate": "node tools/validate.mjs",
+    "test:unit": "node --test tests/unit/",
+    "test:e2e": "playwright test",
+    "test:visual:update": "playwright test tests/e2e/visual.spec.mjs --update-snapshots",
+    "test": "node tools/validate.mjs && node --test tests/unit/ && playwright test",
+    "palette": "node tools/palette.mjs",
+    "palette:check": "node tools/palette.mjs --check",
+    "level:demo": "node tools/make-demo-level.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  }
+}

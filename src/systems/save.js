@@ -48,6 +48,7 @@ export function clearSave() {
 
 export const DEFAULT_SETTINGS = {
   master: 0.8, ambience: 0.8, effects: 0.85, music: 0.6,
+  footsteps: 1, interaction: 1, // sub-mixes of the effects bus
   textSpeed: 'normal', reducedMotion: false, scanlines: false, vignette: false,
   scaling: 'auto', // 'auto' = fill the window (pixel-perfect when it fits well) | 'integer' = whole multiples only
 };

@@ -7,6 +7,8 @@ import { DEDUCTIONS, LEADS, ITEMS } from '../src/data/notebookData.js';
 import { SCRIPTS } from '../src/data/scripts.js';
 import { SCENES, GLOBAL_EVENTS } from '../src/world/scenes.js';
 import { newState, test, apply, observe, examine, countAt } from '../src/systems/storyState.js';
+import { LEVELS } from '../src/world/tiled/levelList.js';
+import { sceneFromTiled, layerPlan, resolveUrl } from '../src/world/tiled/tiledMap.js';
 
 let errors = 0, checks = 0;
 const fail = (m) => { errors++; console.error('  ✗ ' + m); };
@@ -53,6 +55,44 @@ for (const [id, steps] of Object.entries(SCRIPTS)) {
   const offs = steps.filter((s) => s.control === false).length;
   const ons = steps.filter((s) => s.control === true).length;
   ok(offs === 0 || ons > 0 || steps.some((s) => s.endCard), `${id}: removes control without restoring it`);
+}
+
+console.log('Tiled levels');
+{
+  // Convert every registered Tiled map exactly as the game does, check the files it needs, then
+  // register it in SCENES so the scene checks below cover it like any hand-written scene.
+  const exists = async (u) => { try { await readFile(u); return true; } catch { return false; } };
+  for (const lv of LEVELS) {
+    const mapUrl = new URL('../' + lv.url, import.meta.url);
+    let map = null;
+    try { map = JSON.parse(await readFile(mapUrl, 'utf8')); } catch (e) { ok(false, `${lv.id}: cannot read ${lv.url} (${e.message})`); continue; }
+    const { scene, errors: errs, warnings } = sceneFromTiled(map, lv.id);
+    for (const e of errs) ok(false, e);
+    for (const wn of warnings) console.warn('  ! ' + wn);
+    let maxGid = 0;
+    for (const ts of map.tilesets || []) {
+      let def = ts, base = lv.url;
+      if (ts.source) {
+        ok(!/\.tsx$/i.test(ts.source), `${lv.id}: tileset ${ts.source} must be JSON (.tsj), not .tsx`);
+        base = resolveUrl(lv.url, ts.source);
+        try { def = JSON.parse(await readFile(new URL('../' + base, import.meta.url), 'utf8')); } catch (e) { ok(false, `${lv.id}: tileset ${base} unreadable (${e.message})`); continue; }
+      }
+      if (def.image) ok(await exists(new URL('../' + resolveUrl(base, def.image), import.meta.url)), `${lv.id}: tileset image ${resolveUrl(base, def.image)} missing`);
+      maxGid = Math.max(maxGid, ts.firstgid + (def.tilecount || 0) - 1);
+    }
+    const plan = layerPlan(map);
+    for (const p of plan) {
+      if (p.layer.type === 'imagelayer') ok(await exists(new URL('../' + resolveUrl(lv.url, p.layer.image), import.meta.url)), `${lv.id}: image layer "${p.name}" file ${p.layer.image} missing`);
+      if (p.layer.type === 'tilelayer') {
+        ok(Array.isArray(p.layer.data), `${lv.id}: layer "${p.name}" must use CSV tile layer format`);
+        for (const g of p.layer.data || []) if (((g >>> 0) & 0x0fffffff) > maxGid) { ok(false, `${lv.id}: layer "${p.name}" uses tile ${g & 0x0fffffff} beyond its tilesets`); break; }
+      }
+      ok(['back', 'main', 'glow', 'front'].includes(p.role), `${lv.id}: layer "${p.name}" has unknown role "${p.role}"`);
+    }
+    ok(!SCENES[lv.id] || SCENES[lv.id].tiled, `${lv.id}: id collides with a hand-written scene`);
+    if (!errs.length) SCENES[lv.id] = scene;
+    ok(Object.keys(scene.spawns).length > 0, `${lv.id}: no spawn`);
+  }
 }
 
 console.log('Scenes');
