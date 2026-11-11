@@ -88,3 +88,8 @@ window, rutted street snow and footprints, porch posts. `assets/levels/main_stre
 snow), station (the pitched snow roof), sawmill (fence, barrel, crate, planks, cordwood) and this one. The watcher prop takes its
 window position from the map (prop `args` = top-left of the lit pane in world units), so moving the window means editing that
 property in Tiled.
+
+**Forecourt additions (appended tiles, indices of existing tiles unchanged):** `pine_a` (4×6), `pine_b` (2×4), `shrub`, `bench` (2×1), `trodden_a/b`.
+`tools/patch-forecourt-pass2.mjs` applied them once to `assets/levels/black_ram_exterior.tmj` (street arriving from Main Street, snow trodden
+flat before the door, one set of prints leaving east, barrels/crate/bench/drifts/shrub, the MILL board with its interactable, an
+outbuilding door/window/unlit lantern, pines). That map now combines three tilesets (Black Ram, sawmill, main_street) and is edited in Tiled.

@@ -108,6 +108,32 @@ function build() {
   addTile('doorstep_drift', (c) => { for (let x = 0; x < T; x++) { const h = Math.round(Math.sin((x / 15) * Math.PI) * 5) + 1; for (let y = 0; y < h; y++) c.p(x, 15 - y, y > h - 2 ? 'snow4' : y > h - 4 ? 'snow3' : 'snow1'); } });
   addTile('eave_post', (c) => { c.r(6, 0, 4, T, 'wood2'); c.vl(6, 0, 15, 'wood3'); c.vl(9, 0, 15, 'wood0'); }); // porch post
   addTile('eave_post_foot', (c) => { c.r(6, 0, 4, 13, 'wood2'); c.vl(6, 0, 12, 'wood3'); c.vl(9, 0, 12, 'wood0'); c.hl(4, 11, 13, 'snow3'); c.hl(5, 10, 12, 'snow4'); });
+  // ---- appended for the hotel forecourt (Pass 2): pines, shrub, bench, trodden snow ----
+  const pine = (c, cx, baseY, tiers, half, seed) => { // dark snow-laden pine: layered drooping boughs on a bare trunk
+    c.r(cx - 2, baseY - 14, 4, 14, 'wood1'); c.vl(cx - 2, baseY - 14, baseY - 1, 'wood2'); c.vl(cx + 1, baseY - 14, baseY - 1, 'wood0');
+    for (let k = 0; k < tiers; k++) {
+      const topY = baseY - 14 - (tiers - k) * 15 + 6, w = Math.round((half * (k + 1.4)) / tiers);
+      for (let d = 0; d < 20; d++) {
+        const y = topY + d, span = Math.min(w, Math.round((d * w) / 17) + 1);
+        for (let x = -span; x <= span; x++) {
+          const edge = Math.abs(x) >= span - 1, lit = x < 0;
+          const droop = Math.floor(hash(x + seed, d, 70) * 2);
+          c.p(cx + x, y + (edge ? droop : 0), d < 2 ? 'snow4' : d < 4 && !edge ? (hash(x, d, 71) > 0.4 ? 'snow3' : 'slate4') : edge ? (lit ? 'slate2' : 'navy3') : hash(x + seed, y, 72) > 0.86 ? 'slate0' : lit ? 'navy3' : 'navy2');
+        }
+      }
+    }
+  };
+  addBlock('pine_a', 4, 6, (c) => pine(c, 32, 96, 5, 26, 1));
+  addBlock('pine_b', 2, 4, (c) => pine(c, 16, 64, 3, 14, 7));
+  addTile('shrub', (c) => { for (let x = 1; x < 15; x++) { const h = 4 + Math.round(Math.sin(((x - 1) / 13) * Math.PI) * 6); for (let y = 0; y < h; y++) c.p(x, 15 - y, y > h - 3 ? (y === h - 1 ? 'snow4' : 'snow3') : hash(x, y, 73) > 0.5 ? 'navy3' : 'slate0'); } for (let i = 0; i < 4; i++) c.p(3 + i * 3, 15 - 5 - (i % 2), 'wood2'); });
+  addBlock('bench', 2, 1, (c) => { c.r(2, 7, 28, 3, 'wood2'); c.hl(2, 29, 7, 'wood4'); c.hl(2, 29, 9, 'wood0'); c.r(4, 10, 3, 6, 'wood1'); c.r(25, 10, 3, 6, 'wood1'); c.r(2, 3, 28, 2, 'wood1'); c.hl(2, 29, 3, 'wood3'); c.vl(5, 3, 7, 'wood0'); c.vl(26, 3, 7, 'wood0'); for (let x = 3; x < 29; x++) { c.p(x, 6, hash(x, 1, 74) > 0.35 ? 'snow3' : 'snow4'); if (hash(x, 2, 74) > 0.7) c.p(x, 5, 'snow4'); } });
+  const trodden = (c, seed) => { // snow beaten flat by many boots toward the door
+    brTile(BR_SNOW_TOP, c);
+    for (let i = 0; i < 9; i++) { const x = Math.floor(hash(i, seed, 75) * 13), y = 2 + Math.floor(hash(i, seed, 76) * 11); c.r(x, y, 3, 2, 'snow0'); c.hl(x, x + 2, y - 1, 'snow2'); }
+    for (let x = 0; x < T; x++) if (hash(x, seed, 77) > 0.7) c.p(x, 5 + (x % 6), 'snow1');
+  };
+  addTile('trodden_a', (c) => trodden(c, 1));
+  addTile('trodden_b', (c) => trodden(c, 2));
 }
 
 build();

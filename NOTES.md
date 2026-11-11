@@ -389,3 +389,9 @@ All other LFOs drive filter frequencies or inner stages, not output gains.
 **Unchanged:** every interactable, the Finch and watcher events, exits, spawns, gates and dialogue (the objects layer was kept). Visual baseline `main-street-evening` was regenerated on purpose.
 
 **Not done:** recorded audio; the east end still ends at the woodshed rather than showing the way toward the hotel (the forecourt screen takes over at the edge); not opened in Tiled.
+
+## 16. Hotel forecourt detail pass (2026-11-12)
+
+The forecourt keeps its Black Ram hotel, annex, boardwalk, lamp and windows. Added (`tools/patch-forecourt-pass2.mjs`, run once; Tiled owns the map): the street arriving from Main Street (rutted snow), snow trodden flat in front of the door, one set of prints leaving east toward the creek path, barrels/crate/bench/drifts/shrub, the **MILL board** on its post with an interactable ("Old sign", the line it had on the old village street), an outbuilding door/window and an unlit lantern on its hook, and pines framing the way down to the creek. Five tiles were appended to `main_street_exterior` (88 tiles, existing indices unchanged, Pixelorama source re-imported with a verified round trip). Two forecourt baselines were regenerated on purpose; 73 e2e tests pass.
+
+**Not done:** the pines read faintly at night darkness; no recorded audio; the east exit still jumps straight to the creek screen (no bank slope drawn). Road and Creek are still hand-written scenes.

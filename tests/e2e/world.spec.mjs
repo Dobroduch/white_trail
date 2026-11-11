@@ -265,3 +265,27 @@ test.describe('Main Street (tile-built, Pass 2)', () => {
     await expectClean(page, errors);
   });
 });
+
+test.describe('Hotel forecourt (detail pass)', () => {
+  test('the MILL board points the way to the creek and can be examined', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'BLACK_RAM_EXTERIOR' });
+    await page.evaluate(() => { TWT.state.flags.introDone = true; T.walkTo(480); });
+    expect((await info(page)).prompt).toBe('Examine — Old sign');
+    await press(page, 'KeyE', 90);
+    expect((await info(page)).dlg).toContain('MILL');
+    await page.evaluate(() => T.talkThrough());
+    await expectClean(page, errors);
+  });
+
+  test('street arrives from Main Street, the porch is worn, prints leave east; the playfield is painted end to end', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'BLACK_RAM_EXTERIOR' });
+    await step(page, 2);
+    const r = await page.evaluate(() => {
+      const c = TWT.layers.main.canvas, x = c.getContext('2d');
+      const alpha = (px, py, w = 8, h = 8) => { const d = x.getImageData(px, py, w, h).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n / (w * h); };
+      return { west: alpha(8, 230), door: alpha(470, 180), sign: alpha(704, 200, 16, 16), shed: alpha(780, 200), pines: alpha(880, 150, 16, 16), east: alpha(940, 230) };
+    });
+    for (const [k, v] of Object.entries(r)) expect(v, k).toBeGreaterThan(0.3);
+    await expectClean(page, errors);
+  });
+});
