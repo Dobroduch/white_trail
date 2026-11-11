@@ -1,6 +1,7 @@
 // Dynamic scene props: things that animate, react to story state, or must layer around characters.
 // A prop factory returns { z, update(dt, game), draw(ctx, camX, game), glow?(ctx, camX, game), lights?(game) }.
-import { H } from '../engine/display.js';
+// draw/glow run in the world render pass: coordinates are WORLD units and camX is the camera's whole
+// world-unit position (the sub-unit remainder is already applied by the pass transform).
 import { drawSprite } from '../engine/assets.js';
 import { mulberry32 } from '../engine/rng.js';
 import { PAL, canvas, rect, px, hline, vline, line, signText } from './paint.js';
@@ -361,10 +362,14 @@ export function ledgerProp() {
 // ---------------- Sawmill: lantern on the ridge (the closing beat) ----------------
 export function ridgeLightProp() {
   const RX = 300; // position along the ridge layer
-  const pos = (game, camX) => {
+  // Attached to the ridge parallax layer: its draw-x comes from game.layerX(RIDGE_FACTOR), which is
+  // native-grid aligned; split into whole units (for the integer pixel helpers) + a remainder.
+  const pos = (game) => {
     const heights = sceneMeta.SAWMILL && sceneMeta.SAWMILL.ridgeHeights;
     const top = heights ? heights[RX] : 90;
-    return { x: Math.round(RX - camX * RIDGE_FACTOR + game.ridgeLight.swing), y: top - 3 };
+    const lx = game.layerX(RIDGE_FACTOR);
+    const base = Math.floor(lx + 1e-6);
+    return { x: RX + base + game.ridgeLight.swing, frac: lx - base, y: top - 3 };
   };
   const visible = (game) => game.state.flags.ridgeLightStart && game.ridgeLight && game.ridgeLight.k > 0;
   // Drawn in the depth-sorted pass (behind the playfield) so the mill frame occludes it correctly.
@@ -373,21 +378,22 @@ export function ridgeLightProp() {
     draw(ctx, camX, game) {
       if (!visible(game)) return;
       const k = game.ridgeLight.k;
-      const { x, y } = pos(game, camX);
+      const { x, y, frac } = pos(game);
       const flick = Math.sin(game.time * 11) > 0.6 ? 1 : 0;
+      ctx.save();
+      ctx.translate(frac, 0);
       ctx.globalAlpha = k * 0.3;
       rect(ctx, x - 3, y - 2, 7, 5, PAL.amber); rect(ctx, x - 2, y - 3, 5, 7, PAL.amber);
       ctx.globalAlpha = k;
       rect(ctx, x - 1, y - 1, 3, 3, PAL.amber);
       px(ctx, x, y, flick ? '#fff7d6' : PAL.amberHi);
       px(ctx, x, y + 2, PAL.kerosene);
-      ctx.globalAlpha = 1;
+      ctx.restore();
     },
     lights(game) {
       if (!visible(game)) return [];
-      const camX = game.camera.ix;
-      const { x, y } = pos(game, camX);
-      return [{ x: x + camX, y, r: 9, strength: game.ridgeLight.k, warm: 0.25 * game.ridgeLight.k }];
+      const { x, y, frac } = pos(game);
+      return [{ x: x + frac + game.camera.ix, y, r: 9, strength: game.ridgeLight.k, warm: 0.25 * game.ridgeLight.k }];
     },
     worldPos(game) {
       const heights = sceneMeta.SAWMILL && sceneMeta.SAWMILL.ridgeHeights;
@@ -401,4 +407,4 @@ export const PROP_FACTORIES = {
   patrons: patronsProp, deskFront: deskFrontProp, watcher: watcherProp, windowSnow: windowSnowProp,
   lamp: lampLight, body: bodyProp, watch: watchProp, ledger: ledgerProp, ridgeLight: ridgeLightProp,
 };
-void H; void signText;
+void signText;

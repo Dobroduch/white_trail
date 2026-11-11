@@ -1,7 +1,11 @@
 // Restrained side-scrolling camera with three framing modes.
 // exploration: wide (zoom 1), slight lookahead; investigation: closer, between Silas and object;
-// dialogue: closest, between speakers. Horizontal position is integer-snapped for rendering.
-import { W, H } from './display.js';
+// dialogue: closest, between speakers.
+// The camera lives in WORLD units (it frames VIEW_W×VIEW_H of them) but scrolls on the NATIVE pixel
+// grid: `pos` is snapped to multiples of 1/WORLD_SCALE, and is split into a whole world-unit part
+// (`ix`, which legacy draw code subtracts and rounds against) plus a sub-unit remainder (`sub`, applied
+// once as a framebuffer translation), so legacy art and the backdrop always move together.
+import { VIEW_W, VIEW_H, WORLD_SCALE, snapN } from './display.js';
 
 const MODES = {
   exploration: { zoom: 1.0, look: 26 },
@@ -11,14 +15,14 @@ const MODES = {
 
 export class Camera {
   constructor() {
-    this.x = 0; // left edge in world px (float)
+    this.x = 0; // left edge in world units (float)
     this.zoom = 1;
     this.mode = 'exploration';
-    this.focusX = 160; this.focusY = 120; // world-space point of interest
+    this.focusX = VIEW_W / 2; this.focusY = 120; // world-space point of interest
     this.override = null; // { x, y } authored focus from cutscenes
     this.lookahead = 0;
     this.reduced = false;
-    this.sceneW = W;
+    this.sceneW = VIEW_W;
   }
   setMode(mode, focus) {
     this.mode = mode;
@@ -26,7 +30,7 @@ export class Camera {
   }
   snap(targetX, sceneW) {
     this.sceneW = sceneW;
-    this.x = clamp(targetX - W / 2, 0, Math.max(0, sceneW - W));
+    this.x = clamp(targetX - VIEW_W / 2, 0, Math.max(0, sceneW - VIEW_W));
     this.lookahead = 0;
     this.zoom = 1;
   }
@@ -41,7 +45,7 @@ export class Camera {
       fy = (player.y - 16 + this.modeFocus.y) / 2;
     }
     if (this.override) { fx = this.override.x; fy = this.override.y; }
-    const targetX = clamp(fx - W / 2, 0, Math.max(0, this.sceneW - W));
+    const targetX = clamp(fx - VIEW_W / 2, 0, Math.max(0, this.sceneW - VIEW_W));
     const follow = this.override ? 2.2 : 4.0;
     this.x += (targetX - this.x) * Math.min(1, dt * follow);
     const wantZoom = this.reduced ? 1 : (this.override && this.override.zoom ? this.override.zoom : m.zoom);
@@ -49,10 +53,15 @@ export class Camera {
     if (Math.abs(this.zoom - wantZoom) < 0.002) this.zoom = wantZoom;
     this.focusX = fx; this.focusY = fy;
   }
-  get ix() { return Math.round(this.x); }
-  // Focus point in world-buffer (screen) space, for the zoom crop.
+  // Render position: left edge snapped to the native pixel grid (world units).
+  get pos() { return snapN(this.x); }
+  // Whole world-unit part of `pos` (legacy draw code subtracts this and rounds).
+  get ix() { return Math.floor(this.pos + 1e-6); }
+  // Remainder of `pos` below one world unit: 0, 1/3 or 2/3 at WORLD_SCALE 1.5.
+  get sub() { return Math.max(0, this.pos - this.ix); }
+  // Focus point in NATIVE screen px, for the zoom crop.
   screenFocus() {
-    return { x: this.focusX - this.ix, y: clamp(this.focusY, 0, H) };
+    return { x: (this.focusX - this.pos) * WORLD_SCALE, y: clamp(this.focusY, 0, VIEW_H) * WORLD_SCALE };
   }
 }
 

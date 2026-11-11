@@ -1,7 +1,7 @@
 // Asset loading: pixel-art sprites are stored as palette strings in assets/sprites/sprites.json
 // and rasterised to canvases at startup. Missing/malformed assets log a clear console error and
 // fall back to a deliberate silhouette so the game never fails silently.
-import { makeCanvas } from './display.js';
+import { makeCanvas, snapN } from './display.js';
 
 const sprites = new Map(); // name -> { frames: [canvas], flipped: [canvas], w, h }
 let palette = {};
@@ -131,10 +131,13 @@ export function getSprite(name) {
   return sprites.get(name) || fallback(name);
 }
 
-// Draw a sprite with its feet at (x, y). facing: 1 = right, -1 = left.
+// Draw a sprite with its feet at (x, y) in WORLD units (world render pass). facing: 1 = right, -1 = left.
+// Sprites in sprites.json are legacy density (1 sprite pixel = 1 world unit = 1.5 native px); the
+// framebuffer shows each as an exact 3×3 block. The position snaps to the NATIVE grid, so characters
+// move in 2/3-unit steps instead of whole legacy pixels. (Integer inputs are unchanged by snapN.)
 export function drawSprite(ctx, name, frame, x, y, facing = 1) {
   const s = getSprite(name);
   const list = facing < 0 ? s.flipped : s.frames;
   const img = list[((frame % list.length) + list.length) % list.length];
-  ctx.drawImage(img, Math.round(x - s.w / 2), Math.round(y - s.h));
+  ctx.drawImage(img, snapN(x - s.w / 2), snapN(y - s.h));
 }

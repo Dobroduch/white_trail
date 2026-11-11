@@ -36,7 +36,7 @@ export class DialogueView {
       else if (this.t > 0.12) r.advance();
     }
   }
-  // Optional mouse: (lx, ly) are logical 320x180 screen coordinates.
+  // Optional mouse: (lx, ly) are UI layout units (see ui/text.js), from Display.clientToUI.
   click(lx, ly) {
     const r = this.game.dialogue;
     if (!r.active) return;

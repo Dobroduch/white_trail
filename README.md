@@ -47,10 +47,12 @@ Progress is saved automatically to `localStorage` at checkpoints: entering a sce
 
 ## Display
 
-The game renders internally at **320×180** and scales to fill the browser window. The 16:9 ratio is always kept and the image is never stretched; any leftover space becomes black bars, and the frame stays centred.
+The game's native resolution is **480×270** and it scales to fill the browser window. The 16:9 ratio is always kept and the image is never stretched; any leftover space becomes black bars, and the frame stays centred. At 1920×1080 (device pixels) the frame is an exact 4×.
 
-- **Fill window** (default): uses whole-pixel scaling whenever that fills at least 90% of the window. Otherwise the frame is upscaled with nearest-neighbour to a whole multiple and smoothly downscaled once to the exact fit. That fills the window while keeping pixel edges sharp.
-- **Whole pixels**: always uses the largest whole multiple. This is the crispest option but can leave wide borders.
+- **Fill window** (default): uses whole-pixel scaling of 480×270 whenever that fills at least 90% of the window. Otherwise the frame is upscaled with nearest-neighbour to a whole multiple and smoothly downscaled once to the exact fit. That fills the window while keeping pixel edges sharp.
+- **Whole pixels**: always uses the largest whole multiple of 480×270. This is the crispest option but can leave wide borders.
+
+The existing art is authored at the original 320×180 density and is shown at exactly 1.5 native pixels per art pixel, so the camera frames the same part of the world as before. See `src/engine/display.js` for the coordinate spaces, and NOTES.md §9 for details.
 
 Choose between them in Pause → Settings → Display scaling. Resizing the window and entering or leaving fullscreen rescale the game immediately.
 
@@ -83,7 +85,7 @@ index.html            entry page (shows a clear message if opened from file://)
 start.bat             Windows launcher
 assets/sprites/       sprites.json — original palette-string pixel art (Silas, cast, props)
 src/main.js           bootstrap, focus/visibility pause
-src/engine/           loop (fixed 60 Hz), display (320×180 + integer scaling + zoom compositor),
+src/engine/           loop (fixed 60 Hz), display (480×270 native, resolution constants + scaling + zoom compositor),
                       camera (exploration / investigation / dialogue framing), input, assets, game
 src/systems/          storyState (flags, conditions, effects), dialogue runner, cutscene runner,
                       save, survival (lantern, warmth, revolver stub)

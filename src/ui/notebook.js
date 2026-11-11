@@ -1,7 +1,7 @@
 // Silas's case file. Tabs: Case · Evidence · Statements · Leads · Deductions.
 // Evidence entries separate OBSERVED (what he saw) from INTERPRETATION (his tentative reading).
 // Deductions are formed only from authored pairs of records the player has actually found.
-import { UI, font, text, panel, wrap, spaced } from './text.js';
+import { UI, font, text, panel, wrap, spaced, UI_W, UI_H, UI_CX } from './text.js';
 import { EVIDENCE, PLACE_NAMES, PEOPLE_NAMES } from '../data/evidence.js';
 import { DEDUCTIONS, DEDUCTION_REFUSAL, LEADS, PEOPLE, TELEGRAM_TEXT } from '../data/notebookData.js';
 import { test, timeString } from '../systems/storyState.js';
@@ -85,7 +85,7 @@ export class Notebook {
   draw(ctx) {
     const s = this.game.state;
     // paper
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, UI_W, UI_H);
     panel(ctx, 8, 6, 304, 168, UI.paper, '#3b2f22');
     ctx.fillStyle = 'rgba(90,70,40,0.07)';
     for (let y = 30; y < 166; y += 7) ctx.fillRect(14, y, 292, 0.4);
@@ -108,7 +108,7 @@ export class Notebook {
     font(ctx, 4.3, { italic: true });
     const foot = name === 'DEDUCTIONS' ? 'Left / Right  tabs    Up / Down  choose    E mark two records to compare    Tab / Esc close'
       : 'Left / Right  tabs    Up / Down  choose    Tab / Esc close';
-    text(ctx, foot, 160, 170, UI.inkDim, 'center');
+    text(ctx, foot, UI_CX, 170, UI.inkDim, 'center');
   }
 
   drawLeads(ctx) {

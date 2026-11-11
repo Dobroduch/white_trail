@@ -3,7 +3,9 @@
 //   main:  { canvas, glow? }              the playfield (factor 1)
 //   front: [{ canvas, factor }]            foreground silhouettes (kept sparse so clues stay visible)
 // "glow" canvases are emissive pixels drawn after the lighting pass (lit windows, lamps).
-import { W, H } from '../engine/display.js';
+// Painters author in WORLD units (1 canvas pixel = 1 world unit = legacy density). W×H here is the
+// world-unit view the camera frames (VIEW_W×VIEW_H = 320×180), not a screen resolution.
+import { VIEW_W as W, VIEW_H as H } from '../engine/display.js';
 import { mulberry32 } from '../engine/rng.js';
 import {
   PAL, canvas, rect, px, hline, vline, line, ditherGradient, ditherFill, mountains, pine, pineRow,

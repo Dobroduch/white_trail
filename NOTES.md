@@ -29,8 +29,8 @@ Status as of 2026-11-11: first playable vertical slice, from the train arrival t
    After four are recorded, the closing beat plays: a lantern appears on the ridge, swings once, and goes dark. *"Somebody watched me find him."* Leaving by the footbridge then shows the end card, which summarizes recorded details, statements, deductions and the open questions. From there the player can keep investigating or return to the title.
 
 ### Systems
-- **Rendering.** World rendered at a logical **320×180**, scaled by whole numbers and letterboxed, with nearest-neighbour filtering. Render passes are separate: parallax backgrounds → depth-sorted props and characters → snow and fog → lighting (darkness with banded light pools, then additive warm glow) → emissive windows and lamps → foreground snow → composite → UI.
-- **Adaptive camera.** Exploration (wide, look-ahead), investigation (zoom ×1.14 between Silas and the object), and dialogue (×1.28 between the speakers), plus authored overrides in cutscenes. Zoom is shimmer-free: the 320×180 frame is first upscaled crisply by a whole number, and only then cropped with bilinear sampling. The camera position is snapped to whole pixels. *Reduce camera motion* turns the zoom off.
+- **Rendering.** Native resolution **480×270** (originally 320×180; see §9), scaled by whole numbers and letterboxed, with nearest-neighbour filtering. Render passes are separate: parallax backgrounds → depth-sorted props and characters → snow and fog → lighting (darkness with banded light pools, then additive warm glow) → emissive windows and lamps → foreground snow → composite → UI.
+- **Adaptive camera.** Exploration (wide, look-ahead), investigation (zoom ×1.14 between Silas and the object), and dialogue (×1.28 between the speakers), plus authored overrides in cutscenes. Zoom is shimmer-free: the frame is first upscaled crisply by a whole number, and only then cropped with bilinear sampling. The camera position is snapped to the native (480×270) pixel grid. *Reduce camera motion* turns the zoom off.
 - **Evidence system.** Data-driven (`src/data/evidence.js`). Each record has:
   - a stable ID, title, category and location;
   - a direct `observed` text and an optional `detail` for the closer look;
@@ -134,7 +134,7 @@ Bugs found and fixed during testing:
 - The art is original but deliberately economical: one sprite per character, procedural backgrounds, and no close-up/portrait art for evidence.
 - After the ridge-light beat, leaving the sawmill always shows the end card; returning to the village is out of scope for this slice.
 - There is no key remapping, gamepad or mouse support (mouse is optional per the spec).
-- UI text is drawn with the system Georgia font, falling back to Times. It is rendered crisply at display resolution on pixel-grid panels; the world itself is strictly 320×180. This was a legibility decision. A bitmap pixel font could replace it if the design owner prefers a pure-pixel UI.
+- UI text is drawn with the system Georgia font, falling back to Times. It is rendered crisply at display resolution on pixel-grid panels; the world itself is strictly on its pixel grids (see §9). This was a legibility decision. A bitmap pixel font could replace it if the design owner prefers a pure-pixel UI.
 - The location clock uses approximate per-route travel minutes.
 - `window.TWT` (the game object) and the `?dpr=N` URL parameter are exposed for testing only.
 
@@ -236,3 +236,74 @@ Nothing here resolves a Part IX question. Wherever a line needed a detail the GD
 - The full playthrough passes.
 
 All other LFOs drive filter frequencies or inner stages, not output gains.
+
+## 9. Native resolution 320×180 → 480×270 (2026-11-11)
+
+**Goal.** Raise the logical resolution to 480×270 without zooming out. Silas, the composition, movement and timing stay the same; the change adds a finer pixel grid for motion, effects and future art.
+
+**Coordinate spaces** (all constants live in `src/engine/display.js`; nothing else hard-codes 320/180/480/270):
+
+| Space | Size | Used for |
+|---|---|---|
+| NATIVE | 480×270 | the logical pixel grid: camera scrolling, sprite placement, lighting, snow, pointer input, future art |
+| WORLD units | camera frames `VIEW_W×VIEW_H` = 320×180 | positions, speeds, collision, scene widths, all existing art (1 art pixel = 1 unit = `WORLD_SCALE` 1.5 native px) |
+| FRAMEBUFFER | 960×540 (`FB_SCALE` 2 per native px) | world compositing |
+| UI units | `UI_W×UI_H` = 320×180 (`UI_SCALE` 1.5 native px) | HUD, menus, dialogue layout; drawn on the output canvas at device resolution |
+| DEVICE / CSS px | output backing store / page size | handled only by `Display` |
+
+**Why a 960×540 framebuffer.** Showing 320-density art at 1.5× on a 480 grid with nearest-neighbour gives uneven 1-2-1-2 pixel widths. Those widths also shimmer as things move, and bilinear filtering would blur them instead. 960×540 is the smallest grid on which both a legacy pixel (exactly 3×3) and a native pixel (exactly 2×2) are whole, so both kinds of art stay exact. At 1920×1080 it is presented at a clean 2× (= 4× native).
+
+**Render passes** (`Game.draw`):
+- **world:** 3 px per unit, shifted by the camera's sub-unit remainder. This draws parallax layers, props, characters, breath, foreground and emissive glows. Legacy draw code is unchanged: it still subtracts a whole-unit `camX` and rounds.
+- **view:** screen-anchored legacy textures (fog).
+- **native:** 2 px per native px (snow).
+- **lighting:** rendered into native-resolution 480×270 buffers, then nearest-scaled.
+
+**Camera.** World-unit position, snapped to the native grid (steps of 2/3 unit, smoother than the old 1-unit steps). It is exposed as `pos` = `ix` (whole units) + `sub` (0, 1/3 or 2/3). `Game.layerX(factor)` is the single source of parallax offsets, and the ridge lantern uses it too. Silas and the NPCs snap to the native grid via `snapN`; static props remain glued to the playfield.
+
+**UI.** Layout coordinates are unchanged, now expressed as `UI_W`/`UI_H`/`UI_CX` instead of literals. The UI transform is `outputWidth / UI_W`, so every panel and font keeps its previous apparent size. Text is vector, so it gains nothing from a pixel grid.
+
+**Input.** Pointer path: `Display.clientToNative` (CSS → native via the canvas's bounding rect, so DPR, letterbox and fullscreen don't matter) → `Display.unprojectZoom` (native) → `/ WORLD_SCALE + camera.pos` → world. Dialogue choices use `Display.clientToUI`.
+
+**Unchanged by design:** world coordinates, scene widths, ground lines, bounds, hotspot sizes, interaction radii, walk speed (44 units/s), acceleration, camera follow rates and zoom factors, cutscene coordinates, and all story data.
+
+**Effects at the new resolution:**
+- **Lighting:** radii are scaled ×1.5 into native px, with the same bands and colours. Band steps are 1.5× finer; the minimum radius is now 3 native px (formerly 2 legacy px).
+- **Snow:** flake sizes are 1/2/3 native px for the far/mid/near layers. The nearest whole-pixel match to the old 1/1/2 legacy px (1.5/1.5/3 native) makes far flakes a little finer.
+- **Fog** and **breath** are unchanged.
+- **Scanlines:** one per art row, as before.
+
+**Tested** (in-app browser; `?dpr=1` unless noted):
+
+| Check | Result |
+|---|---|
+| `node tools/validate.mjs` | 2176 checks, 0 errors |
+| `T.fullRun()` and `T.fullRun({ finchKind: false, examineAll: false })` | 27/27 and 27/27 PASS, 0 runtime errors |
+| 1920×1080 | 1920×1080 output, native ×4, framebuffer ×2 (integer path) |
+| 1366×768 | 1360×765 sharp fit (native ×2.83), centred 3 px / 2 px |
+| 1280×720 | 1280×720 sharp fit (native ×2.67) |
+| 1024×768 | 960×540 integer (native ×2), letterboxed 32 px / 114 px |
+| 760×480 | 752×423 sharp fit, no scrollbars |
+| 1280×720 CSS at DPR 1.5 | 1920×1080 backing store, native ×4 integer |
+| Live resize between all of the above | no reload, no errors |
+| Hotspot round trip (world → client → world → `hotspotAt`), at every size and at zoom 1 / 1.14 / 1.28 | every on-screen hotspot hit, error 0.0000 units |
+| Dispatched clicks at every size | click on Mrs. Gable → walk + dialogue at zoom 1.28; hover on a choice → selects it; click → advances |
+| Pixel exactness: the playfield layer alone, at camera phases 0, 1/3, 2/3 and the scene edges | 0 off-grid edges, horizontally or vertically; every legacy pixel is an exact 3×3 framebuffer block, so no blur and no uneven pixels |
+| Composition | camera position is identical to the pre-migration build for the same input; Silas is 28 of 180 world rows (15.6% of the frame height), unchanged |
+| Walk speed | 44.00 units/s, unchanged |
+| Render submit time (1920×1080 output) | ~0.4 ms at zoom 1, ~0.5 ms at zoom 1.28 (CPU side only; GPU time not measured) |
+| Screenshots | station, parlor (dialogue zoom + toast), creek at night (lantern, snow, fog, foreground) and the title menu all match the previous look |
+
+**Art that would benefit from native 480×270 redraws** (not required; everything works and stays exact as-is):
+- **Characters** (`assets/sprites/sprites.json`): Silas (body, legs, idle/walk composites), conductor, Finch, Gable, the patrons, Hale's body, the lantern and the candle. These are the biggest win: faces and hands read at 1.5× density.
+- **Procedural backdrops** (`src/world/painters.js`): every scene's main playfield (station, road, village, parlor, Room 4, creek, sawmill), plus the sky gradients, mountain ridges and pine rows. Signage uses a 3×5 pixel font (`signText`) that would read better at native density.
+- **Procedural props** (`src/world/props.js`): train body, wheels and steam, fire, the desk front, the watch and the ledger.
+- **Fog texture** (`fogTexture` in `paint.js`).
+
+**Using native-density art later.** Draw it in the native pass (`ctx.setTransform(FB_SCALE, 0, 0, FB_SCALE, 0, 0)`), or in the world pass with a destination size of `width / WORLD_SCALE` world units. Either way, one asset pixel equals 2×2 framebuffer px. A layer replacing a painter canvas needs the scene width × 1.5 native px. To mix densities on one asset type, give assets a `density` field (px per world unit: 1 legacy, 1.5 native) and size the `drawImage` destination by it. No asset uses this yet, so the loader is unchanged.
+
+**Known limitations:**
+- A window size that is an odd multiple of 480 (e.g. 1440×810 at 3×) puts a legacy pixel at 4.5 device px. Those sizes use the sharp-fit path, which leaves a one-pixel soft edge on legacy art; native-grid elements stay exact. The default 'auto' mode only picks 3× when it fills ≥ 90% of the window.
+- At 1280×720 and 1366×768 the old build was a pixel-perfect 4×. Now it is sharp fit, because 480 does not divide those widths at a useful whole factor. The result is visually near-identical (hairline filtering only), but not bit-exact.
+- Static props still sit on whole legacy units relative to the playfield. That is intended (they are part of it), but a prop moving by itself, like the train, steps in whole units rather than native px.
+- Not verified: real-time feel at 60 fps in a visible window (the test pane throttles rAF), Firefox/Safari, and real fullscreen (the embedded browser refuses the API).

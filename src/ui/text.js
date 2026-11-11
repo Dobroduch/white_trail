@@ -1,5 +1,11 @@
-// UI drawing helpers. The interface is drawn on the output canvas in logical 320x180 units
-// (transform = integer display scale), so panels sit on the pixel grid while text stays legible.
+// UI drawing helpers. The interface is drawn on the output canvas (device resolution) in UI layout
+// units: a UI_W×UI_H (320×180) 16:9 frame, 1 unit = UI_SCALE (1.5) native px. Keeping the layout
+// units fixed across the 480×270 migration keeps every panel and font at its previous apparent size;
+// text is rendered as vector glyphs at device resolution, so it is as sharp as the display allows.
+// New UI that should sit on the native pixel grid can multiply native coordinates by 1 / UI_SCALE.
+import { UI_W, UI_H, UI_SCALE } from '../engine/display.js';
+export { UI_W, UI_H, UI_SCALE };
+export const UI_CX = UI_W / 2;
 export const SERIF = "Georgia, 'Times New Roman', Times, serif";
 export const UI = {
   bone: '#f1f5f9', dim: '#94a3b8', faint: '#64748b', amber: '#f59e0b', amberDim: '#b45309',

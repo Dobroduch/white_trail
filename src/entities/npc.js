@@ -1,5 +1,6 @@
 // Named story characters. Never combat targets; they carry state in storyState.chars.
 import { drawSprite } from '../engine/assets.js';
+import { snapN } from '../engine/display.js';
 
 export class NPC {
   constructor(def, groundAt) {
@@ -31,11 +32,12 @@ export class NPC {
   }
   draw(ctx, camX) {
     if (this.hidden) return;
-    const x = Math.round(this.x - camX);
+    const x = snapN(this.x) - camX; // native-grid placement
+    const y = snapN(this.y);
     const bob = this.moving ? (Math.floor(this.t * 6) % 2) : 0;
-    drawSprite(ctx, this.sprite, this.moving ? 0 : Math.floor(this.t / 1.3) % 2, x, Math.round(this.y) - bob, this.facing);
-    if (this.lantern) drawSprite(ctx, 'lantern_on', 0, x + this.facing * 5, Math.round(this.y) - 8 - bob, this.facing);
-    if (this.candle) drawSprite(ctx, 'candle', 0, x + this.facing * 5, Math.round(this.y) - 13, this.facing);
+    drawSprite(ctx, this.sprite, this.moving ? 0 : Math.floor(this.t / 1.3) % 2, x, y - bob, this.facing);
+    if (this.lantern) drawSprite(ctx, 'lantern_on', 0, x + this.facing * 5, y - 8 - bob, this.facing);
+    if (this.candle) drawSprite(ctx, 'candle', 0, x + this.facing * 5, y - 13, this.facing);
   }
   lights() {
     if (this.hidden) return [];

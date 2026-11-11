@@ -1,6 +1,6 @@
 // Title, pause, settings, controls help, confirmation, inventory, document and end-card overlays.
 // All keyboard-driven. Each overlay: update(input) -> action | null, draw(ctx).
-import { UI, font, text, spaced, panel, wrap, keycap } from './text.js';
+import { UI, font, text, spaced, panel, wrap, keycap, UI_W, UI_H, UI_CX } from './text.js';
 import { ITEMS, TELEGRAM_TEXT, LEADS } from '../data/notebookData.js';
 import { EVIDENCE } from '../data/evidence.js';
 import { DEDUCTIONS } from '../data/notebookData.js';
@@ -50,22 +50,22 @@ export class TitleMenu {
     const a = Math.min(1, this.t / 2.5);
     ctx.globalAlpha = a;
     font(ctx, 17);
-    spaced(ctx, 'THE WHITE TRAIL', 160, 62, UI.bone, 3.6, 'center');
+    spaced(ctx, 'THE WHITE TRAIL', UI_CX, 62, UI.bone, 3.6, 'center');
     ctx.fillStyle = UI.amberDim; ctx.fillRect(140, 69, 40, 0.7);
     font(ctx, 5.2, { italic: true });
-    text(ctx, 'Crow\'s Hollow, in the Rocky Mountains. Winter, 1892.', 160, 79, UI.dim, 'center');
+    text(ctx, 'Crow\'s Hollow, in the Rocky Mountains. Winter, 1892.', UI_CX, 79, UI.dim, 'center');
     ctx.globalAlpha = 1;
     if (!this.pressed) {
-      if (this.t > 1.2 && Math.floor(this.t * 1.4) % 2 === 0) { font(ctx, 5.4); text(ctx, 'Press any key', 160, 130, UI.dim, 'center'); }
-      ctx.fillStyle = 'rgba(5,7,12,0.75)'; ctx.fillRect(0, 162, 320, 18);
+      if (this.t > 1.2 && Math.floor(this.t * 1.4) % 2 === 0) { font(ctx, 5.4); text(ctx, 'Press any key', UI_CX, 130, UI.dim, 'center'); }
+      ctx.fillStyle = 'rgba(5,7,12,0.75)'; ctx.fillRect(0, UI_H - 18, UI_W, 18);
       font(ctx, 4.5, { italic: true });
-      text(ctx, 'Sound is part of this game. Headphones recommended.', 160, 172, UI.dim, 'center');
+      text(ctx, 'Sound is part of this game. Headphones recommended.', UI_CX, 172, UI.dim, 'center');
       return;
     }
-    drawMenu(ctx, this.items, this.sel, 160, 110, { align: 'center', size: 6.2, gap: 10 });
-    ctx.fillStyle = 'rgba(5,7,12,0.75)'; ctx.fillRect(0, 162, 320, 18);
+    drawMenu(ctx, this.items, this.sel, UI_CX, 110, { align: 'center', size: 6.2, gap: 10 });
+    ctx.fillStyle = 'rgba(5,7,12,0.75)'; ctx.fillRect(0, UI_H - 18, UI_W, 18);
     font(ctx, 4.5, { italic: true });
-    text(ctx, 'Up / Down  choose    E / Enter confirm', 160, 172, UI.dim, 'center');
+    text(ctx, 'Up / Down  choose    E / Enter confirm', UI_CX, 172, UI.dim, 'center');
   }
 }
 
@@ -86,9 +86,9 @@ export class PauseMenu {
     return null;
   }
   draw(ctx) {
-    ctx.fillStyle = 'rgba(5,7,12,0.72)'; ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = 'rgba(5,7,12,0.72)'; ctx.fillRect(0, 0, UI_W, UI_H);
     panel(ctx, 96, 34, 128, 104, UI.panel, UI.edgeHi);
-    font(ctx, 6.4); spaced(ctx, 'PAUSED', 160, 50, UI.bone, 2, 'center');
+    font(ctx, 6.4); spaced(ctx, 'PAUSED', UI_CX, 50, UI.bone, 2, 'center');
     drawMenu(ctx, this.items, this.sel, 112, 66, { size: 5.8, gap: 9.4 });
   }
 }
@@ -133,9 +133,9 @@ export class SettingsMenu {
     return null;
   }
   draw(ctx) {
-    ctx.fillStyle = 'rgba(5,7,12,0.78)'; ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = 'rgba(5,7,12,0.78)'; ctx.fillRect(0, 0, UI_W, UI_H);
     panel(ctx, 66, 16, 188, 152, UI.panel, UI.edgeHi);
-    font(ctx, 6.4); spaced(ctx, 'SETTINGS', 160, 30, UI.bone, 2, 'center');
+    font(ctx, 6.4); spaced(ctx, 'SETTINGS', UI_CX, 30, UI.bone, 2, 'center');
     this.rows().forEach((r, i) => {
       const y = 43 + i * 10;
       const sel = i === this.sel;
@@ -145,7 +145,7 @@ export class SettingsMenu {
       if (r.val) text(ctx, (sel && r.kind !== 'back' ? '‹ ' : '') + r.val + (sel ? ' ›' : ''), 246, y, sel ? UI.amber : UI.dim, 'right');
     });
     font(ctx, 4.3, { italic: true });
-    text(ctx, 'Up / Down  choose    Left / Right  change    Esc back', 160, 163, UI.faint, 'center');
+    text(ctx, 'Up / Down  choose    Left / Right  change    Esc back', UI_CX, 163, UI.faint, 'center');
   }
 }
 
@@ -154,9 +154,9 @@ export class ControlsHelp {
   constructor(game) { this.game = game; }
   update(input) { if (input.pressed('pause') || input.pressed('confirm') || input.pressed('back')) return 'back'; return null; }
   draw(ctx) {
-    ctx.fillStyle = 'rgba(5,7,12,0.8)'; ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = 'rgba(5,7,12,0.8)'; ctx.fillRect(0, 0, UI_W, UI_H);
     panel(ctx, 56, 22, 208, 136, UI.panel, UI.edgeHi);
-    font(ctx, 6.4); spaced(ctx, 'CONTROLS', 160, 37, UI.bone, 2, 'center');
+    font(ctx, 6.4); spaced(ctx, 'CONTROLS', UI_CX, 37, UI.bone, 2, 'center');
     const rows = [
       [['A', 'D'], 'or arrow keys — walk'], [['E'], 'examine · speak · open · continue'], [['F'], 'light or shutter the lantern'],
       [['Tab'], 'notebook (also J)'], [['I'], 'inventory'], [['Esc'], 'pause · close a panel'],
@@ -173,9 +173,9 @@ export class ControlsHelp {
       font(ctx, 5.4); text(ctx, desc, 120, y, UI.dim);
     });
     font(ctx, 4.6, { italic: true });
-    text(ctx, 'Mouse is optional: click something to walk to it and use it; click to continue dialogue.', 160, 140, UI.faint, 'center');
-    text(ctx, 'There is no jump and no combat in this chapter.', 160, 146.5, UI.faint, 'center');
-    text(ctx, 'Press E or Esc to return', 160, 153, UI.faint, 'center');
+    text(ctx, 'Mouse is optional: click something to walk to it and use it; click to continue dialogue.', UI_CX, 140, UI.faint, 'center');
+    text(ctx, 'There is no jump and no combat in this chapter.', UI_CX, 146.5, UI.faint, 'center');
+    text(ctx, 'Press E or Esc to return', UI_CX, 153, UI.faint, 'center');
   }
 }
 
@@ -189,11 +189,11 @@ export class Confirm {
     return null;
   }
   draw(ctx) {
-    ctx.fillStyle = 'rgba(5,7,12,0.8)'; ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = 'rgba(5,7,12,0.8)'; ctx.fillRect(0, 0, UI_W, UI_H);
     panel(ctx, 70, 62, 180, 54, UI.panel, UI.edgeHi);
     font(ctx, 5.8);
-    wrap(ctx, this.q, 160).forEach((l, i) => text(ctx, l, 160, 78 + i * 7, UI.bone, 'center'));
-    drawMenu(ctx, [{ label: 'Yes' }, { label: 'No' }], this.sel, 160, 98, { align: 'center', size: 5.8, gap: 8 });
+    wrap(ctx, this.q, 160).forEach((l, i) => text(ctx, l, UI_CX, 78 + i * 7, UI.bone, 'center'));
+    drawMenu(ctx, [{ label: 'Yes' }, { label: 'No' }], this.sel, UI_CX, 98, { align: 'center', size: 5.8, gap: 8 });
   }
 }
 
@@ -212,9 +212,9 @@ export class Inventory {
   }
   draw(ctx) {
     const s = this.game.state;
-    ctx.fillStyle = 'rgba(5,7,12,0.72)'; ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = 'rgba(5,7,12,0.72)'; ctx.fillRect(0, 0, UI_W, UI_H);
     panel(ctx, 40, 28, 240, 120, UI.panel, UI.edgeHi);
-    font(ctx, 6.2); spaced(ctx, 'WHAT I CARRY', 160, 42, UI.bone, 2, 'center');
+    font(ctx, 6.2); spaced(ctx, 'WHAT I CARRY', UI_CX, 42, UI.bone, 2, 'center');
     s.items.forEach((id, i) => {
       const it = ITEMS[id];
       const y = 58 + i * 10;
@@ -231,7 +231,7 @@ export class Inventory {
       if (it.doc) { font(ctx, 4.6, { italic: true }); text(ctx, 'E — read it', 146, 136, UI.amber); }
     }
     font(ctx, 4.3, { italic: true });
-    text(ctx, 'I / Esc close', 160, 145, UI.faint, 'center');
+    text(ctx, 'I / Esc close', UI_CX, 145, UI.faint, 'center');
   }
 }
 
@@ -246,7 +246,7 @@ export class DocumentView {
   draw(ctx) {
     const a = Math.min(1, this.t / 0.5);
     ctx.globalAlpha = a;
-    ctx.fillStyle = 'rgba(5,7,12,0.55)'; ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = 'rgba(5,7,12,0.55)'; ctx.fillRect(0, 0, UI_W, UI_H);
     const x = 70, y = 40, w = 180, h = 92;
     ctx.fillStyle = '#e4dcc4'; ctx.fillRect(x, y, w, h);
     ctx.fillStyle = '#cfc4a6'; ctx.fillRect(x, y + h - 2, w, 2); ctx.fillRect(x + w - 2, y, 2, h);
@@ -258,7 +258,7 @@ export class DocumentView {
     let yy = y + 24;
     for (const l of TELEGRAM_TEXT) for (const ln of wrap(ctx, l, w - 20)) { text(ctx, ln, x + 10, yy, '#2a2118'); yy += 6.6; }
     ctx.globalAlpha = 1;
-    if (this.t > 0.6) { font(ctx, 4.6, { italic: true }); text(ctx, 'E — fold it away', 160, 146, UI.dim, 'center'); }
+    if (this.t > 0.6) { font(ctx, 4.6, { italic: true }); text(ctx, 'E — fold it away', UI_CX, 146, UI.dim, 'center'); }
   }
 }
 
@@ -274,12 +274,12 @@ export class EndCard {
   }
   draw(ctx) {
     const s = this.game.state;
-    ctx.fillStyle = '#05070c'; ctx.fillRect(0, 0, 320, 180);
+    ctx.fillStyle = '#05070c'; ctx.fillRect(0, 0, UI_W, UI_H);
     const a = Math.min(1, this.t / 1.5);
     ctx.globalAlpha = a;
-    font(ctx, 13); spaced(ctx, 'THE WHITE TRAIL', 160, 34, UI.bone, 3, 'center');
+    font(ctx, 13); spaced(ctx, 'THE WHITE TRAIL', UI_CX, 34, UI.bone, 3, 'center');
     font(ctx, 5.2, { italic: true });
-    text(ctx, 'The first night ends here. The storm does not.', 160, 45, UI.dim, 'center');
+    text(ctx, 'The first night ends here. The storm does not.', UI_CX, 45, UI.dim, 'center');
     const total = Object.keys(EVIDENCE).filter((id) => EVIDENCE[id].location === 'SAWMILL').length;
     const found = countAt(s, 'SAWMILL');
     const statements = Object.keys(s.evidence).filter((id) => EVIDENCE[id].category === 'TESTIMONY').length;
@@ -290,15 +290,15 @@ export class EndCard {
       `Deductions: ${s.deductions.length ? s.deductions.map((d) => DEDUCTIONS[d].title).join('; ') : 'none yet'}`,
     ];
     let y = 62;
-    for (const l of lines) for (const ln of wrap(ctx, l, 250)) { text(ctx, ln, 160, y, UI.bone, 'center'); y += 7.5; }
+    for (const l of lines) for (const ln of wrap(ctx, l, 250)) { text(ctx, ln, UI_CX, y, UI.bone, 'center'); y += 7.5; }
     y += 3;
-    font(ctx, 4.8, { bold: true }); spaced(ctx, 'STILL OPEN', 160, y, UI.amber, 1.2, 'center'); y += 7;
+    font(ctx, 4.8, { bold: true }); spaced(ctx, 'STILL OPEN', UI_CX, y, UI.amber, 1.2, 'center'); y += 7;
     font(ctx, 5, { italic: true });
     const all = LEADS.map((l) => l.variants.find((v) => test(v.if, s))).filter(Boolean);
     // the newest questions (the ridge, the ledger) matter most at this point; keep them visible
     const open = all.length > 8 ? [...all.slice(0, 4), ...all.slice(-4)] : all;
-    for (const v of open) { text(ctx, v.text, 160, y, UI.dim, 'center'); y += 6.1; }
+    for (const v of open) { text(ctx, v.text, UI_CX, y, UI.dim, 'center'); y += 6.1; }
     ctx.globalAlpha = 1;
-    if (this.t >= 2) drawMenu(ctx, this.items, this.sel, 160, 156, { align: 'center', size: 5.6, gap: 8.5 });
+    if (this.t >= 2) drawMenu(ctx, this.items, this.sel, UI_CX, 156, { align: 'center', size: 5.6, gap: 8.5 });
   }
 }

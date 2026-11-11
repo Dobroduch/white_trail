@@ -1,5 +1,5 @@
 // Game orchestration: modes, scenes, update order, render passes, overlays and checkpoints.
-import { W, H, Display } from './display.js';
+import { Display, VIEW_W, VIEW_H, WORLD_SCALE, FB_W, FB_H, FB_SCALE, FB_PER_WORLD, UI_W, UI_H, UI_SCALE, snapN } from './display.js';
 import { Camera } from './camera.js';
 import { getLayers } from '../world/painters.js';
 import { SCENES, GLOBAL_EVENTS } from '../world/scenes.js';
@@ -147,7 +147,7 @@ export class Game {
     this.player.hidden = false;
     this.player.place(px, pf || 1, groundAt);
     this.camera.snap(px, def.width);
-    this.weather.configure(def.weather, this.camera.ix, true);
+    this.weather.configure(def.weather, this.camera.pos, true);
     this.audio.setAmbience(def.ambience);
     this.eventTimers = {};
     this.exitCooldown = 0.4;
@@ -341,16 +341,16 @@ export class Game {
     this.time += dt;
     if (titleMode) {
       this.titlePan += dt * 7;
-      const max = 640 - W;
+      const max = 640 - VIEW_W;
       this.camera.x = (Math.sin(this.titlePan / 140) * 0.5 + 0.5) * max;
-      this.weather.update(dt, this.camera.ix, null);
+      this.weather.update(dt, this.camera.pos, null);
       return;
     }
     this.player.update(dt, this);
     for (const n of this.npcs) n.update(dt, this);
     for (const p of this.props) p.update && p.update(dt, this);
     this.camera.update(dt, this.player);
-    this.weather.update(dt, this.camera.ix, this.windOverride);
+    this.weather.update(dt, this.camera.pos, this.windOverride);
     this.hud.update(dt);
     updateLantern(this.state, dt);
     const nearFire = this.scene.id === 'PARLOR' && this.state.phase === 'EVENING' && this.player.x < 140;
@@ -399,21 +399,35 @@ export class Game {
       if (d <= r && d < bd) { bd = d; best = o; }
     }
     if (!best) return null;
-    const sx = best.x - this.camera.ix;
-    const fo = this.camera.screenFocus();
-    const pr = Display.projectZoom(sx, best.y, this.camera.zoom, fo.x, fo.y);
-    return { target: best, label: best.label, sx: pr.x, sy: pr.y };
+    const ui = this.worldToUI(best.x, best.y);
+    return { target: best, label: best.label, sx: ui.x, sy: ui.y };
+  }
+
+  // ---------------- coordinate conversions ----------------
+  // world -> native screen (pre-zoom) -> framing zoom -> UI layout units
+  worldToUI(wx, wy) {
+    const cam = this.camera;
+    const fo = cam.screenFocus();
+    const pr = Display.projectZoom((wx - cam.pos) * WORLD_SCALE, wy * WORLD_SCALE, cam.zoom, fo.x, fo.y);
+    return { x: pr.x / UI_SCALE, y: pr.y / UI_SCALE };
+  }
+  // Draw-x (in the sub-translated world pass, world units) of a parallax layer with this factor.
+  // Every parallax layer and anything attached to one (e.g. the ridge lantern) must use this.
+  layerX(factor) {
+    const cam = this.camera;
+    return cam.sub - snapN(cam.pos * factor);
   }
 
   // ---------------- optional mouse support ----------------
-  // Client (CSS) pixels -> logical screen -> (undo framing zoom) -> world. Correct at any scale,
-  // letterbox, DPR, fullscreen state and camera zoom.
+  // Client (CSS) px -> native screen px -> (undo framing zoom) -> world units. Correct at any
+  // scale, letterbox, DPR, fullscreen state and camera zoom.
   pointerToWorld(clientX, clientY) {
-    const l = this.display.clientToLogical(clientX, clientY);
-    if (!l) return null;
-    const fo = this.camera.screenFocus();
-    const b = Display.unprojectZoom(l.x, l.y, this.camera.zoom, fo.x, fo.y);
-    return { sx: l.x, sy: l.y, x: b.x + this.camera.ix, y: b.y };
+    const n = this.display.clientToNative(clientX, clientY);
+    if (!n) return null;
+    const cam = this.camera;
+    const fo = cam.screenFocus();
+    const b = Display.unprojectZoom(n.x, n.y, cam.zoom, fo.x, fo.y);
+    return { nx: n.x, ny: n.y, x: b.x / WORLD_SCALE + cam.pos, y: b.y / WORLD_SCALE };
   }
   hotspotAt(wx, wy) {
     let best = null, bd = Infinity;
@@ -429,7 +443,7 @@ export class Game {
     // choice hover only when the mouse actually moved, so it never fights the keyboard
     const pk = input.pointer ? input.pointer.x + ',' + input.pointer.y : '';
     if (this.dialogue.active && input.pointer && pk !== this.lastPointerKey) {
-      const l = this.display.clientToLogical(input.pointer.x, input.pointer.y);
+      const l = this.display.clientToUI(input.pointer.x, input.pointer.y);
       if (l) this.dialogueView.hover(l.x, l.y);
     }
     this.lastPointerKey = pk;
@@ -449,7 +463,7 @@ export class Game {
     const clicks = input.takeClicks();
     for (const c of clicks) {
       if (this.dialogue.active) {
-        const l = this.display.clientToLogical(c.x, c.y);
+        const l = this.display.clientToUI(c.x, c.y);
         if (l) this.dialogueView.click(l.x, l.y);
         continue;
       }
@@ -555,17 +569,31 @@ export class Game {
     }
   }
 
+  // Render passes. The world is composited into the 960×540 framebuffer using three transforms:
+  //   world  — 1 world unit = FB_PER_WORLD (3) px, shifted left by the camera's sub-unit remainder;
+  //            legacy art and props draw here exactly as they always have (camX = whole units).
+  //   view   — 1 world unit = 3 px with no camera shift (screen-anchored legacy textures, e.g. fog).
+  //   native — 1 native px = FB_SCALE (2) px (snow, lighting, and future native-density art).
   draw() {
     const d = this.display;
     d.ensureSize();
-    const ctx = d.lowCtx;
-    const camX = this.camera.ix;
+    const ctx = d.fbCtx;
+    const cam = this.camera;
+    const camX = cam.ix;
+    const F = FB_PER_WORLD;
+    const worldT = () => ctx.setTransform(F, 0, 0, F, -Math.round(cam.sub * F), 0);
+    const viewT = () => ctx.setTransform(F, 0, 0, F, 0, 0);
+    const nativeT = () => ctx.setTransform(FB_SCALE, 0, 0, FB_SCALE, 0, 0);
     const L = this.layers;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.imageSmoothingEnabled = false;
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#05070c';
-    ctx.fillRect(0, 0, W, H);
-    const layerX = (layer) => -Math.round(camX * layer.factor);
+    ctx.fillRect(0, 0, FB_W, FB_H);
+    worldT();
+    const lx = new Map(); // parallax factor -> draw x (computed once per frame)
+    const layerX = (layer) => { if (!lx.has(layer.factor)) lx.set(layer.factor, this.layerX(layer.factor)); return lx.get(layer.factor); };
     for (const b of L.back) ctx.drawImage(b.canvas, layerX(b), 0);
     // world drawables sorted by depth
     const list = [];
@@ -576,38 +604,47 @@ export class Game {
     list.sort((a, b) => a.z - b.z);
     for (const it of list) it.fn();
     this.weather.drawBreath(ctx, camX);
+    nativeT();
     this.weather.draw(ctx, true);
+    worldT();
     for (const f of L.front) ctx.drawImage(f.canvas, layerX(f), 0);
-    this.weather.drawFog(ctx, camX);
-    // lighting
+    viewT();
+    this.weather.drawFog(ctx, cam.pos);
+    // lighting (rendered at native resolution)
     if (this.mode === 'play' || this.mode === 'title') {
-      renderLighting(ctx, this.collectLights(camX), this.ambient());
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      renderLighting(ctx, this.collectLights(camX), this.ambient(), cam.sub);
     }
     // emissive pixels
+    worldT();
     for (const b of L.back) if (b.glow) ctx.drawImage(b.glow, layerX(b), 0);
     if (L.main.glow) ctx.drawImage(L.main.glow, -camX, 0);
     for (const p of this.props) if (p.glow) p.glow(ctx, camX, this);
+    nativeT();
     this.weather.draw(ctx, false);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
     // compose to the screen
-    const fo = this.camera.screenFocus();
-    d.present(this.camera.zoom, fo.x, fo.y);
+    const fo = cam.screenFocus();
+    d.present(cam.zoom, fo.x, fo.y);
     const out = d.ctx;
-    const S = d.scale; // may be fractional in sharp-fit mode
     const OW = d.canvas.width, OH = d.canvas.height;
     if (this.settings.vignette) {
       const g = out.createRadialGradient(OW / 2, OH / 2, OH * 0.35, OW / 2, OH / 2, OW * 0.62);
       g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.38)');
       out.fillStyle = g; out.fillRect(0, 0, OW, OH);
     }
-    if (this.settings.scanlines && S >= 3) {
+    // scanlines follow the art's pixel rows (world units), so their density is unchanged
+    const SW = d.scale * WORLD_SCALE; // device px per world unit
+    if (this.settings.scanlines && SW >= 3) {
       out.fillStyle = 'rgba(0,0,0,0.13)';
-      const th = Math.max(1, Math.floor(S / 3));
-      for (let y = 0; y < H; y++) out.fillRect(0, Math.round((y + 1) * S) - th, OW, th);
+      const th = Math.max(1, Math.floor(SW / 3));
+      for (let y = 0; y < VIEW_H; y++) out.fillRect(0, Math.round((y + 1) * SW) - th, OW, th);
     }
     // fade
     if (this.fade.v > 0.001) { out.fillStyle = `rgba(3,4,8,${this.fade.v})`; out.fillRect(0, 0, OW, OH); }
-    // UI in logical units
+    // UI in UI layout units (device px per UI unit; may be fractional in sharp-fit mode)
+    const S = OW / UI_W;
     out.save();
     out.setTransform(S, 0, 0, S, 0, 0);
     out.imageSmoothingEnabled = true;
@@ -622,9 +659,9 @@ export class Game {
   }
 
   drawCard(ctx) {
-    ctx.fillStyle = '#030408'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#030408'; ctx.fillRect(0, 0, UI_W, UI_H);
     font(ctx, this.card.lines[0].length < 8 ? 11 : 7);
-    this.card.lines.forEach((l, i) => text(ctx, l, 160, 92 + i * 12, UI.bone, 'center'));
+    this.card.lines.forEach((l, i) => text(ctx, l, UI_W / 2, 92 + i * 12, UI.bone, 'center'));
   }
 
   ambient() {

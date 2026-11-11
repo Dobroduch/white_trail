@@ -1,6 +1,6 @@
 // Minimal HUD: location/time label, contextual interaction prompt, hints, barks, "noted" toast,
 // and small lantern / cold cues. No bars, scores, markers or counters.
-import { UI, font, text, spaced, panel, keycap, wrap } from './text.js';
+import { UI, font, text, spaced, panel, keycap, wrap, UI_W, UI_H, UI_CX } from './text.js';
 import { timeString } from '../systems/storyState.js';
 import { EVIDENCE } from '../data/evidence.js';
 
@@ -42,7 +42,7 @@ export class HUD {
       const a = fadeIO(this.titleT, 1.6, 3.2, 2.2);
       ctx.globalAlpha = a;
       font(ctx, 15);
-      spaced(ctx, 'THE WHITE TRAIL', 160, 46, UI.bone, 3.2, 'center');
+      spaced(ctx, 'THE WHITE TRAIL', UI_CX, 46, UI.bone, 3.2, 'center');
       ctx.globalAlpha = 1;
     }
     // location / time label
@@ -63,7 +63,7 @@ export class HUD {
       const tw = ctx.measureText(label).width;
       const w = tw + 20, h = 9;
       let x = Math.round(p.sx - w / 2), y = Math.round(p.sy - h - 3);
-      x = Math.max(4, Math.min(316 - w, x)); y = Math.max(22, Math.min(118, y));
+      x = Math.max(4, Math.min(UI_W - 4 - w, x)); y = Math.max(22, Math.min(118, y));
       panel(ctx, x, y, w, h, 'rgba(9,13,22,0.82)', UI.edgeHi);
       keycap(ctx, 'E', x + 3, y + 7, UI.amber);
       text(ctx, label, x + 13, y + 6.6, UI.bone);
@@ -85,7 +85,7 @@ export class HUD {
       ctx.globalAlpha = a;
       font(ctx, 5.6, { italic: true });
       ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 2;
-      text(ctx, this.barkMsg.text, 160, 104, UI.bone, 'center');
+      text(ctx, this.barkMsg.text, UI_CX, 104, UI.bone, 'center');
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     }
@@ -98,17 +98,17 @@ export class HUD {
       font(ctx, 5.2);
       const w = Math.max(60, ctx.measureText(t.text).width + 12);
       const y = 146 - (this.toasts.length - 1 - i) * 17;
-      panel(ctx, 312 - w, y, w, 15, 'rgba(9,13,22,0.78)', UI.edge);
+      panel(ctx, UI_W - 8 - w, y, w, 15, 'rgba(9,13,22,0.78)', UI.edge);
       font(ctx, 4.3, { italic: true });
-      text(ctx, head, 312 - w + 6, y + 6, UI.amber);
+      text(ctx, head, UI_W - 8 - w + 6, y + 6, UI.amber);
       font(ctx, 5.2);
-      text(ctx, t.text, 312 - w + 6, y + 12, UI.bone);
+      text(ctx, t.text, UI_W - 8 - w + 6, y + 12, UI.bone);
       ctx.globalAlpha = 1;
     });
     // small status cues
     const s = g.state;
     if (g.mode === 'play' && !g.dialogue.active) {
-      let cx = 312;
+      let cx = UI_W - 8;
       if (s.lanternOn) {
         ctx.fillStyle = UI.amber; ctx.globalAlpha = 0.8;
         ctx.fillRect(cx - 3, 168, 3, 4); ctx.fillRect(cx - 4, 167, 5, 1); ctx.fillRect(cx - 2, 166, 1, 1);

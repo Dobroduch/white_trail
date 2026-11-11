@@ -1,6 +1,7 @@
 // Silas Vance: grounded, deliberate side-scrolling movement. No jump — traversal is walking,
 // authored doors and scene edges. Position is a float; rendering snaps to whole pixels.
 import { drawSprite } from '../engine/assets.js';
+import { snapN } from '../engine/display.js';
 
 const SPEED = 44; // px/s — a deliberate walk
 const ACCEL = 260;
@@ -67,8 +68,9 @@ export class Silas {
   draw(ctx, camX, lanternOn) {
     if (this.hidden) return;
     const moving = Math.abs(this.vx) > 4;
-    const x = Math.round(this.x - camX);
-    const y = Math.round(this.y);
+    // native-grid placement (camX is the camera's whole world-unit position; see Camera)
+    const x = snapN(this.x) - camX;
+    const y = snapN(this.y);
     const shiver = this.shiverT > 0 && !moving && Math.floor(this.shiverT * 12) % 40 < 3 ? 1 : 0;
     if (moving) drawSprite(ctx, 'silas_walk', Math.floor(this.walkT), x, y, this.facing);
     else drawSprite(ctx, 'silas_idle', Math.floor(this.idleT / 1.1) % 2, x + shiver, y, this.facing);
