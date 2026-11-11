@@ -1,5 +1,5 @@
 // THE WHITE TRAIL — bootstrap.
-import { Display } from './engine/display.js';
+import { Display, toggleFullscreen } from './engine/display.js';
 import { Input } from './engine/input.js';
 import { Loop } from './engine/loop.js';
 import { loadSprites, assetErrors } from './engine/assets.js';
@@ -13,6 +13,7 @@ async function boot() {
   const bootEl = document.getElementById('boot');
   const display = new Display(canvas);
   const input = new Input(canvas);
+  input.onFullscreen = () => toggleFullscreen();
   const settings = loadSettings();
   const audio = new Audio(settings);
 

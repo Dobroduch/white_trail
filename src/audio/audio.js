@@ -2,6 +2,12 @@
 // The AudioContext is created only after a user gesture (browser autoplay policy).
 // Buses: master <- { ambience, effects, music }. A generated convolution reverb gives distance.
 
+// WIND_ONLY: the continuous ambience is wind (and its gusts) alone. The other beds — fire roar and
+// crackle, room tone, parlour murmur, water under ice, steam hiss, train rumble, drone, incidental
+// creaks — are kept in code but silenced, so they can be reintroduced one at a time later.
+// One-shot effects (footsteps, doors, whistle, the 02:15 scream, notebook sounds) are unaffected.
+export const WIND_ONLY = true;
+
 const PRESETS = {
   //            wind  muffle  fire  room  murmur water hiss  drone
   silence:     [0.04, true,   0,    0.15, 0,     0,    0,    0],
@@ -203,7 +209,8 @@ export class Audio {
     this.preset = PRESETS[key] || PRESETS.silence;
     if (!PRESETS[key]) console.warn(`[audio] unknown ambience "${key}"`);
     if (!this.ctx) { this.pendingAmbience = key; return; }
-    const [wind, muffle, fire, room, murmur, water, hiss, drone] = this.preset;
+    let [wind, muffle, fire, room, murmur, water, hiss, drone] = this.preset;
+    if (WIND_ONLY) fire = room = murmur = water = hiss = drone = 0;
     const t = this.ctx.currentTime, k = instant ? 0.01 : 1.2;
     const L = this.layers;
     const w = this.windDipValue != null ? this.windDipValue : wind;
@@ -237,7 +244,7 @@ export class Audio {
   }
 
   trainRumble() {
-    if (!this.ctx) return;
+    if (!this.ctx || WIND_ONLY) return;
     const g = this.layers.rumble.gain.gain, t = this.ctx.currentTime;
     g.cancelScheduledValues(t);
     g.setTargetAtTime(0.5, t, 0.6);
@@ -248,12 +255,12 @@ export class Audio {
   update(dt, ctxInfo) {
     if (!this.ctx || this.ctx.state !== 'running') return;
     const [wind, muffle, fire, room, , water] = this.preset;
-    if (fire > 0.05) {
+    if (!WIND_ONLY && fire > 0.05) {
       this.crackleTimer -= dt;
       if (this.crackleTimer <= 0) { this.crackleTimer = 0.04 + Math.random() * 0.35 / fire; this.crackle(fire); }
     }
     this.creakTimer -= dt;
-    if (this.creakTimer <= 0) {
+    if (!WIND_ONLY && this.creakTimer <= 0) {
       this.creakTimer = 5 + Math.random() * 9;
       if (room > 0.1) this.sfx('creak', { vol: 0.35 });
       else if (ctxInfo && ctxInfo.scene === 'SAWMILL') this.sfx('creak', { vol: 0.5, low: true });
@@ -447,6 +454,7 @@ export class Audio {
       for (const [mult, peak, d] of [[1, 0.09, 4.5], [2.76, 0.04, 3.2], [5.4, 0.02, 2.0], [0.5, 0.06, 5]]) {
         this.tone(this.mus, { type: 'sine', freq: 98 * mult, a: 0.005, d, peak });
       }
+      if (WIND_ONLY) return;
       const g = this.layers.drone.gain.gain;
       g.cancelScheduledValues(t);
       g.setTargetAtTime(0.07, t, 0.8);

@@ -52,6 +52,7 @@ export class Game {
   // ---------------- settings / save ----------------
   applySettings(persist = true) {
     this.camera.reduced = !!this.settings.reducedMotion;
+    this.display.setMode(this.settings.scaling);
     this.audio.settings = this.settings;
     this.audio.applyVolumes();
     if (persist) saveSettings(this.settings);
@@ -320,6 +321,7 @@ export class Game {
     // interaction
     this.prompt = this.findPrompt();
     if (this.prompt && this.canInteractUI() && input.pressed('interact')) this.interact(this.prompt.target);
+    this.updatePointer();
 
     // cutscenes
     if (this.cutscene) {
@@ -368,8 +370,9 @@ export class Game {
   interactables() {
     const s = this.state;
     const out = [];
-    for (const n of this.npcs) if (!n.hidden && !n.moving && n.dialogue) out.push({ kind: 'npc', x: n.x, y: n.y - 30, label: `Talk — ${n.name}`, ref: n, radius: 26 });
-    for (const d of this.scene.doors || []) out.push({ kind: 'door', x: d.x, y: this.groundAt(d.x) - 30, label: `${d.verb} — ${d.label}`, ref: d });
+    // hx/hy/hw/hh: the clickable hotspot box in world space (used by the optional mouse support)
+    for (const n of this.npcs) if (!n.hidden && !n.moving && n.dialogue) out.push({ kind: 'npc', x: n.x, y: n.y - 30, hy: n.y - 14, hw: 9, hh: 15, label: `Talk — ${n.name}`, ref: n, radius: 26 });
+    for (const d of this.scene.doors || []) { const g = this.groundAt(d.x); out.push({ kind: 'door', x: d.x, y: g - 30, hy: g - 16, hw: 12, hh: 18, label: `${d.verb} — ${d.label}`, ref: d }); }
     for (const it of this.scene.interactables || []) {
       if (!test(it.if, s)) continue;
       let verb = it.verb || 'Examine';
@@ -378,7 +381,7 @@ export class Game {
         const ev = EVIDENCE[it.evidence];
         if (rec && ev.detail && !rec.examined) verb = 'Look closer';
       }
-      out.push({ kind: 'thing', x: it.x, y: it.y - 4, label: `${verb} — ${it.label}`, ref: it });
+      out.push({ kind: 'thing', x: it.x, y: it.y - 4, hy: it.y, hw: 11, hh: 12, label: `${verb} — ${it.label}`, ref: it });
     }
     return out;
   }
@@ -395,6 +398,75 @@ export class Game {
     const fo = this.camera.screenFocus();
     const pr = Display.projectZoom(sx, best.y, this.camera.zoom, fo.x, fo.y);
     return { target: best, label: best.label, sx: pr.x, sy: pr.y };
+  }
+
+  // ---------------- optional mouse support ----------------
+  // Client (CSS) pixels -> logical screen -> (undo framing zoom) -> world. Correct at any scale,
+  // letterbox, DPR, fullscreen state and camera zoom.
+  pointerToWorld(clientX, clientY) {
+    const l = this.display.clientToLogical(clientX, clientY);
+    if (!l) return null;
+    const fo = this.camera.screenFocus();
+    const b = Display.unprojectZoom(l.x, l.y, this.camera.zoom, fo.x, fo.y);
+    return { sx: l.x, sy: l.y, x: b.x + this.camera.ix, y: b.y };
+  }
+  hotspotAt(wx, wy) {
+    let best = null, bd = Infinity;
+    for (const o of this.interactables()) {
+      const dx = Math.abs(o.x - wx), dy = Math.abs(o.hy - wy);
+      if (dx <= o.hw && dy <= o.hh && dx + dy < bd) { bd = dx + dy; best = o; }
+    }
+    return best;
+  }
+  updatePointer() {
+    const input = this.input;
+    const canvas = this.display.canvas;
+    // choice hover only when the mouse actually moved, so it never fights the keyboard
+    const pk = input.pointer ? input.pointer.x + ',' + input.pointer.y : '';
+    if (this.dialogue.active && input.pointer && pk !== this.lastPointerKey) {
+      const l = this.display.clientToLogical(input.pointer.x, input.pointer.y);
+      if (l) this.dialogueView.hover(l.x, l.y);
+    }
+    this.lastPointerKey = pk;
+    // hover cursor
+    if (input.pointer && this.canMove()) {
+      const p = this.pointerToWorld(input.pointer.x, input.pointer.y);
+      const hot = p && this.hotspotAt(p.x, p.y);
+      canvas.style.cursor = hot ? 'pointer' : 'default';
+      this.hover = hot;
+    } else { this.hover = null; canvas.style.cursor = 'default'; }
+    // finish a walk-then-interact started by a click
+    if (this.pendingClick && this.player.autoTarget == null) {
+      const target = this.pendingClick; this.pendingClick = null;
+      const pr = this.findPrompt();
+      if (pr && pr.target.ref === target.ref && this.canInteractUI()) this.interact(pr.target);
+    }
+    const clicks = input.takeClicks();
+    for (const c of clicks) {
+      if (this.dialogue.active) {
+        const l = this.display.clientToLogical(c.x, c.y);
+        if (l) this.dialogueView.click(l.x, l.y);
+        continue;
+      }
+      if (!this.canMove()) continue;
+      const p = this.pointerToWorld(c.x, c.y);
+      if (!p) continue;
+      const hot = this.hotspotAt(p.x, p.y);
+      const pl = this.player;
+      const [b0, b1] = this.scene.bounds;
+      if (hot) {
+        const r = hot.radius || hot.ref.radius || INTERACT_RADIUS;
+        if (Math.abs(hot.x - pl.x) <= r && this.canInteractUI()) { this.interact(hot); continue; }
+        const side = pl.x < hot.x ? -1 : 1;
+        pl.autoTarget = Math.max(b0, Math.min(b1, hot.x + side * Math.min(r - 4, 12)));
+        this.pendingClick = hot;
+      } else {
+        // walk toward the clicked spot; clicking past a scene edge leaves through it
+        pl.autoTarget = Math.max(b0, Math.min(b1, p.x));
+        pl.pushDir = p.x < b0 ? -1 : p.x > b1 ? 1 : 0;
+        this.pendingClick = null;
+      }
+    }
   }
 
   interact(o) {
@@ -439,9 +511,10 @@ export class Game {
     const p = this.player;
     const [b0, b1] = this.scene.bounds;
     let side = null;
-    if (p.x <= b0 + 0.5 && this.input.held('left')) side = 'left';
-    if (p.x >= b1 - 0.5 && this.input.held('right')) side = 'right';
+    if (p.x <= b0 + 0.5 && (this.input.held('left') || p.pushDir < 0)) side = 'left';
+    if (p.x >= b1 - 0.5 && (this.input.held('right') || p.pushDir > 0)) side = 'right';
     if (!side) return;
+    p.pushDir = 0;
     const ex = (this.scene.exits || []).find((e) => e.side === side);
     if (!ex) return;
     this.exitCooldown = 0.8;
@@ -515,18 +588,20 @@ export class Game {
     const fo = this.camera.screenFocus();
     d.present(this.camera.zoom, fo.x, fo.y);
     const out = d.ctx;
-    const S = d.scale;
+    const S = d.scale; // may be fractional in sharp-fit mode
+    const OW = d.canvas.width, OH = d.canvas.height;
     if (this.settings.vignette) {
-      const g = out.createRadialGradient(W * S / 2, H * S / 2, H * S * 0.35, W * S / 2, H * S / 2, W * S * 0.62);
+      const g = out.createRadialGradient(OW / 2, OH / 2, OH * 0.35, OW / 2, OH / 2, OW * 0.62);
       g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.38)');
-      out.fillStyle = g; out.fillRect(0, 0, W * S, H * S);
+      out.fillStyle = g; out.fillRect(0, 0, OW, OH);
     }
     if (this.settings.scanlines && S >= 3) {
       out.fillStyle = 'rgba(0,0,0,0.13)';
-      for (let y = 0; y < H; y++) out.fillRect(0, y * S + S - Math.max(1, Math.floor(S / 3)), W * S, Math.max(1, Math.floor(S / 3)));
+      const th = Math.max(1, Math.floor(S / 3));
+      for (let y = 0; y < H; y++) out.fillRect(0, Math.round((y + 1) * S) - th, OW, th);
     }
     // fade
-    if (this.fade.v > 0.001) { out.fillStyle = `rgba(3,4,8,${this.fade.v})`; out.fillRect(0, 0, W * S, H * S); }
+    if (this.fade.v > 0.001) { out.fillStyle = `rgba(3,4,8,${this.fade.v})`; out.fillRect(0, 0, OW, OH); }
     // UI in logical units
     out.save();
     out.setTransform(S, 0, 0, S, 0, 0);

@@ -5,6 +5,7 @@ import { ITEMS, TELEGRAM_TEXT, LEADS } from '../data/notebookData.js';
 import { EVIDENCE } from '../data/evidence.js';
 import { DEDUCTIONS } from '../data/notebookData.js';
 import { revolverDescription } from '../systems/survival.js';
+import { isFullscreen, toggleFullscreen } from '../engine/display.js';
 import { test, countAt } from '../systems/storyState.js';
 
 function menuNav(self, input, n, audio) {
@@ -107,6 +108,8 @@ export class SettingsMenu {
       { key: 'reducedMotion', label: 'Reduce camera motion', val: s.reducedMotion ? 'on' : 'off', kind: 'bool' },
       { key: 'vignette', label: 'Vignette', val: s.vignette ? 'on' : 'off', kind: 'bool' },
       { key: 'scanlines', label: 'Scanlines', val: s.scanlines ? 'on' : 'off', kind: 'bool' },
+      { key: 'scaling', label: 'Display scaling', val: s.scaling === 'integer' ? 'whole pixels' : 'fill window', kind: 'enum', opts: ['auto', 'integer'] },
+      { key: 'fullscreen', label: 'Fullscreen  (Alt+Enter)', val: isFullscreen() ? 'on' : 'off', kind: 'action' },
       { key: 'back', label: 'Back', kind: 'back' },
     ];
   }
@@ -121,6 +124,7 @@ export class SettingsMenu {
     const conf = input.pressed('confirm');
     if (!dir && !conf) return null;
     const d = dir || 1;
+    if (r.kind === 'action') { toggleFullscreen(); this.game.audio.sfx('tick'); return null; }
     if (r.kind === 'vol') s[r.key] = Math.max(0, Math.min(1, Math.round((s[r.key] + d * 0.1) * 10) / 10));
     if (r.kind === 'bool') s[r.key] = !s[r.key];
     if (r.kind === 'enum') { const i = r.opts.indexOf(s[r.key]); s[r.key] = r.opts[(i + d + r.opts.length) % r.opts.length]; }
@@ -130,18 +134,18 @@ export class SettingsMenu {
   }
   draw(ctx) {
     ctx.fillStyle = 'rgba(5,7,12,0.78)'; ctx.fillRect(0, 0, 320, 180);
-    panel(ctx, 70, 24, 180, 132, UI.panel, UI.edgeHi);
-    font(ctx, 6.4); spaced(ctx, 'SETTINGS', 160, 39, UI.bone, 2, 'center');
+    panel(ctx, 66, 16, 188, 152, UI.panel, UI.edgeHi);
+    font(ctx, 6.4); spaced(ctx, 'SETTINGS', 160, 30, UI.bone, 2, 'center');
     this.rows().forEach((r, i) => {
-      const y = 54 + i * 10.4;
+      const y = 43 + i * 10;
       const sel = i === this.sel;
       font(ctx, 5.6);
-      if (sel) { ctx.fillStyle = UI.amber; ctx.fillRect(80, y - 3, 3, 1.2); }
-      text(ctx, r.label, 87, y, sel ? UI.bone : UI.dim);
-      if (r.val) text(ctx, (sel && r.kind !== 'back' ? '‹ ' : '') + r.val + (sel ? ' ›' : ''), 240, y, sel ? UI.amber : UI.dim, 'right');
+      if (sel) { ctx.fillStyle = UI.amber; ctx.fillRect(76, y - 3, 3, 1.2); }
+      text(ctx, r.label, 83, y, sel ? UI.bone : UI.dim);
+      if (r.val) text(ctx, (sel && r.kind !== 'back' ? '‹ ' : '') + r.val + (sel ? ' ›' : ''), 246, y, sel ? UI.amber : UI.dim, 'right');
     });
     font(ctx, 4.3, { italic: true });
-    text(ctx, 'Up / Down  choose    Left / Right  change    Esc back', 160, 150, UI.faint, 'center');
+    text(ctx, 'Up / Down  choose    Left / Right  change    Esc back', 160, 163, UI.faint, 'center');
   }
 }
 
@@ -157,19 +161,21 @@ export class ControlsHelp {
       [['A', 'D'], 'or arrow keys — walk'], [['E'], 'examine · speak · open · continue'], [['F'], 'light or shutter the lantern'],
       [['Tab'], 'notebook (also J)'], [['I'], 'inventory'], [['Esc'], 'pause · close a panel'],
       [['1', '–', '5'], 'pick a dialogue choice (or Up / Down and E)'],
+      [['Alt', 'Enter'], 'toggle fullscreen'],
     ];
     rows.forEach(([keys, desc], i) => {
-      const y = 54 + i * 12;
-      let x = 70;
+      const y = 50 + i * 11;
+      let x = 66;
       for (const k of keys) {
         if (k === '–') { font(ctx, 5); text(ctx, '–', x + 1, y, UI.dim); x += 6; continue; }
         x += keycap(ctx, k, x, y, UI.amber) + 2;
       }
-      font(ctx, 5.4); text(ctx, desc, 116, y, UI.dim);
+      font(ctx, 5.4); text(ctx, desc, 120, y, UI.dim);
     });
     font(ctx, 4.6, { italic: true });
-    text(ctx, 'No mouse needed. There is no jump and no combat in this chapter.', 160, 142, UI.faint, 'center');
-    text(ctx, 'Press E or Esc to return', 160, 151, UI.faint, 'center');
+    text(ctx, 'Mouse is optional: click something to walk to it and use it; click to continue dialogue.', 160, 140, UI.faint, 'center');
+    text(ctx, 'There is no jump and no combat in this chapter.', 160, 146.5, UI.faint, 'center');
+    text(ctx, 'Press E or Esc to return', 160, 153, UI.faint, 'center');
   }
 }
 

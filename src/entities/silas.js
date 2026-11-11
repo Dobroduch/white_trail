@@ -19,6 +19,10 @@ export class Silas {
   update(dt, game) {
     const scene = game.scene;
     let dir = 0;
+    // keyboard input cancels a mouse-initiated walk (but not an authored/back-step move)
+    if (this.autoTarget != null && !this.backstep && game.canMove() && (game.input.held('left') || game.input.held('right'))) {
+      this.autoTarget = null; this.pushDir = 0; game.pendingClick = null;
+    }
     if (this.autoTarget != null) {
       const d = this.autoTarget - this.x;
       if (Math.abs(d) < 0.8) { this.x = this.autoTarget; this.autoTarget = null; this.vx = 0; this.backstep = false; }
@@ -26,7 +30,8 @@ export class Silas {
     } else if (game.canMove()) {
       dir = (game.input.held('right') ? 1 : 0) - (game.input.held('left') ? 1 : 0);
     }
-    const target = dir * SPEED * (this.autoTarget != null ? 0.85 : 1);
+    // authored (cutscene) walks are a touch slower; player-initiated mouse walks use full speed
+    const target = dir * SPEED * (this.autoTarget != null && !game.canMove() ? 0.85 : 1);
     if (this.vx < target) this.vx = Math.min(target, this.vx + ACCEL * dt);
     else if (this.vx > target) this.vx = Math.max(target, this.vx - ACCEL * dt);
     if (dir !== 0 && !(this.autoTarget != null && this.backstep)) this.facing = dir;

@@ -36,6 +36,24 @@ export class DialogueView {
       else if (this.t > 0.12) r.advance();
     }
   }
+  // Optional mouse: (lx, ly) are logical 320x180 screen coordinates.
+  click(lx, ly) {
+    const r = this.game.dialogue;
+    if (!r.active) return;
+    const full = r.lastText ? r.lastText.length : 0;
+    if (r.choices && this.shown >= full) {
+      const i = (this.choiceRects || []).findIndex((b) => lx >= b.x && lx <= b.x + b.w && ly >= b.y && ly <= b.y + b.h);
+      if (i >= 0 && i < r.choices.length) this.pick(i);
+      return;
+    }
+    if (this.shown < full) this.shown = full;
+    else if (this.t > 0.12) r.advance();
+  }
+  // hover highlight for choices
+  hover(lx, ly) {
+    const i = (this.choiceRects || []).findIndex((b) => lx >= b.x && lx <= b.x + b.w && ly >= b.y && ly <= b.y + b.h);
+    if (i >= 0) this.sel = i;
+  }
   pick(i) {
     this.game.audio.sfx('tick');
     this.game.input.clearAll();
@@ -75,11 +93,13 @@ export class DialogueView {
       remaining -= l.length + 1;
       text(ctx, part, X0 + 8, y0 + 10.5 + i * lineH, col);
     });
+    this.choiceRects = [];
     if (choices) {
       font(ctx, 5.7);
       const cy = y0 + 10 + lines.length * lineH + 2;
       choices.forEach((c, i) => {
         const y = cy + i * 8 + 4;
+        this.choiceRects.push({ x: X0 + 5, y: y - 6, w: W0 - 10, h: 8 });
         const sel = i === this.sel;
         if (sel) { ctx.fillStyle = 'rgba(245,158,11,0.12)'; ctx.fillRect(X0 + 5, y - 6, W0 - 10, 8); }
         text(ctx, `${i + 1}.`, X0 + 9, y, sel ? UI.amber : UI.faint);

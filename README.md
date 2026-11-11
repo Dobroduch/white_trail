@@ -35,14 +35,24 @@ Click or press any key on the title screen. Browsers only allow audio to start a
 | `I` | Inventory (read the telegram, inspect the revolver) |
 | `Esc` | Pause, or close a panel (works during dialogue too) |
 | `1`–`5` or `↑` / `↓` + `E` | Choose a dialogue option |
+| `Alt` + `Enter` | Toggle fullscreen (also in Pause → Settings) |
 
 Inside the notebook, `←` / `→` switch tabs, `↑` / `↓` choose an entry, and `E` marks records to compare on the **Deductions** tab.
 
-The game is keyboard-only; no mouse is needed. There is no jump and no combat in this chapter.
+The game is fully playable with the keyboard. The mouse is optional: click something (the cursor changes over it) to walk to it and use it, click empty ground to walk there, click dialogue to continue, click a choice to pick it. There is no jump and no combat in this chapter.
 
 ## Saving
 
 Progress is saved automatically to `localStorage` at checkpoints: entering a scene, recording evidence, forming a deduction, and story beats. **Continue** on the title screen resumes from the last checkpoint. **New investigation** (title screen), or **Pause → Restart from the beginning**, wipes the save and starts again from the train.
+
+## Display
+
+The game renders internally at **320×180** and scales to fill the browser window. The 16:9 ratio is always kept and the image is never stretched; any leftover space becomes black bars, and the frame stays centred.
+
+- **Fill window** (default): uses whole-pixel scaling whenever that fills at least 90% of the window. Otherwise the frame is upscaled with nearest-neighbour to a whole multiple and smoothly downscaled once to the exact fit. That fills the window while keeping pixel edges sharp.
+- **Whole pixels**: always uses the largest whole multiple. This is the crispest option but can leave wide borders.
+
+Choose between them in Pause → Settings → Display scaling. Resizing the window and entering or leaving fullscreen rescale the game immediately.
 
 ## Settings
 

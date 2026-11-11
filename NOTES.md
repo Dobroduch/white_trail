@@ -173,3 +173,40 @@ Nothing here resolves a Part IX question. Wherever a line needed a detail the GD
 10. **Mercer.** Clara's father is referred to only as "Mr. Mercer"; Gideon is not named or shown.
 11. **Clara (Q3).** She is mentioned, but nothing is said of her whereabouts.
 12. **Year and times.** 1892 (the GDD's working canon), with arrival at 18:40 and the scream at 02:15 (both from the prompt).
+
+## 6. Update — responsive display, fullscreen, mouse, wind-only audio (2026-11-11)
+
+**Why the canvas looked small.** `Display.resize()` only ever used `floor(min(viewport / 320×180))`. A window that fits 3.9× rendered at 3×, losing about a quarter of each dimension; smaller windows lost even more (1.9× → 1×).
+
+**What changed** (the internal resolution is still 320×180; gameplay systems are untouched):
+- `src/engine/display.js` gained a **sharp-fit** path. The world buffer is upscaled with nearest-neighbour to a whole multiple ≥ the target, then drawn once with bilinear filtering at the exact 16:9 fit (width a multiple of 16).
+  - **Default 'auto' mode:** whole-pixel scaling when it covers ≥ 90% of the fit, otherwise sharp fit.
+  - **'integer' mode:** always uses a whole multiple.
+  - Camera zoom already used the same upscale-then-sample path, so they share code (`Display.crop`).
+- The canvas is sized to the frame and centred by CSS. `image-rendering: pixelated` stays on it, and the page background forms the letterbox.
+- Resizing works three ways: the `resize` event, `fullscreenchange`, and a per-frame size check.
+- **Fullscreen:** `Alt+Enter`, or Pause → Settings → Fullscreen (Fullscreen API on the document element).
+- **Pointer mapping:** client → logical (`Display.clientToLogical`, via the canvas bounding rect, so DPR, letterbox and fullscreen are irrelevant) → undo framing zoom (`Display.unprojectZoom`) → world (`Game.pointerToWorld`).
+- **Optional mouse:**
+  - each interactable has a world-space hotspot box, and the cursor becomes a pointer over it;
+  - clicking walks to the object and uses it;
+  - clicking empty ground walks there (clicking past a scene edge exits through it);
+  - clicking advances dialogue, and clicking a choice picks it;
+  - any movement key cancels a mouse-walk.
+- **New settings:** `scaling` ('auto' | 'integer') and a Fullscreen toggle, both in Settings; Alt+Enter is listed in Controls.
+- **Audio:**
+  - `WIND_ONLY = true` in `src/audio/audio.js`. The continuous ambience is now only wind and its gusts.
+  - Silenced but kept in code: fire roar and crackle, room tone, the patrons' murmur, water under ice, steam hiss, train rumble, drone, and incidental creaks.
+  - One-shot effects are unchanged: footsteps, doors, the whistle, the scream, and notebook sounds.
+
+**Tested:**
+- **Scale calculation:** 9 window sizes from 300×150 to 1920×950, all exact 16:9, with the limiting dimension filled 94–100% in 'auto'. One example: 1100×620 → 1088×612 at 3.4×, centred with 6 px / 4 px margins; the screenshot confirmed it is crisp.
+- **Pointer round trip** world → client → world: error 0.000 at zoom 1 and at the dialogue zoom of 1.28.
+- **Dispatched pointer events:**
+  - click on the register → Silas walks over and examines it;
+  - click on Mrs. Gable → dialogue starts;
+  - click on a choice during the 1.28 zoom → the right choice is picked;
+  - click in the letterbox → ignored.
+- **Regression:** both scripted full playthroughs pass at 3.4× (27 + 27 checks), with no runtime errors, and `validate.mjs` passes.
+- **Audio:** with ambience set to each scene and the sting and rumble triggered, every non-wind layer stays at gain 0.
+- **Fullscreen not verified:** the embedded test browser refuses the Fullscreen API ("Permissions check failed"). The keypress handler fires and calls `requestFullscreen`, but the actual switch must be checked in a normal browser.
