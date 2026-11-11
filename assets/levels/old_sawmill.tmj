@@ -1,0 +1,604 @@
+{
+ "type": "map",
+ "version": "1.10",
+ "tiledversion": "1.11.0",
+ "orientation": "orthogonal",
+ "renderorder": "right-down",
+ "width": 105,
+ "height": 34,
+ "tilewidth": 8,
+ "tileheight": 8,
+ "infinite": false,
+ "compressionlevel": -1,
+ "nextlayerid": 3,
+ "nextobjectid": 21,
+ "properties": [
+  {
+   "name": "name",
+   "type": "string",
+   "value": "THE OLD SAWMILL"
+  },
+  {
+   "name": "exterior",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "travel",
+   "type": "float",
+   "value": 8
+  },
+  {
+   "name": "ambience",
+   "type": "string",
+   "value": "sawmill"
+  },
+  {
+   "name": "darkness",
+   "type": "float",
+   "value": 0.8
+  },
+  {
+   "name": "painter",
+   "type": "string",
+   "value": "SAWMILL"
+  },
+  {
+   "name": "snow",
+   "type": "float",
+   "value": 0.75
+  },
+  {
+   "name": "wind",
+   "type": "float",
+   "value": 0.8
+  },
+  {
+   "name": "fog",
+   "type": "float",
+   "value": 0.4
+  }
+ ],
+ "tilesets": [],
+ "layers": [
+  {
+   "id": 1,
+   "name": "gameplay",
+   "type": "objectgroup",
+   "draworder": "topdown",
+   "opacity": 1,
+   "visible": true,
+   "x": 0,
+   "y": 0,
+   "objects": [
+    {
+     "id": 1,
+     "name": "walkable",
+     "type": "bounds",
+     "x": 9,
+     "y": 187.5,
+     "width": 750,
+     "height": 90,
+     "rotation": 0,
+     "visible": true,
+     "properties": []
+    },
+    {
+     "id": 2,
+     "name": "ground",
+     "type": "ground",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "polyline": [
+      {
+       "x": 0,
+       "y": 225
+      },
+      {
+       "x": 729,
+       "y": 225
+      },
+      {
+       "x": 750,
+       "y": 232.5
+      },
+      {
+       "x": 840,
+       "y": 237
+      }
+     ],
+     "properties": []
+    },
+    {
+     "id": 3,
+     "name": "fromCreek",
+     "type": "spawn",
+     "x": 24,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "name": "westEdge",
+     "type": "exit",
+     "x": 0,
+     "y": 150,
+     "width": 12,
+     "height": 120,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "side",
+       "type": "string",
+       "value": "left"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "CREEK"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromSawmill"
+      },
+      {
+       "name": "scriptIf",
+       "type": "string",
+       "value": "{\"if\":{\"flag\":\"ridgeLightSeen\"},\"script\":\"SLICE_END\"}"
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "name": "sm_saw",
+     "type": "interactable",
+     "x": 294,
+     "y": 204,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Saw carriage"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "The saw carriage, a log still clamped on it. Rust has the blade. Nobody has cut timber here in years."
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "name": "sm_ledger",
+     "type": "interactable",
+     "x": 384,
+     "y": 219,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Ash pit"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "SAWMILL_LEDGER"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notItem\":\"LEDGER\"}"
+      }
+     ]
+    },
+    {
+     "id": 7,
+     "name": "sm_boots",
+     "type": "interactable",
+     "x": 438,
+     "y": 226.5,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Prints in the sawdust"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "SAWMILL_BOOTPRINTS"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "name": "sm_marks",
+     "type": "interactable",
+     "x": 525,
+     "y": 198,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Post"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "SAWMILL_MARKS"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "name": "sm_rope",
+     "type": "interactable",
+     "x": 556.5,
+     "y": 150,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Rope"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "SAWMILL_ROPE"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "name": "sm_body",
+     "type": "interactable",
+     "x": 588,
+     "y": 162,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "The body"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "SAWMILL_BODY"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"foundSheriffBody\"}"
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "name": "sm_watch",
+     "type": "interactable",
+     "x": 696,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Something in the snow"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "SAWMILL_WATCH"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notItem\":\"WATCH\"}"
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "name": "sm_drag",
+     "type": "interactable",
+     "x": 741,
+     "y": 228,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Furrow"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "SAWMILL_DRAG"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "name": "light",
+     "type": "light",
+     "x": 588,
+     "y": 168,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "r",
+       "type": "float",
+       "value": 45
+      },
+      {
+       "name": "strength",
+       "type": "float",
+       "value": 0.4
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "name": "light",
+     "type": "light",
+     "x": 672,
+     "y": 180,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "r",
+       "type": "float",
+       "value": 60
+      },
+      {
+       "name": "strength",
+       "type": "float",
+       "value": 0.25
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "name": "body",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "body"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "watch",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "watch"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notItem\":\"WATCH\"}"
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "ledger",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "ledger"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notItem\":\"LEDGER\"}"
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "name": "ridgeLight",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "ridgeLight"
+      },
+      {
+       "name": "id",
+       "type": "string",
+       "value": "ridgeLight"
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "name": "SAWMILL_BODY",
+     "type": "event",
+     "x": 450,
+     "y": 135,
+     "width": 390,
+     "height": 150,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "script",
+       "type": "string",
+       "value": "SAWMILL_BODY"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notFlag\":\"foundSheriffBody\"}"
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "name": "RIDGE_LIGHT",
+     "type": "event",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "script",
+       "type": "string",
+       "value": "RIDGE_LIGHT"
+      },
+      {
+       "name": "delay",
+       "type": "float",
+       "value": 1.6
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"foundSheriffBody\"},{\"notFlag\":\"ridgeLightSeen\"},{\"countAt\":{\"scene\":\"SAWMILL\",\"min\":4}}]}"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

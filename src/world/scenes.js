@@ -1,30 +1,12 @@
 // Scene definitions: geometry, exits, characters, interactables, lights, weather, and story events.
 // Phase-specific overrides live under `night` and are merged when state.phase === 'NIGHT'.
-import { ROAD_GROUND, CREEK_GROUND, SAWMILL_GROUND } from './painters.js';
+import { ROAD_GROUND, CREEK_GROUND } from './painters.js';
 
 const FLAT = [[0, 150], [2000, 150]];
 
 export const SCENES = {
-  STATION: {
-    name: 'BLACKWOOD STATION', travel: 3, width: 560, exterior: true, surface: 'wood', ground: FLAT, bounds: [8, 554],
-    spawns: { start: { x: 198, facing: 1 }, fromRoad: { x: 546, facing: -1 } },
-    exits: [{ side: 'right', to: 'ROAD', spawn: 'fromStation', if: { flag: 'talkedConductor' }, blockedScript: 'STATION_BLOCK' }],
-    npcs: [
-      { id: 'conductor', sprite: 'conductor_idle', x: 232, facing: -1, if: { notFlag: 'trainDeparted' }, dialogue: 'CONDUCTOR', name: 'Conductor', lantern: true },
-    ],
-    interactables: [
-      { id: 'st_waiting', x: 354, y: 122, label: 'Waiting room', lines: ['The waiting room is dark. A stove inside, long cold. Nobody waits for trains here anymore.'] },
-      { id: 'st_freight', x: 300, y: 140, label: 'Freight', lines: ['Mail sacks and a crate of lamp oil, addressed to Crow\'s Hollow. Nobody has come down to collect them.'] },
-      { id: 'st_telegraph', x: 429, y: 122, label: 'Telegraph office', lines: ['The telegraph office, shuttered for the storm. A lamp still burns inside.', 'Overhead, the wire runs up the valley. If the storm brings it down, there is no other way to send word out.'] },
-      { id: 'st_timetable', x: 457, y: 120, label: 'Timetable board', lines: ['A chalk timetable. Beside every return train someone has written the same word: PASS?'] },
-    ],
-    props: [{ type: 'train', id: 'train' }],
-    lights: [{ x: 260, y: 107, r: 72, warm: 0.26 }, { x: 429, y: 121, r: 40, warm: 0.2 }],
-    weather: { snow: 0.55, wind: 0.5, fog: 0.2 }, darkness: 0.56, ambience: 'station',
-    events: [
-      { id: 'INTRO', if: { notFlag: 'introDone' }, script: 'INTRO' },
-    ],
-  },
+  // STATION, VILLAGE, BLACK_RAM_EXTERIOR and SAWMILL are authored in Tiled (assets/levels/*.tmj), registered in
+  // tiled/levelList.js. Station and Sawmill keep their painters for the art until Pass 2.
 
   ROAD: {
     name: "THE ROAD TO CROW'S HOLLOW", travel: 7, width: 800, exterior: true, ground: ROAD_GROUND, bounds: [4, 796],
@@ -128,34 +110,6 @@ export const SCENES = {
     events: [{ id: 'CREEK_ENTER', if: {}, script: 'CREEK_ENTER' }],
   },
 
-  SAWMILL: {
-    name: 'THE OLD SAWMILL', travel: 8, width: 560, exterior: true, ground: SAWMILL_GROUND, bounds: [6, 506],
-    spawns: { fromCreek: { x: 16, facing: 1 } },
-    exits: [{ side: 'left', to: 'CREEK', spawn: 'fromSawmill', scriptIf: { if: { flag: 'ridgeLightSeen' }, script: 'SLICE_END' } }],
-    interactables: [
-      { id: 'sm_saw', x: 196, y: 136, label: 'Saw carriage', lines: ['The saw carriage, a log still clamped on it. Rust has the blade. Nobody has cut timber here in years.'] },
-      { id: 'sm_ledger', x: 256, y: 146, label: 'Ash pit', evidence: 'SAWMILL_LEDGER', important: true, if: { notItem: 'LEDGER' } },
-      { id: 'sm_boots', x: 292, y: 151, label: 'Prints in the sawdust', evidence: 'SAWMILL_BOOTPRINTS', important: true },
-      { id: 'sm_marks', x: 350, y: 132, label: 'Post', evidence: 'SAWMILL_MARKS', important: true },
-      { id: 'sm_rope', x: 371, y: 100, label: 'Rope', evidence: 'SAWMILL_ROPE', important: true },
-      { id: 'sm_body', x: 392, y: 108, label: 'The body', evidence: 'SAWMILL_BODY', important: true, if: { flag: 'foundSheriffBody' } },
-      { id: 'sm_watch', x: 464, y: 150, label: 'Something in the snow', evidence: 'SAWMILL_WATCH', important: true, if: { notItem: 'WATCH' } },
-      { id: 'sm_drag', x: 494, y: 152, label: 'Furrow', evidence: 'SAWMILL_DRAG', important: true },
-    ],
-    props: [
-      { type: 'body' },
-      { type: 'watch', if: { notItem: 'WATCH' } },
-      { type: 'ledger', if: { notItem: 'LEDGER' } },
-      { type: 'ridgeLight', id: 'ridgeLight' },
-    ],
-    // faint snow-glow on the wheel frame so the scene's composition reads even without the lantern
-    lights: [{ x: 392, y: 112, r: 30, strength: 0.4 }, { x: 448, y: 120, r: 40, strength: 0.25 }],
-    weather: { snow: 0.75, wind: 0.8, fog: 0.4 }, darkness: 0.8, ambience: 'sawmill',
-    events: [
-      { id: 'SAWMILL_BODY', if: { all: [{ notFlag: 'foundSheriffBody' }, { xMin: 300 }] }, script: 'SAWMILL_BODY' },
-      { id: 'RIDGE_LIGHT', if: { all: [{ flag: 'foundSheriffBody' }, { notFlag: 'ridgeLightSeen' }, { countAt: { scene: 'SAWMILL', min: 4 } }] }, delay: 1.6, script: 'RIDGE_LIGHT' },
-    ],
-  },
 };
 
 // Global events checked in any scene.

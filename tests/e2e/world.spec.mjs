@@ -10,8 +10,10 @@ import { mkdirSync } from 'node:fs';
 
 // [scene id, phase, expected width (world units), a few x positions that must be walkable and framed]
 const LOCATIONS = [
+  { id: 'STATION', width: 560, spawn: 'start' },
   { id: 'VILLAGE', width: 480, spawn: 'fromRoad' },
   { id: 'BLACK_RAM_EXTERIOR', width: 640, spawn: 'fromWest' },
+  { id: 'SAWMILL', width: 560, spawn: 'fromCreek' },
 ];
 
 for (const loc of LOCATIONS) {
@@ -77,6 +79,39 @@ test.describe('transitions', () => {
     expect((await walkOff(page, 4, 'KeyA')).scene).toBe('VILLAGE');
     expect(await page.evaluate(() => TWT.player.x)).toBeGreaterThan(440); // arrives at the east end
     expect((await walkOff(page, 4, 'KeyA')).scene).toBe('ROAD');
+    await expectClean(page, errors);
+  });
+
+  test('Station: the platform exit stays shut until the conductor has been spoken to, then leads to the road', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'STATION' });
+    await page.evaluate(() => { TWT.state.flags.introDone = true; T.talkThrough(); });
+    expect((await walkOff(page, 554, 'KeyD')).scene).toBe('STATION'); // blocked (STATION_BLOCK)
+    await page.evaluate(() => { T.talkThrough(); TWT.state.flags.talkedConductor = true; });
+    expect((await walkOff(page, 554, 'KeyD')).scene).toBe('ROAD');
+    expect(await page.evaluate(() => TWT.player.x)).toBeLessThan(40);
+    expect((await walkOff(page, 4, 'KeyA')).scene).toBe('STATION');
+    expect(await page.evaluate(() => TWT.player.x)).toBeGreaterThan(520);
+    await expectClean(page, errors);
+  });
+
+  test('Sawmill: reached from the creek footbridge; every inspection point is reachable and records its evidence', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'CREEK', phase: 'NIGHT' });
+    await page.evaluate(() => { T.talkThrough(); T.walkTo(648); });
+    await press(page, 'KeyE', 80);
+    expect((await info(page)).scene).toBe('SAWMILL');
+    const res = await page.evaluate(() => {
+      T.talkThrough([], 3000); // the body event
+      const out = [];
+      for (const it of TWT.scene.interactables.filter((i) => i.evidence)) {
+        T.walkTo(it.x); T.talkThrough([], 3000); T.walkTo(it.x); T.step(5); // the body event fires on the way
+        const prompt = T.info().prompt;
+        T.press('KeyE'); T.step(80); T.talkThrough([], 3000); T.step(150); T.talkThrough([], 3000); // incl. the ridge-light beat
+        out.push([it.id, prompt, !!TWT.state.evidence[it.evidence]]);
+      }
+      return out;
+    });
+    for (const [id, prompt, recorded] of res) { expect(prompt, id).toContain('Examine'); expect(recorded, id + ' evidence recorded').toBe(true); }
+    expect(res.length).toBeGreaterThanOrEqual(7);
     await expectClean(page, errors);
   });
 

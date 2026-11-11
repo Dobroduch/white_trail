@@ -84,6 +84,7 @@ export function sceneFromTiled(map, id) {
     weather: null,
     tiled: { pxW, pxH, source: id },
   };
+  if (mp.painter) scene.tiled.painter = String(mp.painter); // keep this scene's existing procedural/native painter for its art
   if (mp.surface) scene.surface = mp.surface;
   if (mp.ambient) scene.ambient = mp.ambient;
   if (mp.music) scene.music = mp.music;
@@ -127,6 +128,7 @@ export function sceneFromTiled(map, id) {
           if (cond) ex.if = cond;
           if (p.blockedLines) ex.blockedLines = lines(p.blockedLines);
           if (p.blockedScript) ex.blockedScript = p.blockedScript;
+          if (p.scriptIf) ex.scriptIf = json(p.scriptIf, where + '.scriptIf', errors); // { if, script }: run a script instead of travelling
           scene.exits.push(ex);
           break;
         }

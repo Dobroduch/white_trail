@@ -26,7 +26,8 @@ async function loadLevel(def) {
       return false;
     }
     SCENES[def.id] = scene;
-    registerPainter(def.id, (width, phase) => renderTiledLayers(loaded, phase, width));
+    // Pass 1 maps own the layout only; map property `painter` keeps the scene's existing painter for its art.
+    if (!scene.tiled.painter) registerPainter(def.id, (width, phase) => renderTiledLayers(loaded, phase, width));
     levelStatus[def.id] = { ok: true, errors, warnings };
     return true;
   } catch (err) {

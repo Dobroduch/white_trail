@@ -1,0 +1,406 @@
+{
+ "type": "map",
+ "version": "1.10",
+ "tiledversion": "1.11.0",
+ "orientation": "orthogonal",
+ "renderorder": "right-down",
+ "width": 105,
+ "height": 34,
+ "tilewidth": 8,
+ "tileheight": 8,
+ "infinite": false,
+ "compressionlevel": -1,
+ "nextlayerid": 3,
+ "nextobjectid": 14,
+ "properties": [
+  {
+   "name": "name",
+   "type": "string",
+   "value": "BLACKWOOD STATION"
+  },
+  {
+   "name": "exterior",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "travel",
+   "type": "float",
+   "value": 3
+  },
+  {
+   "name": "ambience",
+   "type": "string",
+   "value": "station"
+  },
+  {
+   "name": "darkness",
+   "type": "float",
+   "value": 0.56
+  },
+  {
+   "name": "surface",
+   "type": "string",
+   "value": "wood"
+  },
+  {
+   "name": "painter",
+   "type": "string",
+   "value": "STATION"
+  },
+  {
+   "name": "snow",
+   "type": "float",
+   "value": 0.55
+  },
+  {
+   "name": "wind",
+   "type": "float",
+   "value": 0.5
+  },
+  {
+   "name": "fog",
+   "type": "float",
+   "value": 0.2
+  }
+ ],
+ "tilesets": [],
+ "layers": [
+  {
+   "id": 1,
+   "name": "gameplay",
+   "type": "objectgroup",
+   "draworder": "topdown",
+   "opacity": 1,
+   "visible": true,
+   "x": 0,
+   "y": 0,
+   "objects": [
+    {
+     "id": 1,
+     "name": "walkable",
+     "type": "bounds",
+     "x": 12,
+     "y": 187.5,
+     "width": 819,
+     "height": 90,
+     "rotation": 0,
+     "visible": true,
+     "properties": []
+    },
+    {
+     "id": 2,
+     "name": "start",
+     "type": "spawn",
+     "x": 297,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      }
+     ]
+    },
+    {
+     "id": 3,
+     "name": "fromRoad",
+     "type": "spawn",
+     "x": 819,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      }
+     ]
+    },
+    {
+     "id": 4,
+     "name": "eastEdge",
+     "type": "exit",
+     "x": 828,
+     "y": 150,
+     "width": 12,
+     "height": 120,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "side",
+       "type": "string",
+       "value": "right"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "ROAD"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromStation"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"talkedConductor\"}"
+      },
+      {
+       "name": "blockedScript",
+       "type": "string",
+       "value": "STATION_BLOCK"
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "name": "conductor",
+     "type": "npc",
+     "x": 348,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "conductor_idle"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "CONDUCTOR"
+      },
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Conductor"
+      },
+      {
+       "name": "lantern",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notFlag\":\"trainDeparted\"}"
+      }
+     ]
+    },
+    {
+     "id": 6,
+     "name": "st_waiting",
+     "type": "interactable",
+     "x": 531,
+     "y": 183,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Waiting room"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "The waiting room is dark. A stove inside, long cold. Nobody waits for trains here anymore."
+      }
+     ]
+    },
+    {
+     "id": 7,
+     "name": "st_freight",
+     "type": "interactable",
+     "x": 450,
+     "y": 210,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Freight"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "Mail sacks and a crate of lamp oil, addressed to Crow's Hollow. Nobody has come down to collect them."
+      }
+     ]
+    },
+    {
+     "id": 8,
+     "name": "st_telegraph",
+     "type": "interactable",
+     "x": 643.5,
+     "y": 183,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Telegraph office"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "The telegraph office, shuttered for the storm. A lamp still burns inside.\nOverhead, the wire runs up the valley. If the storm brings it down, there is no other way to send word out."
+      }
+     ]
+    },
+    {
+     "id": 9,
+     "name": "st_timetable",
+     "type": "interactable",
+     "x": 685.5,
+     "y": 180,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Timetable board"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "A chalk timetable. Beside every return train someone has written the same word: PASS?"
+      }
+     ]
+    },
+    {
+     "id": 10,
+     "name": "light",
+     "type": "light",
+     "x": 390,
+     "y": 160.5,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "r",
+       "type": "float",
+       "value": 108
+      },
+      {
+       "name": "warm",
+       "type": "float",
+       "value": 0.26
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "name": "light",
+     "type": "light",
+     "x": 643.5,
+     "y": 181.5,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "r",
+       "type": "float",
+       "value": 60
+      },
+      {
+       "name": "warm",
+       "type": "float",
+       "value": 0.2
+      }
+     ]
+    },
+    {
+     "id": 12,
+     "name": "train",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "train"
+      },
+      {
+       "name": "id",
+       "type": "string",
+       "value": "train"
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "name": "INTRO",
+     "type": "event",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "script",
+       "type": "string",
+       "value": "INTRO"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notFlag\":\"introDone\"}"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -31,7 +31,8 @@
                 { "name": "if", "type": "string", "value": "" },
                 { "name": "phase", "type": "string", "value": "" },
                 { "name": "blockedLines", "type": "string", "value": "" },
-                { "name": "blockedScript", "type": "string", "value": "" }
+                { "name": "blockedScript", "type": "string", "value": "" },
+                { "name": "scriptIf", "type": "string", "value": "" }
             ]
         },
         {
