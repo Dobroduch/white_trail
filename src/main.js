@@ -12,6 +12,7 @@ import { loadSettings } from './systems/save.js';
 import { PauseMenu } from './ui/menus.js';
 import { loadMapArt } from './ui/mapView.js';
 import { loadHudIcons } from './ui/hud.js';
+import { loadItemIcons } from './ui/itemIcons.js';
 
 async function boot() {
   const canvas = document.getElementById('game');
@@ -27,7 +28,7 @@ async function boot() {
   await loadStationArt();
   await loadTownArt();
   await loadNativeSceneArt();
-  await Promise.all([loadMapArt(), loadHudIcons()]);
+  await Promise.all([loadMapArt(), loadHudIcons(), loadItemIcons()]);
   if (assetErrors().length) console.warn(`[boot] ${assetErrors().length} asset problem(s); see errors above. The game will continue with fallbacks.`);
 
   const game = new Game({ display, input, audio, settings });

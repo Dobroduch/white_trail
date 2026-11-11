@@ -3,6 +3,7 @@
 import { UI, font, text, spaced, panel, keycap, wrap, UI_W, UI_H, UI_CX, UI_LEFT, UI_RIGHT } from './text.js';
 import { timeString } from '../systems/storyState.js';
 import { EVIDENCE } from '../data/evidence.js';
+import { drawItemIcon } from './itemIcons.js';
 
 // Dedicated panel buttons (top-right): Notebook, Inventory, Map. Pixel icons from
 // assets/export/ui/hud_icons.png (assets/source/pixelorama/ui/hud_icons.pxo): three 16x16 icons.
@@ -48,7 +49,7 @@ export class HUD {
     this.toasts.push({ head: kind, text: ev.title, t: 0 });
     if (this.toasts.length > 3) this.toasts.shift();
   }
-  item(name) { this.toasts.push({ head: 'Taken', text: name, t: 0 }); }
+  item(name, id) { this.toasts.push({ head: 'Taken', text: name, icon: id, t: 0 }); }
   clear() { this.label = null; this.hintMsg = null; this.barkMsg = null; this.toasts = []; this.titleT = null; }
 
   update(dt) {
@@ -146,13 +147,15 @@ export class HUD {
       font(ctx, 4.5, { italic: true });
       const head = t.head;
       font(ctx, 5.2);
-      const w = Math.max(60, ctx.measureText(t.text).width + 12);
+      const iw = t.icon ? 14 : 0; // a taken item shows its own illustration
+      const w = Math.max(60, ctx.measureText(t.text).width + 12 + iw);
       const y = 146 - (this.toasts.length - 1 - i) * 17;
       panel(ctx, UI_RIGHT - 8 - w, y, w, 15, 'rgba(9,13,22,0.78)', UI.edge);
+      if (t.icon) drawItemIcon(ctx, t.icon, UI_RIGHT - 8 - w + 10, y + 7.5, 13);
       font(ctx, 4.3, { italic: true });
-      text(ctx, head, UI_RIGHT - 8 - w + 6, y + 6, UI.amber);
+      text(ctx, head, UI_RIGHT - 8 - w + 6 + iw, y + 6, UI.amber);
       font(ctx, 5.2);
-      text(ctx, t.text, UI_RIGHT - 8 - w + 6, y + 12, UI.bone);
+      text(ctx, t.text, UI_RIGHT - 8 - w + 6 + iw, y + 12, UI.bone);
       ctx.globalAlpha = 1;
     });
     this.drawButtons(ctx);

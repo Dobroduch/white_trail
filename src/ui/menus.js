@@ -7,6 +7,7 @@ import { DEDUCTIONS } from '../data/notebookData.js';
 import { revolverDescription } from '../systems/survival.js';
 import { isFullscreen, toggleFullscreen } from '../engine/display.js';
 import { test, countAt } from '../systems/storyState.js';
+import { drawItemIcon } from './itemIcons.js';
 
 function menuNav(self, input, n, audio) {
   if (input.pressed('up')) { self.sel = (self.sel + n - 1) % n; audio.sfx('tick'); }
@@ -198,13 +199,54 @@ export class Confirm {
 }
 
 // ---------------- Inventory ----------------
+// A grid of the objects Silas carries, each shown by its own illustration (ITEMS[id].icon, see
+// ui/itemIcons.js), with the selected one drawn large beside its name and description.
+const INV = { x: 22, y: 26, w: 276, h: 138, cols: 3, rows: 2, gx: 32, gy: 47, sw: 40, sh: 34, nameH: 13, divX: 166 };
 export class Inventory {
-  constructor(game) { this.game = game; this.sel = 0; }
+  constructor(game) { this.game = game; this.sel = 0; this.top = 0; this.hover = -1; }
+  slotRect(i) {
+    const k = i - this.top * INV.cols;
+    const c = k % INV.cols, r = Math.floor(k / INV.cols);
+    return { x: INV.gx + c * (INV.sw + 3), y: INV.gy + r * (INV.sh + INV.nameH + 3), w: INV.sw, h: INV.sh };
+  }
+  slotAt(ux, uy, n) {
+    for (let i = this.top * INV.cols; i < Math.min(n, (this.top + INV.rows) * INV.cols); i++) {
+      const r = this.slotRect(i);
+      if (ux >= r.x && ux <= r.x + r.w && uy >= r.y && uy <= r.y + r.h + INV.nameH) return i;
+    }
+    return -1;
+  }
   update(input) {
     const items = this.game.state.items;
+    const n = items.length;
     if (input.pressed('pause') || input.pressed('inventory') || input.pressed('back')) return 'close';
-    menuNav(this, input, items.length, this.game.audio);
-    if (input.pressed('interact')) {
+    if (!n) return null;
+    const prev = this.sel;
+    if (input.pressed('left')) this.sel = (this.sel + n - 1) % n;
+    if (input.pressed('right')) this.sel = (this.sel + 1) % n;
+    if (input.pressed('up') && this.sel - INV.cols >= 0) this.sel -= INV.cols;
+    if (input.pressed('down') && this.sel + INV.cols < n) this.sel += INV.cols;
+    else if (input.pressed('down') && Math.floor(this.sel / INV.cols) < Math.floor((n - 1) / INV.cols)) this.sel = n - 1;
+    // mouse: hover highlights, a click selects (a second click on a readable item opens it)
+    const disp = this.game.display;
+    const l = input.pointer && disp.clientToUI(input.pointer.x, input.pointer.y);
+    this.hover = l ? this.slotAt(l.x, l.y, n) : -1;
+    let open = false;
+    if (input.clicks && input.clicks.length) {
+      input.clicks = input.clicks.filter((c) => {
+        const u = disp.clientToUI(c.x, c.y);
+        const i = u ? this.slotAt(u.x, u.y, n) : -1;
+        if (i < 0) return true;
+        if (i === this.sel) open = true; else this.sel = i;
+        return false;
+      });
+    }
+    if (this.sel !== prev) this.game.audio.sfx('tick');
+    // keep the selected row in view when there are more items than slots
+    const row = Math.floor(this.sel / INV.cols);
+    if (row < this.top) this.top = row;
+    if (row >= this.top + INV.rows) this.top = row - INV.rows + 1;
+    if (input.pressed('interact') || open) {
       const it = ITEMS[items[this.sel]];
       if (it && it.doc) return 'doc:' + it.doc;
     }
@@ -213,25 +255,43 @@ export class Inventory {
   draw(ctx) {
     const s = this.game.state;
     ctx.fillStyle = 'rgba(5,7,12,0.72)'; ctx.fillRect(UI_LEFT, UI_TOP, UI_RIGHT - UI_LEFT, UI_BOTTOM - UI_TOP);
-    panel(ctx, 40, 28, 240, 120, UI.panel, UI.edgeHi);
-    font(ctx, 6.2); spaced(ctx, 'WHAT I CARRY', UI_CX, 42, UI.bone, 2, 'center');
-    s.items.forEach((id, i) => {
+    panel(ctx, INV.x, INV.y, INV.w, INV.h, UI.panel, UI.edgeHi);
+    font(ctx, 6.2); spaced(ctx, 'WHAT I CARRY', UI_CX, INV.y + 12, UI.bone, 2, 'center');
+    ctx.fillStyle = UI.edge; ctx.fillRect(INV.x + 10, INV.y + 17, INV.w - 20, 0.6);
+    const n = s.items.length;
+    const first = this.top * INV.cols, last = Math.min(n, first + INV.rows * INV.cols);
+    for (let i = first; i < first + INV.rows * INV.cols; i++) {
+      const r = this.slotRect(i);
+      if (i >= last) { panel(ctx, r.x, r.y, r.w, r.h, 'rgba(15,20,32,0.45)', 'rgba(51,65,85,0.5)'); continue; }
+      const id = s.items[i];
       const it = ITEMS[id];
-      const y = 58 + i * 10;
-      const sel = i === this.sel;
-      if (sel) { ctx.fillStyle = UI.amber; ctx.fillRect(50, y - 3, 3, 1.2); }
-      font(ctx, 5.6); text(ctx, it ? it.name : id, 56, y, sel ? UI.bone : UI.dim);
-    });
-    ctx.fillStyle = UI.edge; ctx.fillRect(140, 52, 0.6, 88);
-    const it = ITEMS[s.items[this.sel]];
+      const sel = i === this.sel, hov = i === this.hover && !sel;
+      panel(ctx, r.x, r.y, r.w, r.h, sel ? 'rgba(40,30,18,0.92)' : 'rgba(15,20,32,0.85)', sel ? UI.amber : hov ? UI.dim : UI.edge);
+      // the pictures carry ~3px of transparent margin, so they may fill the box edge to edge
+      drawItemIcon(ctx, id, r.x + r.w / 2, r.y + r.h / 2, r.h + 2);
+      font(ctx, 4.2, { italic: !sel });
+      const lines = wrap(ctx, it ? it.name : id, r.w + 2).slice(0, 2);
+      lines.forEach((ln, k) => text(ctx, ln, r.x + r.w / 2, r.y + r.h + 5 + k * 4.6, sel ? UI.bone : UI.dim, 'center'));
+    }
+    if (first > 0) { font(ctx, 4.4); text(ctx, '▲', INV.gx + 64, INV.gy - 3, UI.faint, 'center'); }
+    if (last < n) { font(ctx, 4.4); text(ctx, '▼', INV.gx + 64, INV.y + INV.h - 10, UI.faint, 'center'); }
+    ctx.fillStyle = UI.edge; ctx.fillRect(INV.divX, INV.y + 24, 0.6, INV.h - 40);
+    const id = s.items[this.sel];
+    const it = ITEMS[id];
+    const rx = INV.divX + 8, rw = INV.x + INV.w - 10 - rx, rcx = rx + rw / 2;
     if (it) {
-      font(ctx, 5.4, { italic: true });
+      // the selected object, large
+      drawItemIcon(ctx, id, rcx, INV.y + 50, 56);
+      font(ctx, 6); text(ctx, it.name, rcx, INV.y + 86, UI.bone, 'center');
+      font(ctx, 5, { italic: true });
       const desc = it.revolver ? revolverDescription(s) : it.text;
-      wrap(ctx, desc, 128).forEach((l, i) => text(ctx, l, 146, 58 + i * 7, UI.dim));
-      if (it.doc) { font(ctx, 4.6, { italic: true }); text(ctx, 'E — read it', 146, 136, UI.amber); }
+      wrap(ctx, desc, rw).slice(0, 7).forEach((l, i) => text(ctx, l, rx, INV.y + 95 + i * 6.2, UI.dim));
+      if (it.doc) { font(ctx, 4.6, { italic: true }); text(ctx, 'E — read it', rx, INV.y + INV.h - 6, UI.amber); }
+    } else {
+      font(ctx, 5.4, { italic: true }); text(ctx, 'Empty pockets.', rcx, INV.y + 60, UI.faint, 'center');
     }
     font(ctx, 4.3, { italic: true });
-    text(ctx, 'I / Esc close', UI_CX, 145, UI.faint, 'center');
+    text(ctx, 'Arrows choose · I / Esc close', INV.gx, INV.y + INV.h - 6, UI.faint);
   }
 }
 

@@ -130,5 +130,26 @@ console.log('Sprites');
   for (const n of ['silas_body', 'silas_legs', 'lantern_on', 'lantern_off', 'candle', 'hale_body', 'patron', 'patron_look']) ok(data.sprites[n], `sprite ${n} missing`);
 }
 
+console.log('Item artwork');
+{
+  // every item has its own 48x48 inventory picture, plus the sawmill pick-ups' world sprites
+  const pngSize = (buf) => [buf.readUInt32BE(16), buf.readUInt32BE(20)];
+  const seen = new Set();
+  for (const [id, it] of Object.entries(ITEMS)) {
+    ok(it.icon, `${id}: no inventory icon`);
+    if (!it.icon) continue;
+    ok(!seen.has(it.icon), `${id}: icon ${it.icon} shared with another item`); seen.add(it.icon);
+    let buf = null;
+    try { buf = await readFile(new URL('../' + it.icon, import.meta.url)); } catch { /* reported below */ }
+    ok(buf, `${id}: icon file ${it.icon} missing`);
+    if (buf) { const [w, h] = pngSize(buf); ok(w === 48 && h === 48, `${id}: icon is ${w}x${h}, expected 48x48`); }
+  }
+  for (const f of ['pocket_watch_world', 'ledger_world']) {
+    let buf = null;
+    try { buf = await readFile(new URL(`../assets/export/items/world/${f}.png`, import.meta.url)); } catch { /* reported below */ }
+    ok(buf, `world item sprite ${f}.png missing`);
+  }
+}
+
 console.log(`\n${checks} checks, ${errors} error(s)`);
 process.exit(errors ? 1 : 0);

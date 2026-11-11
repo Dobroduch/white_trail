@@ -414,6 +414,23 @@ export function bodyProp() {
 }
 
 // ---------------- Sawmill: small evidence objects that can be picked up ----------------
+// Native-density pick-up sprites (assets/export/items/world/*.png, Pixelorama sources in
+// assets/source/pixelorama/items/), drawn from the same designs as the inventory pictures. Until an
+// image has loaded (or if it is missing) the original hand-placed pixels are drawn instead.
+const worldItemArt = {};
+function worldItem(name) {
+  if (!(name in worldItemArt)) {
+    const img = new Image();
+    worldItemArt[name] = null;
+    img.onload = () => { worldItemArt[name] = img; };
+    img.onerror = () => console.error(`[props] could not load assets/export/items/world/${name}.png; using the fallback pixels.`);
+    img.src = `assets/export/items/world/${name}.png?v=1`;
+  }
+  return worldItemArt[name];
+}
+// 1 image px = 1 native px = 1 / 1.5 world units
+function drawWorldItem(ctx, img, x, y) { ctx.drawImage(img, x, y, img.width / 1.5, img.height / 1.5); }
+
 export function watchProp() {
   let t = 0;
   return {
@@ -421,6 +438,8 @@ export function watchProp() {
     update(dt) { t += dt; },
     draw(ctx, camX) {
       const bx = Math.round(463 - camX);
+      const img = worldItem('pocket_watch_world');
+      if (img) { drawWorldItem(ctx, img, bx, 148); return; }
       rect(ctx, bx, 149, 3, 2, '#9aa3ad'); px(ctx, bx + 1, 149, '#e2e8f0');
       line(ctx, bx + 3, 150, bx + 7, 151, '#7a7f88');
     },
@@ -436,6 +455,8 @@ export function ledgerProp() {
     z: 2,
     draw(ctx, camX) {
       const bx = Math.round(252 - camX);
+      const img = worldItem('ledger_world');
+      if (img) { drawWorldItem(ctx, img, bx, 145); return; }
       rect(ctx, bx, 145, 9, 3, '#b8ad92');
       rect(ctx, bx + 5, 145, 4, 3, '#2a2420');
       px(ctx, bx + 4, 145, '#5a4632'); px(ctx, bx + 1, 146, '#6b6250'); px(ctx, bx + 3, 146, '#6b6250');

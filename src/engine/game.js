@@ -239,7 +239,7 @@ export class Game {
   handleEffects(results, pendingScripts) {
     for (const r of results) {
       if (r.noted) { this.hud.noted(r.noted, r.detail); this.audio.sfx('pen'); this.checkpointSoon = true; }
-      if (r.item && ITEMS[r.item]) this.hud.item(ITEMS[r.item].name);
+      if (r.item && ITEMS[r.item]) this.hud.item(ITEMS[r.item].name, r.item);
       if (r.script) { if (pendingScripts) pendingScripts.push(r.script); else this.runScript(r.script); }
     }
   }
