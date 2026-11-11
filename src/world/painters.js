@@ -50,7 +50,7 @@ function nb(scene, name, layer, glowName) {
 }
 
 // Top edge of a native layer, per world unit (for props that sit on a painted ridge).
-function nativeHeights(img) {
+export function nativeHeights(img) {
   const [, x] = canvas(img.width, img.height);
   x.drawImage(img, 0, 0);
   const d = x.getImageData(0, 0, img.width, img.height).data;
@@ -609,126 +609,9 @@ function paintCreek(sw) {
 }
 
 // ---------- THE OLD SAWMILL ----------
-export const SAWMILL_GROUND = [[0, 150], [486, 150], [500, 155], [560, 158]];
+// The sawmill is a Tiled map (assets/levels/old_sawmill.tmj, tiles from tilesets/sawmill_exterior). Its ridge
+// layer is flagged `ridge`, which publishes the skyline heights for the closing lantern (see tiled/levels.js).
 export const RIDGE_FACTOR = 0.22;
-function paintSawmill(sw) {
-  const ridge = nb('sawmill', 'ridge', mountainLayer(sw, RIDGE_FACTOR, 110, 40, 101, '#0e131e', '#3a4559', '#1a2232', -85));
-  // the ridge-light beat stands on the ridge's top edge, so read it from whichever art is in use
-  sceneMeta.SAWMILL = { ridgeHeights: ridge.native ? nativeHeights(ridge.canvas) : ridge.heights };
-  const back = [
-    nb('sawmill', 'sky', sky(['#05070d', PAL.navy, PAL.purple, '#111624'], 16)),
-    nb('sawmill', 'mountains_far', mountainLayer(sw, 0.06, 96, 30, 100, '#161c29', '#4a566c', null, -90)),
-    ridge,
-    nb('sawmill', 'pines', pineLayer(sw, 0.45, 146, 10, 26, 7, 102, '#0a0e16', '#252e3e', -70, '#0a0e16')),
-  ];
-  const gAt = groundFn(SAWMILL_GROUND);
-  const [m, ctx] = canvas(sw, H);
-  const [g] = canvas(sw, H);
-  // creek on the right
-  rect(ctx, 486, 156, sw - 486, 24, '#08101c');
-  const rng = mulberry32(103);
-  for (let i = 0; i < 18; i++) { const x = 490 + Math.floor(rng() * 66); const y = 160 + Math.floor(rng() * 18); rect(ctx, x, y, 4 + Math.floor(rng() * 10), 1, '#2f3b4e'); }
-  for (let x = 486; x < sw; x += 9) rect(ctx, x, 158, 6, 2, '#4a566b');
-  // shed floor: packed earth + sawdust, sheltered from snow
-  snowGround(ctx, sw, gAt, H, 104);
-  rect(ctx, 134, 150, 196, 4, '#3a2c20');
-  for (let x = 134; x < 330; x++) { if (rng() > 0.6) px(ctx, x, 150, '#5a4632'); if (rng() > 0.7) px(ctx, x, 151 + Math.floor(rng() * 3), '#4e3c2b'); }
-  hline(ctx, 134, 329, 154, PAL.snow1);
-  // shed frame
-  for (const p of [134, 200, 266, 326]) { rect(ctx, p, 92, 4, 58, '#21180f'); vline(ctx, p, 92, 149, '#2e2216'); }
-  // back wall: broken planks
-  for (let x = 138; x < 326; x += 5) {
-    if (rng() > 0.78) continue;
-    const h = 20 + Math.floor(rng() * 26);
-    rect(ctx, x, 94, 4, h, '#1a130d'); vline(ctx, x, 94, 94 + h, '#241a12');
-  }
-  // roof (slanted, snow-laden)
-  for (let x = 124; x < 338; x++) {
-    const y = Math.round(82 + ((x - 124) / 214) * 10);
-    rect(ctx, x, y, 1, 7, '#1a130d');
-    px(ctx, x, y, PAL.snow4); px(ctx, x, y - 1, PAL.snow3); if (rng() > 0.4) px(ctx, x, y - 2, PAL.snow2);
-    if ((x % 9) === 0) { vline(ctx, x, y + 7, y + 7 + Math.floor(rng() * 4), '#a3afc2'); }
-  }
-  // saw carriage + log + blade
-  rect(ctx, 146, 140, 100, 3, '#2e2216'); rect(ctx, 150, 143, 2, 7, '#21180f'); rect(ctx, 238, 143, 2, 7, '#21180f');
-  rect(ctx, 152, 132, 70, 8, '#4a3626'); hline(ctx, 152, 221, 132, '#5e4632'); rect(ctx, 150, 133, 3, 6, '#6b5440');
-  for (let i = 0; i < 6; i++) px(ctx, 151, 134 + i, i % 2 ? '#7a6248' : '#5a4632');
-  const bxC = 232, byC = 136, br = 9;
-  for (let a = 0; a < 48; a++) { const t = (a / 48) * Math.PI * 2; px(ctx, bxC + Math.round(Math.cos(t) * br), byC + Math.round(Math.sin(t) * br), a % 3 ? PAL.rust : '#7a4a30'); }
-  rect(ctx, bxC - 1, byC - 1, 3, 3, PAL.iron2);
-  // fire pit / ash in the shed (ledger is a prop)
-  rect(ctx, 248, 147, 18, 3, '#1c1814'); for (let i = 0; i < 14; i++) px(ctx, 249 + Math.floor(rng() * 16), 146 + Math.floor(rng() * 2), rng() > 0.5 ? '#3a3632' : '#5a5650');
-  // tools on the wall
-  line(ctx, 206, 100, 210, 128, '#3a3028'); rect(ctx, 204, 98, 6, 3, PAL.iron2);
-  line(ctx, 214, 102, 214, 126, '#3a3028'); rect(ctx, 212, 124, 5, 4, PAL.iron);
-  // boot impressions: sheltered under the roof edge, in the sawdust
-  for (const [x, y] of [[279, 151], [288, 152], [297, 151], [305, 152]]) {
-    rect(ctx, x, y, 4, 1, '#20170f'); px(ctx, x + 4, y, '#20170f'); rect(ctx, x, y + 1, 1, 1, '#20170f');
-    px(ctx, x - 1, y, '#20170f');
-  }
-  // waterwheel frame
-  rect(ctx, 350, 60, 5, 90, '#21180f'); vline(ctx, 350, 60, 149, '#2e2216');
-  rect(ctx, 482, 60, 5, 96, '#21180f');
-  rect(ctx, 344, 60, 146, 5, '#2a1f15'); hline(ctx, 344, 489, 59, PAL.snow3); hline(ctx, 344, 489, 60, PAL.snow2);
-  line(ctx, 355, 70, 370, 62, '#21180f');
-  // rope burn on the beam
-  for (let i = 0; i < 4; i++) px(ctx, 390 + i, 64, '#b39a72');
-  px(ctx, 391, 65, '#b39a72');
-  // rope from beam over to the cleat on the post
-  line(ctx, 391, 65, 356, 118, '#8b7a55');
-  rect(ctx, 354, 116, 4, 3, PAL.iron2);
-  // carved marks on the post (pale fresh cuts)
-  const marks = ['1111', '111', '1-1', '11111', '11'];
-  let my = 124;
-  for (const mk of marks) {
-    let mx = 351;
-    for (const ch of mk) {
-      if (ch === '1') vline(ctx, mx, my, my + 3, '#c9b68e');
-      mx += ch === '-' ? 1 : 1;
-      if (ch === '-') hline(ctx, mx - 2, mx, my + 1, '#c9b68e');
-    }
-    if (mk.length >= 5) line(ctx, 350, my + 3, 354, my, '#c9b68e');
-    my += 5;
-  }
-  // waterwheel (stopped, iced)
-  const cx = 448, cy = 118, r = 28;
-  for (let a = 0; a < 180; a++) {
-    const t = (a / 180) * Math.PI * 2;
-    px(ctx, cx + Math.round(Math.cos(t) * r), cy + Math.round(Math.sin(t) * r), '#2e2216');
-    px(ctx, cx + Math.round(Math.cos(t) * (r - 1)), cy + Math.round(Math.sin(t) * (r - 1)), '#3a2a1c');
-    px(ctx, cx + Math.round(Math.cos(t) * (r - 7)), cy + Math.round(Math.sin(t) * (r - 7)), '#2e2216');
-  }
-  for (let a = 0; a < 12; a++) {
-    const t = (a / 12) * Math.PI * 2 + 0.1;
-    line(ctx, cx, cy, cx + Math.cos(t) * (r - 1), cy + Math.sin(t) * (r - 1), '#2a1f15');
-    const bx = cx + Math.round(Math.cos(t) * (r - 3)), by = cy + Math.round(Math.sin(t) * (r - 3));
-    rect(ctx, bx - 2, by - 2, 4, 4, '#241a12');
-    if (Math.sin(t) > 0.2) vline(ctx, bx, by + 2, by + 4 + (a % 3), '#a3afc2');
-  }
-  rect(ctx, cx - 3, cy - 3, 6, 6, PAL.iron); rect(ctx, cx - 1, cy - 1, 2, 2, PAL.iron2);
-  for (let a = 0; a < 90; a++) { const t = Math.PI + (a / 90) * Math.PI; if (rng() > 0.6) px(ctx, cx + Math.round(Math.cos(t) * r), cy + Math.round(Math.sin(t) * r) - 1, PAL.snow3); }
-  // drag furrow up from the creek bank toward the wheel
-  for (let x = 404; x < 500; x++) {
-    const gy = Math.round(gAt(x));
-    if ((x * 13) % 7 > 1) px(ctx, x, gy + 1, '#7d8aa0');
-    if ((x * 7) % 5 > 1) px(ctx, x, gy + 2, '#5d6a80');
-    if (rng() > 0.8) px(ctx, x, gy, '#a3afc2');
-  }
-  // beneath the body: undisturbed white; only a faint stain
-  rect(ctx, 384, 150, 14, 1, PAL.snow4);
-  px(ctx, 390, 151, '#6b3a3a'); px(ctx, 392, 151, '#5a3030');
-  // front: icicles hanging off a near beam + reeds
-  const [f, fx] = canvas(lw(sw, 1.2), H);
-  const fr = mulberry32(105);
-  for (let x = 0; x < f.width; x += 4 + Math.floor(fr() * 12)) {
-    const h = 5 + Math.floor(fr() * 10);
-    line(fx, x, 180, x + 1, 180 - h, '#090c13');
-  }
-  // native-density Pixelorama playfield replaces the procedural one (same clue positions)
-  const NA = nativeArt('SAWMILL');
-  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [nb('sawmill', 'front', { canvas: f, factor: 1.2, z: 20 })] };
-  return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.2, z: 20 }] };
-}
 
 // ---------- title backdrop ----------
 function paintTitle() {
@@ -748,7 +631,7 @@ function paintTitle() {
 
 const PAINTERS = {
   STATION: paintStation, ROAD: paintRoad, PARLOR: paintParlor,
-  ROOM4: paintRoom4, CREEK: paintCreek, SAWMILL: paintSawmill, TITLE: paintTitle,
+  ROOM4: paintRoom4, CREEK: paintCreek, TITLE: paintTitle,
 };
 
 // Data-driven scenes (Tiled maps, see world/tiled/levels.js) register their own layer builder.

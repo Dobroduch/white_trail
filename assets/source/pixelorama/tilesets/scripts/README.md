@@ -47,3 +47,22 @@ your edits.
 **Known Pixelorama quirk:** a canvas made with *New* (or the MCP `create_canvas`) can start with a
 1×1 cel, so script output, imports and exports silently collapse to one pixel. Run the script on a
 project opened from a `.pxo` file instead (this one, or a copy of it), which loads its cels at full size.
+
+## Sawmill tileset (`sawmill_exterior`)
+
+Painted by `tools/make-sawmill-tileset.mjs` (Node, palette colours only, 16×16, 8 columns), not by
+`tilesets.gd`: `node tools/make-sawmill-tileset.mjs` writes `assets/export/tilesets/sawmill_exterior.png`, the Tiled
+tileset `assets/levels/tilesets/sawmill_exterior.tsj` (every tile has a `name` property) and
+`tools/data/sawmill_tiles.json` (name → index). `assets/source/pixelorama/tilesets/sawmill_exterior.pxo` is that image
+imported into Pixelorama for hand editing; once you edit it by hand, the `.pxo` is the source of truth and re-running the
+script would overwrite your work. Tile order is fixed (add new tiles at the end). Big pieces (the waterwheel, the log on
+the carriage, the blade, the cordwood stack, the sign, the rope) are drawn once and sliced into tiles named
+`wheel_<row>_<col>` and so on; place them in Tiled as a rectangle of those tiles.
+
+The map `assets/levels/old_sawmill.tmj` was built once by `tools/make-sawmill-level.mjs` and is now edited in Tiled.
+It uses this tileset plus the Black Ram tileset's snow tiles, so both places share one snow.
+
+**Importing a PNG into a `.pxo`:** the 1×1-cel quirk above also hits `import_image`. What works: open an existing good `.pxo`
+(for example `black_ram_exterior.pxo`), run `eval_gdscript` that loads the PNG and *returns* the `Image` (the canvas resizes
+to fit), then `save_project` with the new path and compare an `export_image` against the PNG. The original `.pxo` on disk is
+untouched.

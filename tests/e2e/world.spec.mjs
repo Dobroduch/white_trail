@@ -13,7 +13,7 @@ const LOCATIONS = [
   { id: 'STATION', width: 560, spawn: 'start' },
   { id: 'VILLAGE', width: 480, spawn: 'fromRoad' },
   { id: 'BLACK_RAM_EXTERIOR', width: 640, spawn: 'fromWest' },
-  { id: 'SAWMILL', width: 560, spawn: 'fromCreek' },
+  { id: 'SAWMILL', width: 576, spawn: 'fromCreek' },
 ];
 
 for (const loc of LOCATIONS) {
@@ -163,6 +163,36 @@ test.describe('transitions', () => {
     await press(page, 'KeyE', 60);
     await page.evaluate(() => T.talkThrough());
     expect((await info(page)).scene).toBe('BLACK_RAM_EXTERIOR');
+    await expectClean(page, errors);
+  });
+});
+
+test.describe('Sawmill (tile-built, Pass 2)', () => {
+  test('layers come from the map: tile playfield, parallax with a ridge, foreground; ridge heights are published', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'SAWMILL', phase: 'NIGHT' });
+    await step(page, 2);
+    const L = await page.evaluate(async () => {
+      const l = TWT.layers, M = await import('/src/world/painters.js');
+      const h = M.sceneMeta.SAWMILL && M.sceneMeta.SAWMILL.ridgeHeights;
+      return { back: l.back.map((b) => [b.name, b.factor]), main: [l.main.canvas.width, l.main.canvas.height], front: l.front.map((f) => f.name), ridge: h ? [h.length, h[300]] : null };
+    });
+    expect(L.back).toEqual([['sky', 0], ['mountains_far', 0.06], ['ridge', 0.22], ['pines', 0.45]]);
+    expect(L.main).toEqual([864, 272]);
+    expect(L.front).toEqual(['foreground']);
+    expect(L.ridge[0]).toBeGreaterThan(400);
+    expect(L.ridge[1]).toBeGreaterThan(40); // a real skyline height at the lantern's position, not the 90 fallback
+    await expectClean(page, errors);
+  });
+
+  test('the playfield is not empty where the story needs it: shed, wheel frame and creek are painted', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'SAWMILL', phase: 'NIGHT' });
+    await step(page, 2);
+    const covered = await page.evaluate(() => {
+      const c = TWT.layers.main.canvas, x = c.getContext('2d');
+      const alpha = (px, py, w = 8, h = 8) => { const d = x.getImageData(px, py, w, h).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n / (w * h); };
+      return { shedWall: alpha(260, 150), shedFloor: alpha(300, 226), beam: alpha(600, 90), wheel: alpha(668, 173), water: alpha(780, 250), rope: alpha(544, 128, 32, 32) * 10 };
+    });
+    for (const [k, v] of Object.entries(covered)) expect(v, k).toBeGreaterThan(0.2);
     await expectClean(page, errors);
   });
 });

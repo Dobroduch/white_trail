@@ -46,6 +46,7 @@ const SHOTS = [
   { name: 'main-street-evening', scene: 'VILLAGE', setup: () => { TWT.state.flags.introDone = true; T.walkTo(120); } },
   { name: 'black-ram-evening', scene: 'BLACK_RAM_EXTERIOR', setup: () => T.walkTo(300) },
   { name: 'black-ram-night-lantern', scene: 'BLACK_RAM_EXTERIOR', phase: 'NIGHT', setup: () => { T.press('KeyF'); T.walkTo(420); } },
+  { name: 'sawmill-night-frame', scene: 'SAWMILL', phase: 'NIGHT', setup: () => { T.talkThrough(); TWT.state.flags.foundSheriffBody = true; T.walkTo(420); } },
   { name: 'parlor-fire', scene: 'PARLOR', setup: () => { T.talkThrough(); T.walkTo(120); } },
   { name: 'creek-night-snow-fog', scene: 'CREEK', phase: 'NIGHT', setup: () => { T.talkThrough(); T.walkTo(200); } },
 ];

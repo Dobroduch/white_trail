@@ -6,8 +6,8 @@
 // A map that fails to load or convert logs a clear error and is simply not registered; the rest of
 // the game is unaffected. See docs/TILED_LEVELS.md.
 import { SCENES } from '../scenes.js';
-import { registerPainter, clearLayerCache } from '../painters.js';
-import { sceneFromTiled } from './tiledMap.js';
+import { registerPainter, clearLayerCache, sceneMeta, nativeHeights } from '../painters.js';
+import { sceneFromTiled, layerPlan, props } from './tiledMap.js';
 import { loadTiledMap, renderTiledLayers } from './tiledRender.js';
 import { LEVELS } from './levelList.js';
 
@@ -26,6 +26,9 @@ async function loadLevel(def) {
       return false;
     }
     SCENES[def.id] = scene;
+    // A layer flagged `ridge` is the skyline the closing lantern stands on: publish its top edge for that prop.
+    const ridge = layerPlan(loaded.map).find((p) => p.layer.type === 'imagelayer' && props(p.layer).ridge);
+    if (ridge) sceneMeta[def.id] = { ridgeHeights: nativeHeights(loaded.images.get(ridge.layer.image)) };
     // Pass 1 maps own the layout only; map property `painter` keeps the scene's existing painter for its art.
     if (!scene.tiled.painter) registerPainter(def.id, (width, phase) => renderTiledLayers(loaded, phase, width));
     levelStatus[def.id] = { ok: true, errors, warnings };
