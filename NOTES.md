@@ -395,3 +395,15 @@ All other LFOs drive filter frequencies or inner stages, not output gains.
 The forecourt keeps its Black Ram hotel, annex, boardwalk, lamp and windows. Added (`tools/patch-forecourt-pass2.mjs`, run once; Tiled owns the map): the street arriving from Main Street (rutted snow), snow trodden flat in front of the door, one set of prints leaving east toward the creek path, barrels/crate/bench/drifts/shrub, the **MILL board** on its post with an interactable ("Old sign", the line it had on the old village street), an outbuilding door/window and an unlit lantern on its hook, and pines framing the way down to the creek. Five tiles were appended to `main_street_exterior` (88 tiles, existing indices unchanged, Pixelorama source re-imported with a verified round trip). Two forecourt baselines were regenerated on purpose; 73 e2e tests pass.
 
 **Not done:** the pines read faintly at night darkness; no recorded audio; the east exit still jumps straight to the creek screen (no bank slope drawn). Road and Creek are still hand-written scenes.
+
+## 17. Road and Creek, tile-built (2026-11-12)
+
+**What changed.** `ROAD` (`road_to_crows_hollow.tmj`, 800 units) and `CREEK` (`creek_path.tmj`, 768 units: 8 units wider so the width is whole tiles) are now Tiled maps built from the new `wilderness_exterior` tileset (216 tiles, palette-exact, Pixelorama source with a verified round trip), via `tools/migrate-scene-to-tiled.mjs` (layout, diffed against the old scene data) and `tools/make-wilderness-levels.mjs` (art, built once). `scenes.js` now only holds PARLOR and ROOM4; `paintRoad`, `paintCreek`, `ROAD_GROUND`, `CREEK_GROUND` and their `nativeArt` entries are deleted. The existing parallax PNGs (with the Road's distant village lights and glow) are image layers.
+
+**Terrain tiles.** Both scenes have rolling ground, so the ground is tiles whose crust row follows the polyline (see the tileset README). The Road's ground is 3 px lower than before so the crust always has a row to sit in (151.3 instead of 150 world units at x=0); a test checks the crust against the polyline. Fences, the CROW'S HOLLOW signpost, the ore car and the notice board stand behind the terrain with their feet sunk in; the creek has its bank, ice rim and black water, the footbridge (in front) and the deadfall, and fresh prints lead to the bridge.
+
+**A mistake found and fixed.** The `station-house-evening` baseline I added earlier actually captured the Road: its setup walked Silas to world x=560, past the station's east bound, so the exit fired. The setup now walks to x=430 (in front of the house) and the baseline was regenerated, with the creek baseline.
+
+**Unchanged:** all interactables, events, doors, gates and dialogue. 81 e2e tests pass (two baselines regenerated).
+
+**Not done:** both scenes are very dark by design at their story phases, so the new art reads best with the lantern; no recorded audio; the interiors (PARLOR, ROOM4) and the title backdrop are still painted, not tile-built.

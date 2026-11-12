@@ -93,3 +93,14 @@ property in Tiled.
 `tools/patch-forecourt-pass2.mjs` applied them once to `assets/levels/black_ram_exterior.tmj` (street arriving from Main Street, snow trodden
 flat before the door, one set of prints leaving east, barrels/crate/bench/drifts/shrub, the MILL board with its interactable, an
 outbuilding door/window/unlit lantern, pines). That map now combines three tilesets (Black Ram, sawmill, main_street) and is edited in Tiled.
+
+## Wilderness tileset (`wilderness_exterior`)
+
+`node tools/make-wilderness-tileset.mjs` writes `wilderness_exterior.png` (216 tiles), the Tiled tileset and `tools/data/wilderness_tiles.json`;
+`wilderness_exterior.pxo` is that image imported into Pixelorama (round trip verified identical). **Terrain:** rolling ground is tiles whose snow
+crust sits at local y `s` (`t_<plain|rut|tuft|prints>_<a|b>_s<0..12>`): the crust of a column is at native y 224 + s, and the Tiled `ground` polyline
+Silas walks on follows it (`tools/make-wilderness-levels.mjs` derives s from the polyline). Things that stand on the ground sit on a layer *behind* the
+terrain with their feet sunk into row 14, so the terrain tiles clip them at any slope; the footbridge is the exception (a layer in front). Also: creek
+bank/ice/water, the CROW'S HOLLOW signpost, ore car, notice board, fence pieces, the footbridge and the deadfall (blocks sliced as `name_row_col`).
+`road_to_crows_hollow.tmj` and `creek_path.tmj` were built once from this and are now edited in Tiled. If you change a ground polyline, re-pick the
+terrain tiles under it (a tile's crust row `s` should match the polyline within a pixel or two).

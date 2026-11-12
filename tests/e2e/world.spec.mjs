@@ -10,6 +10,8 @@ import { mkdirSync } from 'node:fs';
 
 // [scene id, phase, expected width (world units), a few x positions that must be walkable and framed]
 const LOCATIONS = [
+  { id: 'ROAD', width: 800, spawn: 'fromStation' },
+  { id: 'CREEK', width: 768, spawn: 'fromVillage' },
   { id: 'STATION', width: 576, spawn: 'start' },
   { id: 'VILLAGE', width: 480, spawn: 'fromRoad' },
   { id: 'BLACK_RAM_EXTERIOR', width: 640, spawn: 'fromWest' },
@@ -27,7 +29,7 @@ for (const loc of LOCATIONS) {
       expect(s.w).toBe(loc.width);
       expect(s.b[0]).toBeGreaterThan(0);
       expect(s.b[1]).toBeLessThan(s.w);
-      expect(s.g[0][1]).toBe(150); // shared ground line → Silas is the same size everywhere
+      expect(Math.abs(s.g[0][1] - 150)).toBeLessThanOrEqual(3); // one ground line everywhere (rolling terrain stays within a few units) → Silas is the same size
       expect(Object.keys(s.sp)).toContain(loc.spawn);
       await expectClean(page, errors);
     });
@@ -286,6 +288,39 @@ test.describe('Hotel forecourt (detail pass)', () => {
       return { west: alpha(8, 230), door: alpha(470, 180), sign: alpha(704, 200, 16, 16), shed: alpha(780, 200), pines: alpha(880, 150, 16, 16), east: alpha(940, 230) };
     });
     for (const [k, v] of Object.entries(r)) expect(v, k).toBeGreaterThan(0.3);
+    await expectClean(page, errors);
+  });
+});
+
+test.describe('Road and Creek (tile-built)', () => {
+  const crustY = (page, xs) => page.evaluate((list) => {
+    const c = TWT.layers.main.canvas, x = c.getContext('2d'), out = [];
+    for (const px of list) {
+      const d = x.getImageData(px, 0, 1, c.height).data;
+      let y = c.height - 1; while (y > 0 && d[y * 4 + 3] > 0) y--; // walk up from the bottom while the column is solid
+      const g = TWT.scene.ground, wx = px / 1.5; let gy = g[g.length - 1][1];
+      for (let i = 0; i < g.length - 1; i++) if (wx >= g[i][0] && wx <= g[i + 1][0]) gy = g[i][1] + ((wx - g[i][0]) / (g[i + 1][0] - g[i][0])) * (g[i + 1][1] - g[i][1]);
+      out.push([px, y + 1, gy * 1.5]);
+    }
+    return out;
+  }, xs);
+
+  test('Road: terrain follows the ground polyline Silas walks on; fence, signpost, ore car and notice board are painted', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'ROAD' });
+    await step(page, 2);
+    for (const [px, top, gy] of await crustY(page, [600, 620, 640, 1040, 1060])) expect(Math.abs(top - gy), 'crust vs ground at x=' + px).toBeLessThanOrEqual(3);
+    const r = await page.evaluate(() => { const x = TWT.layers.main.canvas.getContext('2d'); const a = (px, py, w = 8, h = 8) => { const d = x.getImageData(px, py, w, h).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n / (w * h); }; return { sign: a(200, 180, 40, 12), orecar: a(540, 200, 20, 20), notice: a(1085, 190, 20, 20), fence: a(100, 214, 16, 12) }; });
+    for (const [k, v] of Object.entries(r)) expect(v, k).toBeGreaterThan(0.15);
+    expect(await page.evaluate(() => TWT.layers.back.map((b) => [b.name, b.factor]))).toEqual([['sky', 0], ['mountains_far', 0.08], ['mountains_near', 0.18], ['lights', 0.32], ['pines_far', 0.42], ['pines_near', 0.7]]);
+    await expectClean(page, errors);
+  });
+
+  test('Creek: terrain follows the polyline down to the water; footbridge and deadfall are painted; fresh prints lead to the bridge', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'CREEK', phase: 'NIGHT' });
+    await step(page, 2);
+    for (const [px, top, gy] of await crustY(page, [152, 280, 408, 536, 664, 792])) expect(Math.abs(top - gy), 'crust vs ground at x=' + px).toBeLessThanOrEqual(14); // columns include the creek bank below the crust
+    const r = await page.evaluate(() => { const x = TWT.layers.main.canvas.getContext('2d'); const a = (px, py, w = 8, h = 8) => { const d = x.getImageData(px, py, w, h).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n / (w * h); }; return { bridge: a(950, 236, 40, 4), deadfall: a(1040, 150, 100, 60), water: a(300, 252, 40, 14) }; });
+    for (const [k, v] of Object.entries(r)) expect(v, k).toBeGreaterThan(0.15);
     await expectClean(page, errors);
   });
 });

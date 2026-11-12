@@ -122,116 +122,7 @@ function footprints(ctx, x0, x1, gAt, seed, col, step = 9) {
 // The station is a Tiled map (assets/levels/blackwood_station.tmj, tiles from tilesets/station_exterior + black_ram_exterior).
 // Its train is a prop (props.js) drawn between the map's track-bed layer and its playfield.
 
-// ---------- THE ROAD ----------
-export const ROAD_GROUND = [[0, 150], [120, 148], [260, 152], [400, 149], [540, 151], [680, 148], [800, 150]];
-function paintRoad(sw) {
-  const back = [
-    nb('road', 'sky', sky([PAL.navy, '#0b0f1b', PAL.purple, '#191f2e'], 12)),
-    nb('road', 'mountains_far', mountainLayer(sw, 0.08, 112, 44, 51, '#171d2b', '#4e5a70', '#212a39', -90)),
-    nb('road', 'mountains_near', mountainLayer(sw, 0.18, 130, 28, 52, '#111622', '#333e52', null, -85)),
-  ];
-  // distant village lights
-  {
-    const factor = 0.32, w = lw(sw, factor);
-    const [c, ctx] = canvas(w, H);
-    const [gc, gctx] = canvas(w, H);
-    const r = mulberry32(3);
-    for (let i = 0; i < 7; i++) {
-      const hx = w - 120 + i * 14 + Math.floor(r() * 6);
-      const hh = 6 + Math.floor(r() * 6);
-      rect(ctx, hx, 140 - hh, 10, hh + 4, '#0e121c');
-      for (let k = 0; k < 6; k++) px(ctx, hx - 1 + k * 2, 140 - hh - 1 - (k < 3 ? k : 5 - k), '#0e121c');
-      if (r() > 0.35) { px(gctx, hx + 3, 136 - Math.floor(hh / 2), PAL.amber); px(gctx, hx + 4, 136 - Math.floor(hh / 2), PAL.kerosene); }
-    }
-    back.push(nb('road', 'lights', { canvas: c, glow: gc, factor, z: -78 }, 'lights_glow'));
-  }
-  back.push(nb('road', 'pines_far', pineLayer(sw, 0.42, 146, 10, 24, 6, 61, '#0c1019', '#28303f', -70, '#0c1019')));
-  back.push(nb('road', 'pines_near', pineLayer(sw, 0.7, 152, 30, 62, 16, 62, '#090c14', '#2f394b', -60)));
-  const gAt = groundFn(ROAD_GROUND);
-  const [m, ctx] = canvas(sw, H);
-  const [g] = canvas(sw, H);
-  // fence (behind path)
-  const fenceRuns = [[30, 300], [450, 650]];
-  for (const [a, b] of fenceRuns) {
-    for (let x = a; x <= b; x += 14) {
-      const gy = Math.round(gAt(x));
-      const broken = x > 210 && x < 240;
-      rect(ctx, x, gy - 15, 2, 15, '#1e1712');
-      px(ctx, x, gy - 16, PAL.snow3); px(ctx, x + 1, gy - 16, PAL.snow2);
-      if (x + 14 <= b && !broken) {
-        const gy2 = Math.round(gAt(x + 14));
-        line(ctx, x + 2, gy - 11, x + 13, gy2 - 11, '#2a2018');
-        line(ctx, x + 2, gy - 6, x + 13, gy2 - 6, '#2a2018');
-        line(ctx, x + 2, gy - 12, x + 13, gy2 - 12, PAL.snow1);
-      }
-      if (broken) line(ctx, x + 2, gy - 11, x + 9, gy - 2, '#2a2018');
-    }
-  }
-  snowGround(ctx, sw, gAt, H, 17);
-  // trodden path: wagon ruts
-  for (let x = 0; x < sw; x++) {
-    const gy = Math.round(gAt(x));
-    if ((x * 7) % 11 > 2) px(ctx, x, gy + 2, PAL.snow1);
-    if ((x * 5) % 13 > 3) px(ctx, x, gy + 5, PAL.snow1);
-  }
-  // signpost
-  {
-    const x = 140, gy = Math.round(gAt(x));
-    rect(ctx, x, gy - 26, 2, 26, '#2a1f17');
-    const t = "CROW'S HOLLOW";
-    const w = signWidth(t) + 8;
-    rect(ctx, x - 4, gy - 30, w, 8, '#3a2a1c');
-    for (let i = 0; i < 4; i++) vline(ctx, x - 4 + w + i, gy - 30 + i, gy - 23 - i, '#3a2a1c');
-    hline(ctx, x - 4, x - 4 + w, gy - 31, PAL.snow3);
-    signText(ctx, t, x - 1, gy - 28, '#c8bfa8');
-  }
-  // half-buried ore car on a stub of rail
-  {
-    const x = 352, gy = Math.round(gAt(x));
-    hline(ctx, x - 14, x + 30, gy - 1, PAL.iron2);
-    rect(ctx, x - 2, gy - 12, 22, 9, PAL.rust);
-    rect(ctx, x - 3, gy - 13, 24, 2, '#3a2418');
-    for (let i = 0; i < 5; i++) vline(ctx, x + 1 + i * 4, gy - 11, gy - 5, '#4a2a1b');
-    rect(ctx, x + 1, gy - 4, 4, 4, PAL.iron); rect(ctx, x + 13, gy - 4, 4, 4, PAL.iron);
-    hline(ctx, x - 3, x + 20, gy - 14, PAL.snow4);
-    for (let i = 0; i < 18; i++) px(ctx, x + i, gy - 15 - (i % 5 === 0 ? 1 : 0), PAL.snow3);
-    for (let i = -6; i < 30; i++) { const hh = Math.max(0, 4 - Math.abs(i - 6) / 4); vline(ctx, x + i, Math.round(gy - hh), gy, PAL.snow3); }
-  }
-  // notice board near the village
-  {
-    const x = 716, gy = Math.round(gAt(x));
-    rect(ctx, x, gy - 30, 2, 30, '#2a1f17'); rect(ctx, x + 22, gy - 30, 2, 30, '#2a1f17');
-    rect(ctx, x - 2, gy - 34, 28, 3, '#2a1f17'); hline(ctx, x - 2, x + 25, gy - 35, PAL.snow4);
-    rect(ctx, x + 2, gy - 30, 20, 16, '#3a2a1c');
-    rect(ctx, x + 5, gy - 28, 9, 11, '#c9bfa6');
-    for (let i = 0; i < 4; i++) hline(ctx, x + 6, x + 12, gy - 26 + i * 2, '#6b6250');
-    rect(ctx, x + 15, gy - 27, 5, 6, '#a9a08a');
-  }
-  // front: big trunks
-  const fw = lw(sw, 1.3);
-  const [f, fx] = canvas(fw, H);
-  const fr = mulberry32(8);
-  for (let x = 120; x < fw; x += 230 + Math.floor(fr() * 140)) {
-    const tw = 10;
-    rect(fx, x, 0, tw, H, '#05070c');
-    vline(fx, x, 0, H, '#0d111b');
-    for (let y = 0; y < H; y += 3) if (fr() > 0.55) px(fx, x + 1 + Math.floor(fr() * (tw - 2)), y, '#0b0e16');
-    // snow caught on the windward side, and broken branch stubs with snow clumps
-    for (let y = 0; y < H; y += 2) if (fr() > 0.6) px(fx, x, y, '#1e2534');
-    for (let y = 8; y < H - 30; y += 18 + Math.floor(fr() * 18)) {
-      const side = fr() > 0.5 ? -1 : 1;
-      const len = 6 + Math.floor(fr() * 10);
-      const bx = side < 0 ? x - len : x + tw;
-      rect(fx, bx, y, len, 2, '#05070c');
-      rect(fx, bx + (side < 0 ? 0 : len - 4), y - 1, 4, 1, '#3b4558');
-      if (fr() > 0.5) px(fx, bx + (side < 0 ? 1 : len - 2), y + 2, '#05070c');
-    }
-  }
-  const NA = nativeArt('ROAD');
-  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [nb('road', 'front', { canvas: f, factor: 1.3, z: 20 })] };
-  return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.3, z: 20 }] };
-}
-
+// The Road and the Creek Path are Tiled maps too (assets/levels/road_to_crows_hollow.tmj, creek_path.tmj; wilderness_exterior tileset).
 // CROW'S HOLLOW Main Street and the Black Ram forecourt are Tiled maps (assets/levels/*.tmj): see world/tiled/.
 
 // ---------- BLACK RAM HOTEL PARLOR ----------
@@ -391,86 +282,6 @@ function paintRoom4Procedural(sw, phase) {
   return { back: [], main: { canvas: m, glow: g }, front: [] };
 }
 
-// ---------- THE CREEK PATH ----------
-export const CREEK_GROUND = [[0, 150], [200, 153], [420, 156], [600, 157], [760, 157]];
-function paintCreek(sw) {
-  const back = [
-    nb('creek', 'sky', sky(['#05070d', PAL.navy, PAL.purple, '#121725'], 15)),
-    nb('creek', 'mountains_far', mountainLayer(sw, 0.08, 104, 42, 91, '#141a27', '#46526a', '#1c2433', -90)),
-    nb('creek', 'mountains_near', mountainLayer(sw, 0.2, 126, 30, 92, '#0f141f', '#2f394c', null, -85)),
-  ];
-  // distant sawmill & waterwheel silhouette
-  {
-    const factor = 0.45, w = lw(sw, factor);
-    const [c, ctx] = canvas(w, H);
-    const col = '#0a0e17';
-    const mx = w - 110;
-    rect(ctx, mx, 116, 40, 26, col);
-    for (let i = 0; i < 10; i++) hline(ctx, mx - 3 + i, mx + 42 - i, 116 - 10 + i, col);
-    hline(ctx, mx - 3, mx + 42, 106, '#2f394b');
-    const cx = mx + 54, cy = 124, r = 14;
-    for (let a = 0; a < 64; a++) { const t = (a / 64) * Math.PI * 2; px(ctx, cx + Math.round(Math.cos(t) * r), cy + Math.round(Math.sin(t) * r), col); px(ctx, cx + Math.round(Math.cos(t) * (r - 1)), cy + Math.round(Math.sin(t) * (r - 1)), col); }
-    for (let a = 0; a < 8; a++) { const t = (a / 8) * Math.PI * 2; line(ctx, cx, cy, cx + Math.cos(t) * r, cy + Math.sin(t) * r, col); }
-    rect(ctx, mx + 40, 108, 30, 3, col);
-    pineRow(ctx, w, 146, 10, 22, 6, 93, '#0c1019', '#232b3a');
-    rect(ctx, 0, 146, w, 40, '#0c1019');
-    back.push(nb('creek', 'mill', { canvas: c, factor, z: -70 }));
-  }
-  back.push(nb('creek', 'pines', pineLayer(sw, 0.72, 154, 34, 66, 15, 94, '#070a11', '#283244', -60)));
-  const gAt = groundFn(CREEK_GROUND);
-  const [m, ctx] = canvas(sw, H);
-  const [g] = canvas(sw, H);
-  // creek in the foreground
-  rect(ctx, 0, 168, sw, 12, '#08101c');
-  const rng = mulberry32(95);
-  for (let x = 0; x < sw; x += 6 + Math.floor(rng() * 20)) {
-    const w = 8 + Math.floor(rng() * 30);
-    rect(ctx, x, 168 + Math.floor(rng() * 3), w, 2 + Math.floor(rng() * 3), '#3a4659');
-    hline(ctx, x, x + w - 1, 168, '#5d6a80');
-  }
-  snowGround(ctx, sw, gAt, 168, 96);
-  for (let x = 0; x < sw; x++) px(ctx, x, 167, (x * 7) % 5 ? '#2a3446' : '#3a4659');
-  // fresh footprints toward the bridge (visible, subtle; the lantern makes them read clearly)
-  footprints(ctx, 30, 636, gAt, 97, '#3a4659');
-  // footbridge (angles away from the viewer across the creek)
-  {
-    const bx = 628;
-    for (let i = 0; i < 9; i++) {
-      const y = 157 + i;
-      rect(ctx, bx + i * 2, y, 34 - i, 1, i % 2 ? PAL.wood2 : PAL.wood3);
-    }
-    hline(ctx, bx, bx + 34, 157, PAL.snow3);
-    rect(ctx, bx + 2, 140, 2, 18, PAL.wood1); rect(ctx, bx + 32, 140, 2, 18, PAL.wood1);
-    line(ctx, bx + 2, 141, bx + 22, 158, PAL.wood3);
-    line(ctx, bx + 32, 141, bx + 52, 158, PAL.wood3);
-    line(ctx, bx + 3, 140, bx + 33, 140, '#8b7a55');
-    px(ctx, bx + 2, 139, PAL.snow3); px(ctx, bx + 32, 139, PAL.snow3);
-  }
-  // deadfall blocking the bank path
-  {
-    const dx = 690;
-    line(ctx, dx - 6, 120, dx + 60, 157, '#1c140e');
-    line(ctx, dx - 6, 121, dx + 60, 158, '#2a1f17');
-    line(ctx, dx - 5, 122, dx + 60, 159, '#1c140e');
-    line(ctx, dx - 6, 119, dx + 58, 155, PAL.snow3);
-    line(ctx, dx + 10, 156, dx + 70, 120, '#1c140e');
-    line(ctx, dx + 10, 157, dx + 70, 121, '#2a1f17');
-    line(ctx, dx + 11, 155, dx + 69, 120, PAL.snow2);
-    for (let i = 0; i < 16; i++) { const x = dx + Math.floor(rng() * 64); const y = 124 + Math.floor(rng() * 30); line(ctx, x, y, x + (rng() > 0.5 ? 6 : -6), y - 5, '#1c140e'); }
-    rect(ctx, dx + 30, 112, 5, 46, '#140e0a');
-  }
-  // reeds at the creek's edge (front)
-  const [f, fx] = canvas(lw(sw, 1.25), H);
-  const fr = mulberry32(98);
-  for (let x = 0; x < f.width; x += 3 + Math.floor(fr() * 9)) {
-    const h = 6 + Math.floor(fr() * 12);
-    line(fx, x, 180, x + (fr() > 0.5 ? 2 : -1), 180 - h, '#0a0d14');
-  }
-  const NA = nativeArt('CREEK');
-  if (NA) return { back, main: { canvas: NA.main, glow: null, native: true }, front: [nb('creek', 'front', { canvas: f, factor: 1.25, z: 20 })] };
-  return { back, main: { canvas: m, glow: g }, front: [{ canvas: f, factor: 1.25, z: 20 }] };
-}
-
 // ---------- THE OLD SAWMILL ----------
 // The sawmill is a Tiled map (assets/levels/old_sawmill.tmj, tiles from tilesets/sawmill_exterior). Its ridge
 // layer is flagged `ridge`, which publishes the skyline heights for the closing lantern (see tiled/levels.js).
@@ -493,8 +304,8 @@ function paintTitle() {
 }
 
 const PAINTERS = {
-  ROAD: paintRoad, PARLOR: paintParlor,
-  ROOM4: paintRoom4, CREEK: paintCreek, TITLE: paintTitle,
+  PARLOR: paintParlor,
+  ROOM4: paintRoom4, TITLE: paintTitle,
 };
 
 // Data-driven scenes (Tiled maps, see world/tiled/levels.js) register their own layer builder.

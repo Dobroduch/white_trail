@@ -1,28 +1,11 @@
 // Scene definitions: geometry, exits, characters, interactables, lights, weather, and story events.
 // Phase-specific overrides live under `night` and are merged when state.phase === 'NIGHT'.
-import { ROAD_GROUND, CREEK_GROUND } from './painters.js';
 
 const FLAT = [[0, 150], [2000, 150]];
 
 export const SCENES = {
-  // STATION, VILLAGE, BLACK_RAM_EXTERIOR and SAWMILL are authored in Tiled (assets/levels/*.tmj), registered in
-  // tiled/levelList.js. Station and Sawmill keep their painters for the art until Pass 2.
-
-  ROAD: {
-    name: "THE ROAD TO CROW'S HOLLOW", travel: 7, width: 800, exterior: true, ground: ROAD_GROUND, bounds: [4, 796],
-    spawns: { fromStation: { x: 14, facing: 1 }, fromVillage: { x: 786, facing: -1 } },
-    exits: [
-      { side: 'left', to: 'STATION', spawn: 'fromRoad' },
-      { side: 'right', to: 'VILLAGE', spawn: 'fromRoad' },
-    ],
-    interactables: [
-      { id: 'rd_sign', x: 150, y: 124, label: 'Signpost', lines: ['A hand-lettered signpost: CROW\'S HOLLOW. The paint is newer than the post.'] },
-      { id: 'rd_orecar', x: 362, y: 140, label: 'Ore car', lines: ['An ore car, rusted to its rail and half under the drift. The silver gave out here a long time ago. Nobody troubled to haul the car away.'] },
-      { id: 'rd_notice', x: 728, y: 124, label: 'Notice board', evidence: 'ROAD_NOTICE', important: true },
-    ],
-    weather: { snow: 0.8, wind: 0.75, fog: 0.35 }, darkness: 0.74, ambience: 'road',
-    events: [{ id: 'ROAD_ENTER', if: { all: [{ notFlag: 'lanternOn' }, { phase: 'EVENING' }] }, script: 'ROAD_ENTER' }],
-  },
+  // STATION, ROAD, VILLAGE, BLACK_RAM_EXTERIOR, CREEK and SAWMILL are authored in Tiled (assets/levels/*.tmj), registered in
+  // tiled/levelList.js. Only the interiors (PARLOR, ROOM4) are still defined here.
 
   // VILLAGE (Crow's Hollow Main Street) and BLACK_RAM_EXTERIOR (the hotel forecourt) are authored in Tiled:
   // assets/levels/main_street.tmj and black_ram_exterior.tmj, registered in tiled/levelList.js.
@@ -94,20 +77,6 @@ export const SCENES = {
     weather: null, darkness: 0.4, ambient: 'warm', ambience: 'room4',
     events: [{ id: 'ROOM4_ENTER', if: { notFlag: 'enteredRoom4' }, do: [{ set: { enteredRoom4: true } }], bark: 'Room 4. Clean. Very clean.' }],
     night: { lights: [{ x: 116, y: 119, r: 34, warm: 0.14 }, { x: 156, y: 86, r: 30, warm: 0 }], darkness: 0.7 },
-  },
-
-  CREEK: {
-    name: 'THE CREEK PATH', travel: 6, width: 760, exterior: true, ground: CREEK_GROUND, bounds: [4, 686],
-    spawns: { fromVillage: { x: 12, facing: 1 }, fromSawmill: { x: 648, facing: -1 } },
-    exits: [{ side: 'left', to: 'BLACK_RAM_EXTERIOR', spawn: 'fromCreek' }],
-    doors: [{ id: 'ck_bridge', x: 648, label: 'Footbridge', verb: 'Cross', to: 'SAWMILL', spawn: 'fromCreek', minutes: 6 }],
-    interactables: [
-      { id: 'ck_tracks', x: 116, y: 152, label: 'Tracks', evidence: 'CREEK_TRACKS', important: true },
-      { id: 'ck_ice', x: 330, y: 166, label: 'Creek', lines: ['The creek is iced at the edges. In the middle the water still moves, black and quick.'] },
-      { id: 'ck_deadfall', x: 680, y: 140, label: 'Deadfall', lines: ['Two pines down across the bank path. No getting through. The prints turn off before it, onto the footbridge.'] },
-    ],
-    weather: { snow: 0.85, wind: 0.9, fog: 0.45 }, darkness: 0.8, ambience: 'creek',
-    events: [{ id: 'CREEK_ENTER', if: {}, script: 'CREEK_ENTER' }],
   },
 
 };
