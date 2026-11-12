@@ -7,5 +7,7 @@ export const LEVELS = [
   { id: 'VILLAGE', url: 'assets/levels/main_street.tmj' },
   { id: 'BLACK_RAM_EXTERIOR', url: 'assets/levels/black_ram_exterior.tmj' },
   { id: 'CREEK', url: 'assets/levels/creek_path.tmj' },
+  { id: 'PARLOR', url: 'assets/levels/black_ram_parlor.tmj' },
+  { id: 'ROOM4', url: 'assets/levels/room_4.tmj' },
   { id: 'SAWMILL', url: 'assets/levels/old_sawmill.tmj' },
 ];

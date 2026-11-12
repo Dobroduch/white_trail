@@ -104,3 +104,14 @@ terrain with their feet sunk into row 14, so the terrain tiles clip them at any 
 bank/ice/water, the CROW'S HOLLOW signpost, ore car, notice board, fence pieces, the footbridge and the deadfall (blocks sliced as `name_row_col`).
 `road_to_crows_hollow.tmj` and `creek_path.tmj` were built once from this and are now edited in Tiled. If you change a ground polyline, re-pick the
 terrain tiles under it (a tile's crust row `s` should match the polyline within a pixel or two).
+
+## Hotel interior tileset (`hotel_interior`)
+
+`node tools/make-interior-tileset.mjs` writes `hotel_interior.png` (312 tiles), the Tiled tileset and `tools/data/hotel_tiles.json`;
+`hotel_interior.pxo` is that image imported into Pixelorama (round trip verified identical). It holds the ceiling beams, cornice, damask
+wallpaper, wainscot and floor boards for the parlor; Room 4's cold stippled walls and wainscot; the scrubbed floor tile; and the big pieces as
+blocks (`name_row_col`): parlor door, fireplace, photograph frame, pigeonholes with the key row (key 4 missing), staircase, landing, sconces;
+Room 4 door with the brass 4, wardrobe, washstand, window, bed. `assets/levels/black_ram_parlor.tmj` and `room_4.tmj` were built once by
+`tools/make-interior-levels.mjs` (each feature at the position of the painting it replaced) and are now edited in Tiled. The authored light and
+glow passes remain as phase-tagged image layers (`light_*.png`, `glow_*.png` under `assets/export/environments/{parlor,room4}/`), so if you move a
+sconce or the lamp, move its glow with it.

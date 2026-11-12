@@ -407,3 +407,13 @@ The forecourt keeps its Black Ram hotel, annex, boardwalk, lamp and windows. Add
 **Unchanged:** all interactables, events, doors, gates and dialogue. 81 e2e tests pass (two baselines regenerated).
 
 **Not done:** both scenes are very dark by design at their story phases, so the new art reads best with the lantern; no recorded audio; the interiors (PARLOR, ROOM4) and the title backdrop are still painted, not tile-built.
+
+## 18. The hotel interiors, tile-built — every playable scene is now a Tiled map (2026-11-12)
+
+**What changed.** `PARLOR` (`black_ram_parlor.tmj`, 39×17 tiles = a 416-unit room; the east wall gained 24 px so the width is whole tiles) and `ROOM4` (`room_4.tmj`, 30×17) are Tiled maps built from the new `hotel_interior` tileset (312 tiles, palette-exact, Pixelorama source with a verified round trip). Layout was migrated with `migrate-scene-to-tiled.mjs` first (diffed), then `make-interior-levels.mjs` built the art with each feature at the position of the painting it replaces, so every interactable, prop (fire, patrons, desk, window snow) and light is untouched. The authored light/glow passes stay as phase-tagged image layers over the tiles. `scenes.js` now holds only the global events; the `paintParlor*`/`paintRoom4*` painters and the per-scene `nativeArt` machinery are empty/deleted. The only procedural scene left is the **title-screen backdrop** (`paintTitle`), which is a menu background, not a playable place.
+
+**Art.** Parlor: damask wallpaper, panelled wainscot, a stone hearth with mantel candles and clock, the photograph of the mine crew, pigeonholes with the key row (key 4 missing), brass sconces, the stairs with newel and balusters up to a dark landing, the glass-paned door. Room 4: cold stippled walls, the wardrobe, washstand with scoured basin and candle, the window onto the snow, the iron bed, the pale patch where a picture hung, and the **scrubbed boards** as visibly paler floor tiles at the clue (tested).
+
+**Tests:** 94 e2e pass incl. `T.fullRun` (unchanged); parlor-fire baseline regenerated, `room4-night` added.
+
+**Not done:** the Parlor's wallpaper was darkened once after review but interiors have been seen only through the test screenshots; no recorded audio; the title backdrop is still procedural; no maps opened in the Tiled application.

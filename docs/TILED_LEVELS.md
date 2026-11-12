@@ -18,8 +18,7 @@ Requires **Tiled 1.10 or newer** (<https://www.mapeditor.org>).
 
 Walking order: STATION → ROAD → **VILLAGE** (Crow's Hollow Main Street, `main_street.tmj`) →
 **BLACK_RAM_EXTERIOR** (the hotel forecourt) → PARLOR (the hotel, through the door once Finch has been met) and,
-at night only, east from the forecourt → CREEK → SAWMILL. STATION, ROAD, VILLAGE, BLACK_RAM_EXTERIOR, CREEK and SAWMILL exist only as Tiled
-maps; `scenes.js` now holds only the interiors (PARLOR, ROOM4). STATION, ROAD, VILLAGE, CREEK and SAWMILL are tile-built (Pass 2: `tools/make-*-level.mjs` built each map once, Tiled owns it now);
+at night only, east from the forecourt → CREEK → SAWMILL. Every playable scene (STATION, ROAD, VILLAGE, BLACK_RAM_EXTERIOR, CREEK, SAWMILL, PARLOR, ROOM4) exists only as a Tiled map; `scenes.js` keeps just the global events. All but the hotel forecourt were rebuilt from tilesets (Pass 2: `tools/make-*-level.mjs` built each map once, Tiled owns it now);
 the hotel forecourt is the original Black Ram map.
 
 ## Update an existing level

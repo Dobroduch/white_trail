@@ -10,6 +10,8 @@ import { mkdirSync } from 'node:fs';
 
 // [scene id, phase, expected width (world units), a few x positions that must be walkable and framed]
 const LOCATIONS = [
+  { id: 'PARLOR', width: 416, spawn: 'fromStreet' },
+  { id: 'ROOM4', width: 320, spawn: 'fromStairs' },
   { id: 'ROAD', width: 800, spawn: 'fromStation' },
   { id: 'CREEK', width: 768, spawn: 'fromVillage' },
   { id: 'STATION', width: 576, spawn: 'start' },
@@ -321,6 +323,47 @@ test.describe('Road and Creek (tile-built)', () => {
     for (const [px, top, gy] of await crustY(page, [152, 280, 408, 536, 664, 792])) expect(Math.abs(top - gy), 'crust vs ground at x=' + px).toBeLessThanOrEqual(14); // columns include the creek bank below the crust
     const r = await page.evaluate(() => { const x = TWT.layers.main.canvas.getContext('2d'); const a = (px, py, w = 8, h = 8) => { const d = x.getImageData(px, py, w, h).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n / (w * h); }; return { bridge: a(950, 236, 40, 4), deadfall: a(1040, 150, 100, 60), water: a(300, 252, 40, 14) }; });
     for (const [k, v] of Object.entries(r)) expect(v, k).toBeGreaterThan(0.15);
+    await expectClean(page, errors);
+  });
+});
+
+test.describe('Hotel interiors (tile-built)', () => {
+  const cover = (page, probes) => page.evaluate((list) => { const x = TWT.layers.main.canvas.getContext('2d'); return list.map(([n, px, py, w, h]) => { const d = x.getImageData(px, py, w, h).data; let k = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) k++; return [n, k / (w * h)]; }); }, probes);
+
+  test('Parlor: every feature is painted where its interactable or prop is, and the room is solid wall to wall', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'PARLOR' });
+    await page.evaluate(() => T.talkThrough());
+    await step(page, 2);
+    const r = await cover(page, [['ceiling', 10, 2, 20, 10], ['wallpaper', 300, 60, 20, 20], ['door', 8, 180, 30, 30], ['hearth', 120, 200, 20, 20], ['photo', 241, 100, 8, 8], ['pigeonholes', 400, 110, 20, 20], ['stairs', 540, 200, 20, 20], ['floor', 300, 240, 20, 20], ['east wall', 610, 100, 10, 10]]);
+    for (const [k, v] of r) expect(v, k).toBeGreaterThan(0.9);
+    expect(await page.evaluate(() => TWT.layers.main.canvas.width)).toBe(624);
+    await expectClean(page, errors);
+  });
+
+  test('Parlor: the fire prop is placed and the key row sits under the pigeonholes (key 4 is drawn missing)', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'PARLOR' });
+    await page.evaluate(() => T.talkThrough());
+    const fire = await page.evaluate(() => { const p = TWT.props.find((q) => q.id === 'fire'); return !!p; });
+    expect(fire).toBe(true);
+    const tiles = await page.evaluate(async () => { const m = await (await fetch('assets/levels/black_ram_parlor.tmj')).json(); const ids = await (await fetch('tools/data/hotel_tiles.json')).json(); const l = m.layers.find((q) => q.name === 'furniture'); const row = []; for (let c = 23; c <= 28; c++) row.push(l.data[10 * m.width + c] - 1); return { row, keyrow: ['keyrow_0_0', 'keyrow_0_1', 'keyrow_0_2', 'keyrow_0_3', 'keyrow_0_4', 'keyrow_0_5'].map((n) => ids[n]) }; });
+    expect(tiles.row).toEqual(tiles.keyrow); // the six key tiles are in place; tile 3 (key 4) is drawn without its key by design
+    await expectClean(page, errors);
+  });
+
+  test('Room 4: the scrubbed boards are visibly paler than the floor, at the clue', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'ROOM4' });
+    await step(page, 2);
+    const lum = await page.evaluate(() => { const x = TWT.layers.main.canvas.getContext('2d'); const avg = (px, py, w, h) => { const d = x.getImageData(px, py, w, h).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] + d[i + 1] + d[i + 2]; return s / (d.length / 4) / 3; }; return { scrubbed: avg(262, 228, 32, 16), floor: avg(330, 228, 32, 16), clue: TWT.scene.interactables.find((i) => i.id === 'r4_floor').x * 1.5 }; });
+    expect(lum.scrubbed).toBeGreaterThan(lum.floor + 8);
+    expect(lum.clue).toBeGreaterThan(256); expect(lum.clue).toBeLessThan(304); // r4_floor sits on the paler boards
+    await expectClean(page, errors);
+  });
+
+  test('Room 4: window glass, bed, wardrobe and washstand are painted where their interactables are', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'ROOM4' });
+    await step(page, 2);
+    const r = await cover(page, [['window', 215, 110, 30, 30], ['bed', 340, 190, 40, 20], ['wardrobe', 80, 150, 30, 40], ['washstand', 150, 190, 20, 10], ['door', 20, 170, 20, 30]]);
+    for (const [k, v] of r) expect(v, k).toBeGreaterThan(0.9);
     await expectClean(page, errors);
   });
 });

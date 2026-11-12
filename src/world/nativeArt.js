@@ -2,10 +2,7 @@
 // sources in assets/source/pixelorama/environments/*.pxo (+ scripts/*.gd), exports in
 // assets/export/environments/<scene>/. Each scene lists the layer PNGs it needs; if any is missing
 // the loader logs a clear error and that scene keeps its previous painter.
-const SCENES = {
-  PARLOR: { dir: 'parlor', files: ['main', 'light_evening', 'glow_evening'] },
-  ROOM4: { dir: 'room4', files: ['main', 'light_evening', 'light_night', 'glow_evening', 'glow_night'] },
-};
+const SCENES = {}; // every playable scene is a Tiled map now; nothing is painted per scene any more
 
 // Native-density parallax layers (sky, ranges, pine belts, distant roofs, haze, foreground
 // silhouettes), painted by assets/source/pixelorama/environments/scripts/parallax.gd and exported
