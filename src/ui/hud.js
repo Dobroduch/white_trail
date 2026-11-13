@@ -159,6 +159,16 @@ export class HUD {
       ctx.globalAlpha = 1;
     });
     this.drawButtons(ctx);
+    // a hint can be asked for (only after the stuck delay; nothing is shown unasked)
+    const tier = g.hints ? g.hints.available() : 0;
+    if (tier && g.canInteractUI() && !this.hintMsg) {
+      const a = 0.55 + Math.sin(g.time * 2) * 0.15;
+      ctx.globalAlpha = a;
+      const w = keycap(ctx, 'H', 10, 170, UI.amber);
+      font(ctx, 4.7, { italic: true });
+      text(ctx, tier === 1 ? 'Something comes to mind.' : 'Something more comes to mind.', 13 + w, 169.6, UI.dim);
+      ctx.globalAlpha = 1;
+    }
     // small status cues
     const s = g.state;
     if (g.mode === 'play' && !g.dialogue.active) {

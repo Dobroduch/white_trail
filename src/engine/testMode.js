@@ -7,6 +7,8 @@
 //   ?scene=ID        skip the title and start a new game in that scene (also works without test=1).
 //   &phase=NIGHT     story phase for ?scene (EVENING by default).   &spawn=key  spawn point.
 //   ?nopause=1       don't auto-pause when the window loses focus.
+//   ?hintDelay=N     seconds of stuck play before the first hint can be asked for (playtesting; data/hints.js).
+//   &hintFollowUp=N  seconds more before the specific follow-up (default: half of hintDelay).
 //
 // Why seeding is enough: everything time-dependent in the game advances only in Game.update(dt)
 // with a fixed dt, and every random choice (snowflakes, NPC idle phase, breath, audio jitter) comes
@@ -28,6 +30,8 @@ export const TEST = {
   scene: q.get('scene') || null,
   phase: (q.get('phase') || 'EVENING').toUpperCase(),
   spawn: q.get('spawn') || null,
+  hintDelay: q.has('hintDelay') ? Number(q.get('hintDelay')) : null,
+  hintFollowUp: q.has('hintFollowUp') ? Number(q.get('hintFollowUp')) : null,
 };
 
 if (TEST.enabled) {

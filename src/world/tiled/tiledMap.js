@@ -88,6 +88,7 @@ export function sceneFromTiled(map, id) {
   if (mp.surface) scene.surface = mp.surface;
   if (mp.ambient) scene.ambient = mp.ambient;
   if (mp.music) scene.music = mp.music;
+  if (mp.nightSky === false) scene.nightSky = false; // an exterior with no open sky (e.g. under the wheel): no night-sky tint
   if (mp.snow != null || mp.wind != null || mp.fog != null) {
     scene.weather = { snow: num(mp.snow, 0), wind: num(mp.wind, 0), fog: num(mp.fog, 0) };
   }
@@ -136,6 +137,7 @@ export function sceneFromTiled(map, id) {
           const d = { id: o.name || `door_${o.id}`, x: a.x, label: p.label || o.name || 'Door', verb: p.verb || 'Enter', to: p.to, spawn: p.spawn };
           if (p.minutes != null) d.minutes = num(p.minutes, 1);
           if (cond) d.if = cond;
+          if (p.showIf) d.showIf = json(p.showIf, where + '.showIf', errors); // hidden entrance: no prompt at all until this holds
           if (p.blockedLines) d.blockedLines = lines(p.blockedLines);
           scene.doors.push(d);
           break;

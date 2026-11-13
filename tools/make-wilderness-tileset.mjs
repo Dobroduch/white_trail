@@ -121,6 +121,19 @@ function build() {
     for (let x = 2; x < 126; x += 3) if (hash(x, 4, 58) > 0.6) c.p(x, 88 + Math.floor(hash(x, 5, 58) * 6), 'snow3');
   });
   addTile('snow_body', (c) => brTile(BR_SNOW_FILL, c)); // plain snow under the terrain (appended)
+
+  // The first signpost block (sign_crow) is 64 px wide, but its board runs 61 px from x 14, so the tileset cut it off
+  // after "CROW'S HOLL". This wider block (96×64, appended) holds the whole board; the post stays at x 18, so it drops
+  // into the same place on the map. A one-pixel shadow under the paint keeps the letters apart on the dark board.
+  addBlock('sign_crow_wide', 6, 4, (c) => {
+    c.r(18, 14, 4, 50, 'wood1'); c.vl(18, 14, 63, 'wood2'); c.vl(21, 14, 63, 'wood0');
+    const t = "CROW'S HOLLOW", w = textWidth(t) + 8;
+    c.r(14, 2, w, 12, 'wood2'); c.hl(14, 14 + w - 1, 2, 'wood4'); c.hl(14, 14 + w - 1, 13, 'wood0');
+    for (let i = 0; i < 6; i++) c.vl(14 + w + i, 2 + i, 13 - i, 'wood2'); // arrow point
+    for (let x = 14; x < 14 + w + 3; x++) c.p(x, 1, hash(x, 1, 51) > 0.3 ? 'snow3' : 'snow4');
+    text(c, t, 18, 6, 'wood0');
+    text(c, t, 18, 5, 'linen2');
+  });
 }
 
 build();

@@ -25,7 +25,7 @@ export const LOCATIONS = [
   { id: 'store', name: "Rusk's", scenes: ['VILLAGE'], xMin: 140, xMax: 215, art: 'store', label: [158, 65], minor: true },
   { id: 'hotel', name: 'Black Ram', scenes: ['BLACK_RAM_EXTERIOR', 'PARLOR', 'ROOM4'], art: 'hotel', label: [208, 67] },
   { id: 'creek', name: 'the creek', scenes: ['CREEK'], art: 'creek', label: [212, 128], minor: true },
-  { id: 'sawmill', name: 'old mill', scenes: ['SAWMILL'], art: 'sawmill', label: [271, 99] },
+  { id: 'sawmill', name: 'old mill', scenes: ['SAWMILL', 'WHEEL_PIT'], art: 'sawmill', label: [271, 99] },
 ];
 
 export const PATHS = [
@@ -46,4 +46,5 @@ export const POSITION = {
   ROOM4: { at: [177, 70] },
   CREEK: { from: [205, 97], to: [226, 101] },
   SAWMILL: { from: [244, 90], to: [282, 90] },
+  WHEEL_PIT: { at: [268, 95] }, // under the wheel, at the mill
 };

@@ -51,6 +51,8 @@ const SHOTS = [
   { name: 'room4-night', scene: 'ROOM4', phase: 'NIGHT', setup: () => { T.talkThrough(); T.walkTo(200); } },
   { name: 'parlor-fire', scene: 'PARLOR', setup: () => { T.talkThrough(); T.walkTo(120); } },
   { name: 'creek-night-snow-fog', scene: 'CREEK', phase: 'NIGHT', setup: () => { T.talkThrough(); T.walkTo(200); } },
+  { name: 'road-sign-lantern', scene: 'ROAD', setup: () => { T.talkThrough(); T.press('KeyF'); T.walkTo(150); } },
+  { name: 'wheel-pit-lantern', scene: 'WHEEL_PIT', phase: 'NIGHT', setup: () => { T.talkThrough(); T.press('KeyF'); T.walkTo(150); } },
 ];
 
 test.describe('baselines', () => {

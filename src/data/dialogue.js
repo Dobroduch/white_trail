@@ -136,11 +136,17 @@ export const DIALOGUE = {
       d: { who: 'gable', text: 'Sound carries along the water. It always sounds closer than it is.', do: [{ evidence: 'T_GABLE_NIGHT' }], next: 'hub' },
       hub: { choices: [
         { text: 'Have you heard a sound like that before?', next: 'before', once: true },
+        { text: 'Was it a man\'s voice?', next: 'voice', once: true },
+        { text: 'What is there at the mill, at this hour?', next: 'mill', once: true },
         { text: 'Someone may need help out there.', next: 'help' },
         { text: 'Go back to bed, Mrs. Gable.', next: 'bed' },
       ] },
       before: { who: 'note', text: 'The candle flame shakes, once.', next: 'before2' },
       before2: { who: 'gable', text: 'The wind makes all kinds of sounds up here.', next: 'hub' },
+      voice: { who: 'gable', text: 'It went on too long for a man that\'s hurt.', next: 'voice2' },
+      voice2: { who: 'gable', text: 'A hurt man stops, Mister Vance. That one kept on.', do: [{ evidence: 'T_GABLE_VOICE' }], next: 'hub' },
+      mill: { who: 'gable', text: 'Nothing. Rot and ice. The wheel hasn\'t turned since the silver went.', next: 'mill2' },
+      mill2: { who: 'gable', text: 'The race runs in under the wheel. Boys used to dare each other down into the wheel pit. Cold as an icehouse, August or not.', do: [{ evidence: 'T_GABLE_PIT' }, { set: { knowsWheelPit: true } }], next: 'hub' },
       help: { who: 'gable', text: 'Then go, if you\'re going. I\'ll not wait up, and I\'ll not go with you.', next: 'help2' },
       help2: { who: 'note', text: 'She draws back the bolt on the front door and steps away from it.', do: [{ set: { gableUnbolted: true } }], next: 'END' },
       bed: { who: 'gable', text: 'I intend to.', next: 'bed2' },
@@ -151,7 +157,13 @@ export const DIALOGUE = {
   GABLE_NIGHT_AGAIN: {
     start: 'a',
     nodes: {
-      a: { who: 'gable', text: 'The door\'s open, Mister Vance. Go, if you\'re going.', next: 'END' },
+      a: { who: 'gable', text: 'The door\'s open, Mister Vance. Go, if you\'re going.', choices: [
+        { text: 'Was it a man\'s voice?', next: 'voice', if: { noEvidence: 'T_GABLE_VOICE' } },
+        { text: 'What is there at the mill, at this hour?', next: 'mill', if: { noEvidence: 'T_GABLE_PIT' } },
+        { text: 'I\'m going.', next: 'END' },
+      ] },
+      voice: { who: 'gable', text: 'It went on too long for a man that\'s hurt. A hurt man stops, Mister Vance. That one kept on.', do: [{ evidence: 'T_GABLE_VOICE' }], next: 'a' },
+      mill: { who: 'gable', text: 'Rot and ice. The race runs in under the wheel. Boys used to dare each other down into the wheel pit. Cold as an icehouse, August or not.', do: [{ evidence: 'T_GABLE_PIT' }, { set: { knowsWheelPit: true } }], next: 'a' },
     },
   },
 
@@ -168,6 +180,57 @@ export const DIALOGUE = {
     },
   },
 };
+
+// ---------------- Aftermath of the Hale case ----------------
+// Played over black at first light, after Silas leaves the mill (SLICE_END → { aftermath: 'HALE' }). One per conclusion
+// (data/caseData.js) plus AFTER_OPEN for leaving it undecided. Each shows what Silas's conclusion sets in motion.
+Object.assign(DIALOGUE, {
+  // At the footbridge, on the way back up (SLICE_END → { casePrompt: 'HALE' }). The cutscene reads _leaveChoice.
+  CASE_PROMPT: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: '_caseDecidable' }, next: 'ready' }, { next: 'unready' }] },
+    ready: { who: 'note', text: 'Before I climb back up, I should settle what I believe happened here. Finch will ask.', choices: [
+      { text: 'Settle it now. [Review the case]', next: 'review' },
+      { text: 'Not yet. I\'ll go through my notebook first.', next: 'notebook' },
+      { text: 'Go back up and leave it open.', next: 'open' },
+    ] },
+    unready: { who: 'note', text: 'Finch will ask what I make of this, and I have not yet worked out what happened here.', choices: [
+      { text: 'Go through my notebook first.', next: 'notebook' },
+      { text: 'Go back up and leave it open.', next: 'open' },
+    ] },
+    review: { do: [{ set: { _leaveChoice: 'review' } }], next: 'END' },
+    notebook: { do: [{ set: { _leaveChoice: 'notebook' } }], next: 'END' },
+    open: { do: [{ set: { _leaveChoice: 'open' } }], next: 'END' },
+  } },
+  AFTER_STAGED: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Grey light. Finch is waiting at the top of the creek path, his hat in his hands.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'He has been dead since the night he went out. Someone kept him in the cold, and hung him up tonight for whoever came running at that scream.', next: 'd' },
+    d: { who: 'finch', text: '...For you, then. Or for me.', next: 'e' },
+    e: { who: 'silas', text: 'Keep the mill shut and keep him covered. If they ask, tell them a man did this. Not a ghost, and not an Order.', next: 'f' },
+    f: { who: 'finch', text: 'They won\'t like that better.', next: 'g' },
+    g: { who: 'finch', text: 'But they\'ll hear it from me.', next: 'END' },
+  } },
+  AFTER_TONIGHT: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Grey light. Finch is waiting at the top of the creek path, his hat in his hands.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'He was killed at the mill at a quarter past two. That was his scream. Whoever did it went off along the creek.', next: 'd' },
+    d: { who: 'finch', text: 'Then he\'s close. Nobody gets far in this.', next: 'e' },
+    e: { who: 'note', text: 'He is gone before I can say anything more, shouting for men and lanterns.', next: 'END' },
+  } },
+  AFTER_RITE: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Grey light. Finch is waiting at the top of the creek path, his hat in his hands.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'Bled, and hung, and the Order\'s mark cut beside him. Somebody wants it known whose work this is.', next: 'd' },
+    d: { who: 'finch', text: '...Then it\'s true. What they say.', next: 'e' },
+    e: { who: 'note', text: 'He says it quietly. By noon the whole town will be saying it, and saying who told them.', next: 'END' },
+  } },
+  AFTER_OPEN: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Grey light. Finch is waiting at the top of the creek path, his hat in his hands.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'Not yet. I don\'t know enough to say it out loud.', next: 'd' },
+    d: { who: 'finch', text: 'The town won\'t wait for you, Mister Vance.', next: 'END' },
+  } },
+});
 
 export const SPEAKERS = {
   silas: 'SILAS VANCE', finch: 'CONSTABLE FINCH', gable: 'MRS. GABLE', conductor: 'CONDUCTOR', note: null,

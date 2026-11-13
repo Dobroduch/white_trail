@@ -6,12 +6,12 @@
  "tilewidth": 16,
  "tileheight": 16,
  "columns": 8,
- "tilecount": 216,
+ "tilecount": 240,
  "margin": 0,
  "spacing": 0,
  "image": "../../export/tilesets/wilderness_exterior.png",
  "imagewidth": 128,
- "imageheight": 432,
+ "imageheight": 480,
  "tiles": [
   {
    "id": 0,
@@ -2160,6 +2160,246 @@
      "name": "name",
      "type": "string",
      "value": "snow_body"
+    }
+   ]
+  },
+  {
+   "id": 215,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_0_0"
+    }
+   ]
+  },
+  {
+   "id": 216,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_0_1"
+    }
+   ]
+  },
+  {
+   "id": 217,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_0_2"
+    }
+   ]
+  },
+  {
+   "id": 218,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_0_3"
+    }
+   ]
+  },
+  {
+   "id": 219,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_0_4"
+    }
+   ]
+  },
+  {
+   "id": 220,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_0_5"
+    }
+   ]
+  },
+  {
+   "id": 221,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_1_0"
+    }
+   ]
+  },
+  {
+   "id": 222,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_1_1"
+    }
+   ]
+  },
+  {
+   "id": 223,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_1_2"
+    }
+   ]
+  },
+  {
+   "id": 224,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_1_3"
+    }
+   ]
+  },
+  {
+   "id": 225,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_1_4"
+    }
+   ]
+  },
+  {
+   "id": 226,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_1_5"
+    }
+   ]
+  },
+  {
+   "id": 227,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_2_0"
+    }
+   ]
+  },
+  {
+   "id": 228,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_2_1"
+    }
+   ]
+  },
+  {
+   "id": 229,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_2_2"
+    }
+   ]
+  },
+  {
+   "id": 230,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_2_3"
+    }
+   ]
+  },
+  {
+   "id": 231,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_2_4"
+    }
+   ]
+  },
+  {
+   "id": 232,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_2_5"
+    }
+   ]
+  },
+  {
+   "id": 233,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_3_0"
+    }
+   ]
+  },
+  {
+   "id": 234,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_3_1"
+    }
+   ]
+  },
+  {
+   "id": 235,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_3_2"
+    }
+   ]
+  },
+  {
+   "id": 236,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_3_3"
+    }
+   ]
+  },
+  {
+   "id": 237,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_3_4"
+    }
+   ]
+  },
+  {
+   "id": 238,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "sign_crow_wide_3_5"
     }
    ]
   }

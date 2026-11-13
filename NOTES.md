@@ -417,3 +417,58 @@ The forecourt keeps its Black Ram hotel, annex, boardwalk, lamp and windows. Add
 **Tests:** 94 e2e pass incl. `T.fullRun` (unchanged); parlor-fire baseline regenerated, `room4-night` added.
 
 **Not done:** the Parlor's wallpaper was darkened once after review but interiors have been seen only through the test screenshots; no recorded audio; the title backdrop is still procedural; no maps opened in the Tiled application.
+
+## 19. Investigation layer: case solving, hidden area, hints, Mind map and People (2026-11-13)
+
+**Case used for the full flow: case 1, "What happened to Sheriff Hale?"** (the sawmill), built from the clues the slice already had.
+
+**Visual and dialogue fixes.**
+- *Road sign.* The `sign_crow` block was 64 px wide but its board runs 61 px from x 14, so the tileset clipped it to "CROW'S HOLL". A 6×4 `sign_crow_wide` block was appended to `wilderness_exterior` (existing indices unchanged; the old pad tile 215 was unused), with a one-pixel shadow under the lettering; `tools/patch-road-sign.mjs` swapped it in on the Road. The `.pxo` was refreshed (round trip identical).
+- *Night sky.* At night the darkness pass covers ~80% of the sky art, so every night sky read as the same grey-black. `Game.drawNightSky` lays a banded deep-blue gradient over the sky only, after lighting, with every silhouette in front of the sky (ranges, ridge, pines, buildings, props, characters, foreground) cut out of it. Tunable in `NIGHT_SKY` (`src/engine/game.js`); runtime light, so not bound to the palette. Map property `nightSky: false` opts out (the wheel pit).
+- *Silas's lines.* His spoken lines are a faint warm parchment (linen2) against everyone else's cool white, and his name tag uses the same tint with a brass edge (`SPEAKER_STYLE` in `dialogueView.js`). Every spoken line keeps its name tag, so colour only backs the name up. Unspoken observations stay untagged, italic and grey.
+- *Lantern.* The lantern is drawn in his hand only while lit; shuttered, nothing is drawn and no light is cast (his faint self-light stays, as before). Toggling now checkpoints, so a reload comes back with the lantern as the player left it.
+
+**Case solving** (`src/data/caseData.js`, rules in `src/systems/caseSystem.js`, UI in `ui/notebook.js` and `ui/caseReview.js`).
+- *Key statements.* The Deductions page no longer lists every record. Each question has a short list of statements, each merged from the overlapping records behind it (Finch, the notice and Mrs. Gable on Hale going missing are one statement; Mrs. Gable's two Room 4 answers are one). Hale has 11 (one only from the hidden area) and Room 4 has 3, where the page used to list ~22 raw records together. The evidence itself stays on the Evidence and Statements pages. The current question is expanded, others are one line; Q switches.
+- *Deductions with readings.* Pairs of statements form deductions (wrong pairs: "The evidence does not establish that."). Four Hale deductions can each be read two ways: *He did not bleed here* (drained / moved), *Old blood, three nights gone* (died that night / held until tonight), *The same counting* (a claim / set dressing), *A scream, and someone abroad* (his death / a summons). *Kept in the cold* (hidden area only) has a single reading. Old IDs D_SCENE_ARRANGED, D_SAME_COUNTING and D_UNWRITTEN_GUEST are kept.
+- *Conclusions.* The same deductions support three accounts: **Bled in the Order's name** (drained + claim), **Murdered at the mill tonight** (moved + held until tonight + his death), and **Dead three nights, hung for show** (moved + died that night + summons + set dressing; the true one). The readings of different accounts exclude each other (checked by `validate.mjs`). Small details bear on the readings:
+  - the body's closer look (hands frozen hard as wood, added);
+  - the furrow's closer look (heel drag; it starts under the wheel, added);
+  - the creek tracks (none come back, added);
+  - Mrs. Gable at night (*"A hurt man stops. That one kept on."*, a new optional topic);
+  - the rope (new hemp), the marks (made to be seen) and the ledger (left before it caught);
+  - the hidden hollow.
+- *Reviewing and committing.* C in the notebook (or E on the question) opens the review. Left/Right sets each reading; each account shows what it rests on and whether the current readings support it, never whether it is true. E on a supported account asks for confirmation and commits, and the readings lock. Leaving the mill asks first: settle it now, go back to the notebook, or go up and leave it open.
+- *Outcomes.* At first light a short scene with Finch plays over black, then the end card's epilogue:
+  - the true account keeps the mill shut and the town calm (Finch STEADY; new lead "Who laid Hale in the wheel pit…");
+  - "murdered tonight" sends out a search that tramples the mill yard and creek path (`millSearched`);
+  - "the Order's rite" spreads the story through town, told by Silas himself (`townFrightened`, Finch COLD);
+  - leaving it open has its own scene.
+
+**Hidden area: the wheel pit** (`assets/levels/wheel_pit.tmj`, tileset `wheel_pit`, `tools/make-wheel-pit-*.mjs`). It lies under the sawmill's waterwheel. Its entrance is a door behind the wheel with `showIf: {flag: knowsWheelPit}`: until Silas knows, there is no prompt and no hotspot, and the race mouth reads as stonework. He learns of it from the furrow's closer look (environment) or by asking Mrs. Gable at night what is at the mill (dialogue). Near the entrance he then recognises it (a bark) and can climb down. The reward is *A frozen hollow in the wheel pit*: a man-length depression with days of frost and the same new hemp, which separates "held until tonight" from "died that night". The true account is reachable without it (tested, and checked by `validate.mjs`).
+
+**Journal.** Tabs: Case · Evidence · Statements · Leads · Deductions · **Mind map** · **People**.
+- *Mind map:* formed deductions are nodes, joined to their supporting statements (solid) and related deductions (dashed). Up/Down selects; the side pane shows the supporting statements with their evidence text, related deductions and what bears on it; E sets a reading. Laid out for the 320×180 UI frame.
+- *People:* moved out of the Case tab. Each entry has a portrait cut from the character's own in-game sprite (Hale's from the hanging body, turned upright), shown only once Silas has seen the face; Clara gets an empty frame and "I have never seen her." Each entry also has a role, a summary and notes that unlock with evidence and trust.
+- The Case tab now holds the telegram, the timeline and the case's status or decision.
+
+**Hints** (`src/data/hints.js`, `src/systems/hints.js`). Eleven investigation steps, each with a nudge (a person, place or clue) and a specific follow-up.
+- The stuck timer counts only active play (world, dialogue, notebook/inventory/map, case review). It stops while paused, during blocking cutscenes and transitions, and while the tab is hidden.
+- It resets on a step change and on new evidence, closer looks, deductions, readings or commitments.
+- After `firstDelay` (150 s) of stuck play a faint "H — Something comes to mind." cue appears, and nothing more unless the player presses H. The follow-up becomes available `followUpDelay` (75 s) after the nudge was read.
+- Tune in `HINT_TIMING`, or per session with `?hintDelay=N&hintFollowUp=N`. The timer is not saved: a reload restarts it.
+
+**Saves.** Still version 1. `migrateCaseState` (called by `loadGame` and `startPlay`) adds `readings`/`cases`, drops retired deduction ids, and applies what a recorded closer look teaches, so an old save that had examined the furrow knows about the pit. Three real saves captured from the previous build (`tests/e2e/fixtures/save-v1-{parlor,creek,sawmill}.json`) load and play on; the sawmill one was carried through to a commitment and its aftermath.
+
+**Design decisions taken here; please review** (they touch Part IX questions 4 and 6):
+1. The true account of case 1 is that **Hale died the night he vanished, was kept frozen in the wheel pit, and was hung for show tonight; the 02:15 scream was not his but a summons.** This follows from the slice's existing evidence ("blood froze a long while before tonight", "did not die where he hangs") and from the GDD ("murdered by the conspirators and staged at the sawmill"). The murder method, the killer and the screamer stay unstated.
+2. **The wheel pit, the hollow and the hemp strands are new inventions,** as are Mrs. Gable knowing the pit (local lore) and her "a hurt man stops" line.
+3. The wrong accounts' consequences (a trampling search; the Order story spreading with Silas's name on it; Finch's trust) are invented and local to this chapter.
+4. Room 4 is a second question with statements and a deduction but no conclusions; it stays open until Q4 is decided.
+
+**Not done / limits:**
+- No hints are offered for the optional wheel pit (deliberately) or for Room 4.
+- The hint timer does not survive a reload.
+- The Mind map is keyboard-only (no mouse picking).
+- Real-time feel and audio are still unobserved by a person.
+- Firefox and Safari are untested.

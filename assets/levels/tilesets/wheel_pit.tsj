@@ -1,0 +1,447 @@
+{
+ "type": "tileset",
+ "version": "1.10",
+ "tiledversion": "1.11.0",
+ "name": "wheel_pit",
+ "tilewidth": 16,
+ "tileheight": 16,
+ "columns": 8,
+ "tilecount": 48,
+ "margin": 0,
+ "spacing": 0,
+ "image": "../../export/tilesets/wheel_pit.png",
+ "imagewidth": 128,
+ "imageheight": 96,
+ "tiles": [
+  {
+   "id": 0,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "void"
+    }
+   ]
+  },
+  {
+   "id": 1,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_a"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_b"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_wet"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_top"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "beam_h"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "beam_worn"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "post_v"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "planks_under"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "icicles"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "ice_top"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "ice_fill"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "water"
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "drift"
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "hollow_0_0"
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "hollow_0_1"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "hollow_0_2"
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_0_0"
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_0_1"
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_0_2"
+    }
+   ]
+  },
+  {
+   "id": 20,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_0_3"
+    }
+   ]
+  },
+  {
+   "id": 21,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_1_0"
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_1_1"
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_1_2"
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_1_3"
+    }
+   ]
+  },
+  {
+   "id": 25,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_2_0"
+    }
+   ]
+  },
+  {
+   "id": 26,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_2_1"
+    }
+   ]
+  },
+  {
+   "id": 27,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_2_2"
+    }
+   ]
+  },
+  {
+   "id": 28,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_2_3"
+    }
+   ]
+  },
+  {
+   "id": 29,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_3_0"
+    }
+   ]
+  },
+  {
+   "id": 30,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_3_1"
+    }
+   ]
+  },
+  {
+   "id": 31,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_3_2"
+    }
+   ]
+  },
+  {
+   "id": 32,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wheel_rim_3_3"
+    }
+   ]
+  },
+  {
+   "id": 33,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "shaft_0_0"
+    }
+   ]
+  },
+  {
+   "id": 34,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "shaft_0_1"
+    }
+   ]
+  },
+  {
+   "id": 35,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "shaft_1_0"
+    }
+   ]
+  },
+  {
+   "id": 36,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "shaft_1_1"
+    }
+   ]
+  },
+  {
+   "id": 37,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "shaft_2_0"
+    }
+   ]
+  },
+  {
+   "id": 38,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "shaft_2_1"
+    }
+   ]
+  },
+  {
+   "id": 39,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "race_mouth_0_0"
+    }
+   ]
+  },
+  {
+   "id": 40,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "race_mouth_0_1"
+    }
+   ]
+  },
+  {
+   "id": 41,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "race_mouth_1_0"
+    }
+   ]
+  },
+  {
+   "id": 42,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "race_mouth_1_1"
+    }
+   ]
+  }
+ ]
+}

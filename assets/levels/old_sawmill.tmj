@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 12,
- "nextobjectid": 21,
+ "nextobjectid": 24,
  "properties": [
   {
    "name": "name",
@@ -62,6 +62,10 @@
   {
    "firstgid": 41,
    "source": "tilesets/sawmill_exterior.tsj"
+  },
+  {
+   "firstgid": 177,
+   "source": "tilesets/wheel_pit.tsj"
   }
  ],
  "layers": [
@@ -1760,8 +1764,8 @@
     0,
     0,
     0,
-    0,
-    0,
+    216,
+    217,
     0,
     0,
     0,
@@ -1814,8 +1818,8 @@
     0,
     0,
     0,
-    0,
-    0,
+    218,
+    219,
     0,
     0,
     0,
@@ -4388,6 +4392,97 @@
        "name": "if",
        "type": "string",
        "value": "{\"all\":[{\"flag\":\"foundSheriffBody\"},{\"notFlag\":\"ridgeLightSeen\"},{\"countAt\":{\"scene\":\"SAWMILL\",\"min\":4}}]}"
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "rotation": 0,
+     "visible": true,
+     "name": "sm_pit",
+     "type": "door",
+     "x": 657,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Wheel pit"
+      },
+      {
+       "name": "verb",
+       "type": "string",
+       "value": "Climb down"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "WHEEL_PIT"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromSawmill"
+      },
+      {
+       "name": "minutes",
+       "type": "float",
+       "value": 1
+      },
+      {
+       "name": "showIf",
+       "type": "string",
+       "value": "{\"flag\":\"knowsWheelPit\"}"
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "rotation": 0,
+     "visible": true,
+     "name": "fromPit",
+     "type": "spawn",
+     "x": 657,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "rotation": 0,
+     "visible": true,
+     "name": "PIT_RECOGNISED",
+     "type": "event",
+     "x": 600,
+     "y": 150,
+     "width": 120,
+     "height": 80,
+     "properties": [
+      {
+       "name": "bark",
+       "type": "string",
+       "value": "There, behind the wheel. The mouth of the race. That is where the furrow starts."
+      },
+      {
+       "name": "do",
+       "type": "string",
+       "value": "[{\"set\":{\"pitRecognised\":true}}]"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"knowsWheelPit\"},{\"notFlag\":\"pitRecognised\"}]}"
       }
      ]
     }

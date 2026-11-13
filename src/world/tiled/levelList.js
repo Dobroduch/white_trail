@@ -10,4 +10,6 @@ export const LEVELS = [
   { id: 'PARLOR', url: 'assets/levels/black_ram_parlor.tmj' },
   { id: 'ROOM4', url: 'assets/levels/room_4.tmj' },
   { id: 'SAWMILL', url: 'assets/levels/old_sawmill.tmj' },
+  // Optional hidden area under the waterwheel; its entrance appears only once Silas knows about it.
+  { id: 'WHEEL_PIT', url: 'assets/levels/wheel_pit.tmj' },
 ];

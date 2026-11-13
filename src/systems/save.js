@@ -1,6 +1,7 @@
 // localStorage checkpoints. Saved only at intentional points (scene entry, recorded evidence,
 // story beats) — never per frame. Versioned, with a safe fallback for malformed data.
 import { SAVE_VERSION, newState } from './storyState.js';
+import { migrateCaseState } from './caseSystem.js';
 
 const KEY = 'thewhitetrail.save.v1';
 const SETTINGS_KEY = 'thewhitetrail.settings.v1';
@@ -35,6 +36,8 @@ export function loadGame() {
     merged.map = { visited: [...((s.map && s.map.visited) || [])], paths: [...((s.map && s.map.paths) || [])] };
     // A character recorded dead stays dead, whatever defaults say.
     for (const [id, c] of Object.entries(s.chars || {})) if (c && c.alive === false) merged.chars[id].alive = false;
+    // Saves from before the case system (same version 1): new fields, retired deduction ids, onExamine knowledge.
+    migrateCaseState(merged);
     return merged;
   } catch (err) {
     console.warn('[save] save data unreadable, ignoring it:', err.message);

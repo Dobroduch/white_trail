@@ -102,6 +102,8 @@ crust sits at local y `s` (`t_<plain|rut|tuft|prints>_<a|b>_s<0..12>`): the crus
 Silas walks on follows it (`tools/make-wilderness-levels.mjs` derives s from the polyline). Things that stand on the ground sit on a layer *behind* the
 terrain with their feet sunk into row 14, so the terrain tiles clip them at any slope; the footbridge is the exception (a layer in front). Also: creek
 bank/ice/water, the CROW'S HOLLOW signpost, ore car, notice board, fence pieces, the footbridge and the deadfall (blocks sliced as `name_row_col`).
+The first signpost block (`sign_crow`, 4×4) cut the board off after "CROW'S HOLL"; `sign_crow_wide` (6×4, appended, indices 215+) holds the whole
+board and is what the Road uses (`tools/patch-road-sign.mjs`). The `.pxo` was refreshed from the extended PNG (round trip verified identical).
 `road_to_crows_hollow.tmj` and `creek_path.tmj` were built once from this and are now edited in Tiled. If you change a ground polyline, re-pick the
 terrain tiles under it (a tile's crust row `s` should match the polyline within a pixel or two).
 
@@ -115,3 +117,14 @@ Room 4 door with the brass 4, wardrobe, washstand, window, bed. `assets/levels/b
 `tools/make-interior-levels.mjs` (each feature at the position of the painting it replaced) and are now edited in Tiled. The authored light and
 glow passes remain as phase-tagged image layers (`light_*.png`, `glow_*.png` under `assets/export/environments/{parlor,room4}/`), so if you move a
 sconce or the lamp, move its glow with it.
+
+## Wheel-pit tileset (`wheel_pit`)
+
+Painted by `tools/make-wheel-pit-tileset.mjs` (palette colours only, 16×16, 8 columns). It holds the optional hidden area under
+the sawmill's waterwheel: dressed race-wall masonry (plain, wet, snow-topped), the housing's beams and planks (one beam worn bright
+where a loaded rope ran), icicles, floor ice, black race water, drifts, the frozen `hollow` (3×1: a man-length depression with
+frost feathers and hemp strands), the lower `wheel_rim` (4×4), the `shaft` the player climbs down (2×3), and `race_mouth` (2×2),
+which sits on the SAWMILL map's back_wall layer behind the wheel so that, before Silas knows about the pit, it reads as stonework.
+`tools/make-wheel-pit-level.mjs` built `assets/levels/wheel_pit.tmj` once and linked it into `old_sawmill.tmj`; Tiled owns both now.
+`wheel_pit.pxo` is the PNG imported into Pixelorama (round trip verified identical; it was made from a copy of an existing `.pxo`
+because a fresh Pixelorama canvas collapses imports to one pixel).

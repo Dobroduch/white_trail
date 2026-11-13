@@ -4,6 +4,13 @@ import { UI, font, text, panel, wrap, spaced } from './text.js';
 import { SPEAKERS } from '../data/dialogue.js';
 
 const SPEEDS = { slow: 28, normal: 50, fast: 95, instant: 1e9 };
+// Who is talking is shown by the name tag first; colour only backs it up. Silas's own spoken lines are a faint warm
+// parchment (linen2) against everyone else's cool white, and his tag carries the same tint. His unspoken
+// observations ('note') stay untagged, italic and grey.
+export const SPEAKER_STYLE = {
+  silas: { text: '#e4dcc4', tag: '#e4dcc4', tagFill: '#211a12', edge: '#8a6a2a' },
+  default: { text: UI.bone, tag: UI.amber, tagFill: '#1b1410', edge: UI.amberDim },
+};
 
 export class DialogueView {
   constructor(game) {
@@ -77,16 +84,17 @@ export class DialogueView {
     // speaker tag
     const name = SPEAKERS[who];
     if (name) {
+      const st = SPEAKER_STYLE[who] || SPEAKER_STYLE.default;
       font(ctx, 4.8, { bold: true });
       const tw = ctx.measureText(name).width + 3 * name.length * 0.18 + 10;
-      panel(ctx, X0 + 6, y0 - 6, tw, 9, '#1b1410', UI.amberDim);
+      panel(ctx, X0 + 6, y0 - 6, tw, 9, st.tagFill, st.edge);
       font(ctx, 4.8, { bold: true });
-      spaced(ctx, name, X0 + 11, y0 + 0.8, UI.amber, 0.55);
+      spaced(ctx, name, X0 + 11, y0 + 0.8, st.tag, 0.55);
     }
     // text (typewriter)
     font(ctx, 6.1, { italic: isNote });
     let remaining = Math.floor(this.shown);
-    const col = isNote ? '#cbd5e1' : UI.bone;
+    const col = isNote ? '#cbd5e1' : (SPEAKER_STYLE[who] || SPEAKER_STYLE.default).text;
     lines.forEach((l, i) => {
       if (remaining <= 0) return;
       const part = l.slice(0, remaining);

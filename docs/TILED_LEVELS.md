@@ -109,7 +109,7 @@ ellipse uses its centre. Properties marked "native" are in pixels.
 | `bounds` | — (rectangle) | — | walkable x-range. Walking into an edge triggers that side's exit |
 | `ground` | — (polyline) | — | the ground profile Silas walks on (default: flat at map property `groundY`, else 225) |
 | `exit` | — | `side` left/right (inferred from position if empty), `to`, `spawn`, `if`, `phase`, `blockedLines`, `blockedScript`, `scriptIf` (JSON `{"if":…,"script":"ID"}`: run the script instead of travelling) | scene-edge exit |
-| `door` | door id | `label`, `verb` (Enter), `to`, `spawn`, `minutes` (1), `if`, `phase`, `blockedLines` | an "Enter — label" prompt at its x |
+| `door` | door id | `label`, `verb` (Enter), `to`, `spawn`, `minutes` (1), `if`, `phase`, `blockedLines`, `showIf` (JSON condition: until it holds the door does not exist at all — no prompt, no hotspot; used for hidden entrances such as the wheel pit) | an "Enter — label" prompt at its x |
 | `interactable` | object id | `label`, `lines`, `again`, `variants`, `evidence`, `dialogue`, `verb`, `important`, `warm`, `radius` (native), `if`, `phase` | an "Examine — label" prompt |
 | `npc` | character id (`finch`, `gable`, …) | `label` (display name), `sprite`, `dialogue`, `facing`, `z`, `lantern`, `candle`, `if`, `phase` | a character. Must exist in story state `chars` |
 | `light` | — | `r` radius (native, default 60, or the ellipse size), `warm` 0–1, `strength`, `phase` | a light pool. Untagged lights shine in both phases |
@@ -140,6 +140,7 @@ Ids used here (`to`, `spawn`, `dialogue`, `evidence`, `script`, `sprite`) must e
 | `snow`, `wind`, `fog` | float | weather 0–1 (omit all three for none) |
 | `surface` | string | footstep surface override (`wood`) |
 | `painter` | string | keep this scene's existing painter for its art (layout-only map; no image/tile layers needed) |
+| `nightSky` | bool | `false` for an exterior with no open sky (the wheel pit): no deep-blue night-sky tint. Every other exterior gets it at NIGHT (`NIGHT_SKY` in `src/engine/game.js`) |
 | `travel` | int | minutes added to the clock when arriving |
 | `groundY` | float | flat ground line in native px if there is no `ground` object |
 | `night` | string (JSON) | overrides for the night phase, for example `{"darkness":0.84,"ambience":"village_night","weather":{"snow":0.9,"wind":0.85,"fog":0.4}}` |

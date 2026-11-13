@@ -1,5 +1,6 @@
 // Central, serializable story state. Presentation state (camera, particles, UI) lives elsewhere.
 import { EVIDENCE } from '../data/evidence.js';
+import { DEDUCTIONS } from '../data/caseData.js';
 
 export const SAVE_VERSION = 1;
 
@@ -19,7 +20,9 @@ export function newState() {
     items: ['TELEGRAM', 'LANTERN', 'REVOLVER'],
     evidence: {}, // id -> { observed: true, examined: bool, n: discovery order }
     evidenceCount: 0,
-    deductions: [],
+    deductions: [], // formed deduction ids (data/caseData.js)
+    readings: {}, // deduction id -> the reading Silas has chosen
+    cases: {}, // case id -> { conclusion, readings, t } once committed (systems/caseSystem.js)
     looked: {}, // interactable id -> times examined
     seen: {}, // 'DIALOGUE.node' -> true
     flags: { receivedTelegram: true, trappedInVillage: true },
@@ -59,6 +62,9 @@ export function test(cond, s, ctx = {}) {
       case 'xMax': if (!(ctx.playerX <= v)) return false; break;
       case 'countAt': if (countAt(s, v.scene) < v.min) return false; break;
       case 'noDeductions': if (s.deductions.length > 0) return false; break;
+      case 'deductionsIn': if (s.deductions.filter((d) => DEDUCTIONS[d] && DEDUCTIONS[d].q === v.q).length < v.min) return false; break;
+      case 'caseCommitted': if (!(s.cases && s.cases[v])) return false; break;
+      case 'deduction': if (!s.deductions.includes(v)) return false; break;
       case 'all': if (!v.every((c) => test(c, s, ctx))) return false; break;
       case 'any': if (!v.some((c) => test(c, s, ctx))) return false; break;
       default: console.warn(`[story] unknown condition "${k}"`);

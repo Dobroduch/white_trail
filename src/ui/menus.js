@@ -3,11 +3,11 @@
 import { UI, font, text, spaced, panel, wrap, keycap, UI_W, UI_H, UI_CX, UI_LEFT, UI_RIGHT, UI_TOP, UI_BOTTOM } from './text.js';
 import { ITEMS, TELEGRAM_TEXT, LEADS } from '../data/notebookData.js';
 import { EVIDENCE } from '../data/evidence.js';
-import { DEDUCTIONS } from '../data/notebookData.js';
 import { revolverDescription } from '../systems/survival.js';
 import { isFullscreen, toggleFullscreen } from '../engine/display.js';
 import { test, countAt } from '../systems/storyState.js';
 import { drawItemIcon } from './itemIcons.js';
+import { CONCLUSIONS, OPEN_OUTCOME } from '../data/caseData.js';
 
 function menuNav(self, input, n, audio) {
   if (input.pressed('up')) { self.sel = (self.sel + n - 1) % n; audio.sfx('tick'); }
@@ -163,11 +163,12 @@ export class ControlsHelp {
     const rows = [
       [['A', 'D'], 'or arrow keys — walk'], [['E'], 'examine · speak · open · continue'], [['F'], 'light or shutter the lantern'],
       [['N'], 'notebook (also Tab)'], [['I'], 'inventory'], [['M'], 'map'], [['Esc'], 'pause · close a panel'],
+      [['H'], 'ask yourself for a hint, once one comes to mind'], [['C'], 'in the notebook: review the case and decide'],
       [['1', '–', '5'], 'pick a dialogue choice (or Up / Down and E)'],
       [['Alt', 'Enter'], 'toggle fullscreen'],
     ];
     rows.forEach(([keys, desc], i) => {
-      const y = 50 + i * 11;
+      const y = 48 + i * 8.6;
       let x = 66;
       for (const k of keys) {
         if (k === '–') { font(ctx, 5); text(ctx, '–', x + 1, y, UI.dim); x += 6; continue; }
@@ -347,18 +348,23 @@ export class EndCard {
     const statements = Object.keys(s.evidence).filter((id) => EVIDENCE[id].category === 'TESTIMONY').length;
     font(ctx, 5.4);
     const lines = [
-      `Details recorded at the mill: ${found} of ${total}`,
-      `Statements taken: ${statements}`,
-      `Deductions: ${s.deductions.length ? s.deductions.map((d) => DEDUCTIONS[d].title).join('; ') : 'none yet'}`,
+      `Details recorded at the mill: ${found} of ${total}     Statements taken: ${statements}     Deductions: ${s.deductions.length}`,
     ];
-    let y = 62;
-    for (const l of lines) for (const ln of wrap(ctx, l, 250)) { text(ctx, ln, UI_CX, y, UI.bone, 'center'); y += 7.5; }
+    let y = 56;
+    for (const l of lines) for (const ln of wrap(ctx, l, 270)) { text(ctx, ln, UI_CX, y, UI.dim, 'center'); y += 7; }
+    // the case: what Silas decided, and what came of it
+    const k = s.cases && s.cases.HALE;
+    font(ctx, 4.8, { bold: true }); spaced(ctx, 'THE SHERIFF', UI_CX, y + 2, UI.amber, 1.2, 'center'); y += 9;
+    font(ctx, 5.6, { bold: true });
+    text(ctx, k ? CONCLUSIONS[k.conclusion].title : 'Left open', UI_CX, y, UI.bone, 'center'); y += 7;
+    font(ctx, 5, { italic: true });
+    for (const ln of wrap(ctx, (k ? CONCLUSIONS[k.conclusion].outcome : OPEN_OUTCOME).epilogue, 262)) { text(ctx, ln, UI_CX, y, UI.bone, 'center'); y += 6.2; }
     y += 3;
     font(ctx, 4.8, { bold: true }); spaced(ctx, 'STILL OPEN', UI_CX, y, UI.amber, 1.2, 'center'); y += 7;
     font(ctx, 5, { italic: true });
     const all = LEADS.map((l) => l.variants.find((v) => test(v.if, s))).filter(Boolean);
     // the newest questions (the ridge, the ledger) matter most at this point; keep them visible
-    const open = all.length > 8 ? [...all.slice(0, 4), ...all.slice(-4)] : all;
+    const open = all.length > 5 ? [...all.slice(0, 2), ...all.slice(-3)] : all;
     for (const v of open) { text(ctx, v.text, UI_CX, y, UI.dim, 'center'); y += 6.1; }
     ctx.globalAlpha = 1;
     if (this.t >= 2) drawMenu(ctx, this.items, this.sel, UI_CX, 156, { align: 'center', size: 5.6, gap: 8.5 });

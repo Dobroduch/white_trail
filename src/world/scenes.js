@@ -14,4 +14,5 @@ export const GLOBAL_EVENTS = [
     { all: [{ evidence: 'SAWMILL_MARKS' }, { evidence: 'SAWMILL_LEDGER' }] },
     { all: [{ evidence: 'T_GABLE_ROOM4' }, { evidence: 'HOTEL_REGISTER' }] },
   ] }, { noDeductions: true }] }, delay: 2.5, script: 'DEDUCTION_HINT' },
+  // (the investigation hints the player can ask for with H are in data/hints.js; this one is the notebook tutorial)
 ];

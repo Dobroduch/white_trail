@@ -3,7 +3,10 @@
 import { readFile } from 'node:fs/promises';
 import { DIALOGUE, SPEAKERS } from '../src/data/dialogue.js';
 import { EVIDENCE } from '../src/data/evidence.js';
-import { DEDUCTIONS, LEADS, ITEMS } from '../src/data/notebookData.js';
+import { LEADS, ITEMS, PEOPLE } from '../src/data/notebookData.js';
+import { QUESTIONS, STATEMENTS, DEDUCTIONS, CONCLUSIONS, OPEN_OUTCOME } from '../src/data/caseData.js';
+import { HINT_STEPS, HINT_TIMING } from '../src/data/hints.js';
+import { tryPair, conclusionsFor, setReading, commit, canCommit, migrateCaseState, statementKnown } from '../src/systems/caseSystem.js';
 import { SCRIPTS } from '../src/data/scripts.js';
 import { SCENES, GLOBAL_EVENTS } from '../src/world/scenes.js';
 import { newState, test, apply, observe, examine, countAt } from '../src/systems/storyState.js';
@@ -131,7 +134,66 @@ for (const [id, e] of Object.entries(EVIDENCE)) {
   for (const r of e.related.evidence || []) ok(EVIDENCE[r], `${id}: related ${r} missing`);
   if (e.collect) ok(ITEMS[e.collect], `${id}: collect item missing`);
 }
-for (const [id, d] of Object.entries(DEDUCTIONS)) for (const p of d.pairs) for (const e of p) ok(EVIDENCE[e], `${id}: pair evidence ${e} missing`);
+console.log('Case data (statements / deductions / conclusions / hints / people)');
+const qids = new Set(QUESTIONS.map((q) => q.id));
+for (const q of QUESTIONS) walkConds(q.if, q.id);
+for (const [id, st] of Object.entries(STATEMENTS)) {
+  ok(qids.has(st.q), `${id}: unknown question ${st.q}`);
+  ok(st.label && (st.text || st.variants), `${id}: needs label and text`);
+  for (const e of st.sources || []) ok(EVIDENCE[e], `${id}: source ${e} missing`);
+  ok(st.if || (st.sources || []).length, `${id}: no way to become known`);
+  walkConds(st.if, id); for (const v of st.variants || []) walkConds(v.if, id);
+}
+for (const [id, d] of Object.entries(DEDUCTIONS)) {
+  ok(qids.has(d.q), `${id}: unknown question ${d.q}`);
+  for (const p of d.pairs) { ok(p.length === 2, `${id}: pair must have two statements`); for (const x of p) ok(STATEMENTS[x] && STATEMENTS[x].q === d.q, `${id}: pair statement ${x} missing or of another question`); }
+  for (const e of d.details || []) ok(EVIDENCE[e], `${id}: detail ${e} missing`);
+  for (const l of d.links || []) ok(DEDUCTIONS[l], `${id}: link ${l} missing`);
+  if (d.readings) ok(Object.keys(d.readings).length === 2, `${id}: a deduction with readings needs exactly two`);
+  ok(d.map && d.map.x >= 0 && d.map.x <= 1 && d.map.y >= 0 && d.map.y <= 1, `${id}: mind-map position missing`);
+}
+{ // no statement pair may form two deductions
+  const seen = new Map();
+  for (const [id, d] of Object.entries(DEDUCTIONS)) for (const p of d.pairs) { const k = [...p].sort().join('+'); ok(!seen.has(k), `pair ${k} forms both ${seen.get(k)} and ${id}`); seen.set(k, id); }
+}
+for (const [id, c] of Object.entries(CONCLUSIONS)) {
+  ok(qids.has(c.q) && QUESTIONS.find((q) => q.id === c.q).case, `${id}: question ${c.q} is not a case`);
+  for (const [did, key] of Object.entries(c.requires)) ok(DEDUCTIONS[did] && DEDUCTIONS[did].q === c.q && DEDUCTIONS[did].readings && DEDUCTIONS[did].readings[key], `${id}: requires ${did}=${key}, which does not exist`);
+  ok(DIALOGUE[c.outcome.aftermath], `${id}: aftermath dialogue ${c.outcome.aftermath} missing`);
+  ok(c.outcome.epilogue, `${id}: epilogue missing`);
+  walkEffects(c.outcome.do, id);
+}
+ok(DIALOGUE[OPEN_OUTCOME.aftermath], 'open outcome dialogue missing');
+for (const q of QUESTIONS.filter((x) => x.case)) {
+  const list = Object.values(CONCLUSIONS).filter((c) => c.q === q.id);
+  ok(list.filter((c) => c.truth).length === 1, `${q.id}: exactly one conclusion must be the truth`);
+  ok(list.length >= 2, `${q.id}: a case needs more than one plausible conclusion`);
+  // the readings of different conclusions must exclude each other, so the player can never support two at once
+  for (const a of list) for (const b of list) if (a !== b) ok(Object.entries(a.requires).some(([d, k]) => b.requires[d] && b.requires[d] !== k), `${q.id}: "${a.title}" and "${b.title}" can be supported at the same time`);
+}
+for (const h of HINT_STEPS) { ok(h.id && h.nudge && h.specific && h.done, `hint ${h.id}: incomplete`); walkConds(h.done, h.id); walkConds(h.if, h.id); }
+ok(HINT_TIMING.firstDelay > 0 && HINT_TIMING.followUpDelay > 0, 'hint delays must be positive');
+for (const p of PEOPLE) { walkConds(p.if, p.id); for (const n of p.notes || []) walkConds(n.if, p.id); ok(p.portrait, `${p.id}: portrait spec missing`); }
+{ // the true conclusion of the Hale case is reachable from main-route evidence alone (no wheel pit, no optional dialogue)
+  const s = newState();
+  Object.assign(s.flags, { heardScream: true, foundSheriffBody: true, ridgeLightSeen: true });
+  for (const e of ['T_FINCH_HALE', 'SAWMILL_ROPE', 'SAWMILL_MARKS', 'SAWMILL_LEDGER']) observe(s, e);
+  examine(s, 'SAWMILL_BODY');
+  for (const [a, b] of [['S_LITTLE_BLOOD', 'S_HOISTED'], ['S_OLD_BLOOD', 'S_MISSING'], ['S_MARKS', 'S_LEDGER'], ['S_SCREAM', 'S_RIDGE']]) ok(tryPair(s, a, b).ok, `main route: ${a}+${b} should form a deduction`);
+  ok(!tryPair(s, 'S_LITTLE_BLOOD', 'S_LEDGER').ok, 'a wrong pair must be refused');
+  ok(!tryPair(s, 'S_PIT', 'S_OLD_BLOOD').ok, 'a pair with an unknown statement must be refused');
+  const truth = Object.entries(CONCLUSIONS).find(([, c]) => c.truth && c.q === 'Q_HALE');
+  ok(conclusionsFor(s, 'Q_HALE').every((r) => r.available), 'main route: every Hale conclusion is on the table');
+  ok(!canCommit(s, truth[0]), 'no commitment without readings');
+  for (const [d, k] of Object.entries(truth[1].requires)) setReading(s, d, k);
+  ok(conclusionsFor(s, 'Q_HALE').filter((r) => r.supported).length === 1, 'readings support exactly one conclusion');
+  ok(commit(s, truth[0]) && s.cases.HALE.conclusion === truth[0], 'commit records the conclusion');
+  ok(!setReading(s, 'D_LONG_DEAD', 'KEPT_ALIVE'), 'readings are locked after commitment');
+  ok(!statementKnown(newState(), 'S_SCREAM'), 'statements are not known on a new game');
+  const old = { ...newState(), deductions: ['D_SCENE_ARRANGED', 'D_GONE'], readings: undefined, cases: undefined, evidence: { SAWMILL_DRAG: { observed: true, examined: true, n: 1 } } };
+  migrateCaseState(old);
+  ok(old.deductions.join() === 'D_SCENE_ARRANGED' && old.readings && old.cases && old.flags.knowsWheelPit, 'old save migration');
+}
 for (const l of LEADS) for (const v of l.variants) walkConds(v.if, l.id);
 
 console.log('State model');

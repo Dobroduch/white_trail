@@ -30,7 +30,7 @@ export const EVIDENCE = {
   CREEK_TRACKS: {
     title: 'Fresh tracks on the creek path', category: 'ENVIRONMENT', location: 'CREEK', importance: 'CORROBORATING',
     observed: 'One set of prints, made tonight — the edges are still sharp. A long stride, following the path down toward the mill.',
-    detail: 'Deepest at the toe. Whoever made them was moving quickly.',
+    detail: 'Deepest at the toe. Whoever made them was moving quickly. They go down toward the mill, and none come back up this path.',
     interpretation: 'Someone went down to the mill tonight before I did. Toward the scream, or away from something.',
     related: { people: [], places: ['CREEK', 'SAWMILL'], evidence: [] },
     tags: ['TRACKS'],
@@ -39,7 +39,7 @@ export const EVIDENCE = {
   SAWMILL_BODY: {
     title: "Sheriff Hale's body", category: 'PHYSICAL', location: 'SAWMILL', importance: 'KEY',
     observed: 'A man hangs by the ankles from the wheel frame, a sheriff\'s star on his coat. His face is grey-white. The snow beneath him is nearly clean — a few dark spots, no more.',
-    detail: 'His coat is torn at the side, and the cloth around the tear is stiff with blood, frozen through. That blood froze a long while before tonight.',
+    detail: 'His coat is torn at the side, and the cloth around the tear is stiff with blood, frozen through. That blood froze a long while before tonight. His hands are frozen hard as wood; that much cold takes days to get into a man, not an hour on a rope.',
     interpretation: 'The town will say he was drained. To my eye there is simply too little blood beneath him for where he hangs.',
     related: { people: ['HALE'], places: ['SAWMILL'], evidence: ['SAWMILL_ROPE', 'SAWMILL_DRAG'] },
     tags: ['BODY', 'LITTLE_BLOOD'],
@@ -87,10 +87,20 @@ export const EVIDENCE = {
   SAWMILL_DRAG: {
     title: 'Furrow from the creek', category: 'ENVIRONMENT', location: 'SAWMILL', importance: 'KEY',
     observed: 'A shallow furrow in the snow, half filled by the wind, runs from the creek bank up toward the wheel.',
-    detail: 'Heel-drag marks either side of it. Something heavy was pulled up from the water\'s edge, not carried.',
-    interpretation: 'Whatever came up from the creek came up along the ground.',
+    detail: 'Heel-drag marks either side of it. Something heavy was pulled along the ground, not carried, and it did not walk. And the furrow does not start at the open water: it comes out from behind the wheel, where the old race runs in under the frame.',
+    onExamine: [{ set: { knowsWheelPit: true } }], // the closer look teaches Silas there is a way in under the wheel (the hidden wheel pit)
+    interpretation: 'Whatever came up toward the wheel came along the ground, from somewhere under the frame.',
     related: { people: [], places: ['SAWMILL', 'CREEK'], evidence: ['SAWMILL_BODY', 'SAWMILL_WATCH'] },
     tags: ['DRAGGED'],
+  },
+  // ---------------- The wheel pit (optional hidden area) ----------------
+  PIT_HOLLOW: {
+    title: 'A frozen hollow in the wheel pit', category: 'ENVIRONMENT', location: 'WHEEL_PIT', importance: 'OPTIONAL',
+    observed: 'On the ice of the old race, under the wheel: a long hollow pressed into the packed snow, the length of a man. Frost has grown feathers inside it.',
+    detail: 'Frost like that takes days to grow in still air, not hours. Caught in the rim, strands of new hemp, stiff, the same as the rope on the frame. Whatever lay here lay still and cold for a long while before it was dragged out.',
+    interpretation: 'Something the size of a man was kept down here, out of sight and frozen, and taken up the bank to the wheel tonight.',
+    related: { people: ['HALE'], places: ['WHEEL_PIT', 'SAWMILL'], evidence: ['SAWMILL_DRAG', 'SAWMILL_ROPE', 'SAWMILL_BODY'] },
+    tags: ['KEPT_COLD'],
   },
   // ---------------- Testimony ----------------
   T_CONDUCTOR_PASS: {
@@ -159,6 +169,18 @@ export const EVIDENCE = {
     interpretation: 'By her account there was a guest, kept off the books. Whether that is the truth or a better story, I can\'t yet tell.',
     related: { people: ['GABLE'], places: ['ROOM4'], evidence: ['HOTEL_REGISTER'] },
   },
+  T_GABLE_VOICE: {
+    title: 'Mrs. Gable, on the voice', category: 'TESTIMONY', speaker: 'Mrs. Gable', location: 'PARLOR',
+    observed: '"It went on too long for a man that\'s hurt. A hurt man stops, Mister Vance. That one kept on."',
+    interpretation: 'She has heard men hurt before. Whatever screamed tonight, she does not think it was dying.',
+    related: { people: ['GABLE'], places: ['SAWMILL'], evidence: [] },
+  },
+  T_GABLE_PIT: {
+    title: 'Mrs. Gable, on the wheel pit', category: 'TESTIMONY', speaker: 'Mrs. Gable', location: 'PARLOR',
+    observed: '"The race runs in under the wheel. Boys used to dare each other down into the wheel pit. Cold as an icehouse, August or not."',
+    interpretation: 'A cold, hidden place under the wheel, a few yards from where the sound came from.',
+    related: { people: ['GABLE'], places: ['SAWMILL', 'WHEEL_PIT'], evidence: [] },
+  },
   T_GABLE_NIGHT: {
     title: 'Mrs. Gable, at 02:15', category: 'TESTIMONY', speaker: 'Mrs. Gable', location: 'PARLOR',
     observed: '"The mill. Down by the creek. Sound carries along the water — it always sounds closer than it is."',
@@ -169,7 +191,7 @@ export const EVIDENCE = {
 
 export const PLACE_NAMES = {
   STATION: 'Blackwood Station', ROAD: 'The road', VILLAGE: "Crow's Hollow", PARLOR: 'Black Ram Hotel',
-  ROOM4: 'Room 4', CREEK: 'The creek path', SAWMILL: 'The old sawmill', RIDGE: 'The ridge',
+  ROOM4: 'Room 4', CREEK: 'The creek path', SAWMILL: 'The old sawmill', WHEEL_PIT: 'The wheel pit', RIDGE: 'The ridge',
 };
 export const PEOPLE_NAMES = {
   HALE: 'Sheriff Nathaniel Hale', FINCH: 'Constable Edgar Finch', GABLE: 'Mrs. Gable', CLARA: 'Clara Mercer',

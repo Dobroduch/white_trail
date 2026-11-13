@@ -2,6 +2,9 @@
 // Steps with { nowait: true } start and immediately let the next step begin.
 import { SCRIPTS } from '../data/scripts.js';
 import { apply, advanceTime } from './storyState.js';
+import { caseOpenForDecision, outcomeOf } from './caseSystem.js';
+import { CaseReview } from '../ui/caseReview.js';
+import { QUESTIONS } from '../data/caseData.js';
 
 export class Cutscene {
   constructor(game, id) {
@@ -88,6 +91,52 @@ export class Cutscene {
       return;
     }
     if (s.endCard) { g.openEndCard(); st.poll = () => !g.overlay; return; }
+    // Before Silas leaves the mill: if the case can be decided and has not been, open the case review in prompt mode
+    // (commit, or leave it open). Waits until it is closed.
+    // The choice (DIALOGUE.CASE_PROMPT): settle it now (only when an account can be put together), go back to the
+    // notebook first (cancels leaving), or go up and leave it open.
+    if (s.casePrompt) {
+      const f = g.state.flags;
+      if (f['aftermath_' + s.casePrompt] || (g.state.cases && g.state.cases[s.casePrompt])) return finish();
+      const q = QUESTIONS.find((x) => x.case === s.casePrompt);
+      f._caseDecidable = caseOpenForDecision(g.state, s.casePrompt);
+      delete f._leaveChoice;
+      g.startDialogue('CASE_PROMPT');
+      st.poll = () => {
+        if (g.dialogue.active) return false;
+        if (!st.opened) {
+          const choice = f._leaveChoice;
+          delete f._leaveChoice; delete f._caseDecidable;
+          if (choice === 'review') { st.opened = true; g.pushOverlay(new CaseReview(g, q.id, { prompt: true })); return false; }
+          if (choice === 'notebook') { // stay at the mill and work it through
+            this.i = this.steps.length; g.playerControl = true; g.exitCooldown = 1;
+            g.player.autoTarget = g.player.x + 12;
+            g.notebook.open('DEDUCTIONS'); g.pushOverlay(g.notebookOverlay());
+            return true;
+          }
+          return true; // leave it open
+        }
+        return !g.overlay;
+      };
+      return;
+    }
+    // The aftermath (once per case): a held "Morning." card, then the outcome's dialogue over black, then its effects.
+    if (s.aftermath) {
+      const flag = 'aftermath_' + s.aftermath;
+      if (g.state.flags[flag]) return finish();
+      const out = outcomeOf(g.state, s.aftermath);
+      g.card = { lines: ['First light.'], t: 0 };
+      st.poll = () => {
+        if (!st.talking && st.t >= 2.2) { st.talking = true; g.card = null; g.startDialogue(out.aftermath); }
+        if (st.talking && !g.dialogue.active) {
+          apply(out.do, g.state);
+          g.state.flags[flag] = true;
+          return true;
+        }
+        return false;
+      };
+      return;
+    }
     if (s.say) {
       g.startDialogue(s.say);
       st.poll = () => !g.dialogue.active;

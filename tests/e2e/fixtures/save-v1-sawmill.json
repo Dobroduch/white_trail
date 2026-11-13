@@ -1,0 +1,326 @@
+{
+ "savedAt": 1794585813358,
+ "state": {
+  "version": 1,
+  "scene": "SAWMILL",
+  "spawn": "start",
+  "playerX": 352,
+  "facing": 1,
+  "phase": "NIGHT",
+  "time": {
+   "day": 1,
+   "h": 2,
+   "m": 29
+  },
+  "lanternOn": true,
+  "lanternOil": 100,
+  "warmth": 85.97218475324439,
+  "revolver": {
+   "loaded": 3,
+   "capacity": 6,
+   "reserve": 0
+  },
+  "items": [
+   "TELEGRAM",
+   "LANTERN",
+   "REVOLVER",
+   "ROOM4_KEY",
+   "LEDGER",
+   "WATCH"
+  ],
+  "evidence": {
+   "T_CONDUCTOR_PASS": {
+    "observed": true,
+    "examined": true,
+    "n": 1
+   },
+   "ROAD_NOTICE": {
+    "observed": true,
+    "examined": true,
+    "n": 2
+   },
+   "T_FINCH_HALE": {
+    "observed": true,
+    "examined": true,
+    "n": 3
+   },
+   "T_FINCH_TELEGRAM": {
+    "observed": true,
+    "examined": true,
+    "n": 4
+   },
+   "T_FINCH_RIDGE": {
+    "observed": true,
+    "examined": true,
+    "n": 5
+   },
+   "T_GABLE_HALE": {
+    "observed": true,
+    "examined": true,
+    "n": 6
+   },
+   "HOTEL_REGISTER": {
+    "observed": true,
+    "examined": true,
+    "n": 7
+   },
+   "T_FINCH_PAPERS": {
+    "observed": true,
+    "examined": true,
+    "n": 8
+   },
+   "HOTEL_ROOM4_BOARDS": {
+    "observed": true,
+    "examined": true,
+    "n": 9
+   },
+   "T_GABLE_ROOM4": {
+    "observed": true,
+    "examined": true,
+    "n": 10
+   },
+   "T_GABLE_REGISTER": {
+    "observed": true,
+    "examined": true,
+    "n": 11
+   },
+   "T_GABLE_NIGHT": {
+    "observed": true,
+    "examined": true,
+    "n": 12
+   },
+   "CREEK_TRACKS": {
+    "observed": true,
+    "examined": true,
+    "n": 13
+   },
+   "SAWMILL_BOOTPRINTS": {
+    "observed": true,
+    "examined": true,
+    "n": 14
+   },
+   "SAWMILL_LEDGER": {
+    "observed": true,
+    "examined": true,
+    "n": 15
+   },
+   "SAWMILL_MARKS": {
+    "observed": true,
+    "examined": true,
+    "n": 16
+   },
+   "SAWMILL_ROPE": {
+    "observed": true,
+    "examined": true,
+    "n": 17
+   },
+   "SAWMILL_BODY": {
+    "observed": true,
+    "examined": true,
+    "n": 18
+   },
+   "SAWMILL_WATCH": {
+    "observed": true,
+    "examined": true,
+    "n": 19
+   },
+   "SAWMILL_DRAG": {
+    "observed": true,
+    "examined": true,
+    "n": 20
+   }
+  },
+  "evidenceCount": 20,
+  "deductions": [
+   "D_SCENE_ARRANGED"
+  ],
+  "looked": {
+   "st_freight": 1,
+   "st_waiting": 1,
+   "st_telegraph": 1,
+   "st_timetable": 1,
+   "rd_notice": 2,
+   "pl_register": 1,
+   "r4_floor": 2,
+   "ck_tracks": 2,
+   "sm_boots": 4,
+   "sm_ledger": 2,
+   "sm_marks": 4,
+   "sm_rope": 2,
+   "sm_body": 2,
+   "sm_watch": 2,
+   "sm_drag": 2
+  },
+  "seen": {
+   "_lines.l0": true,
+   "_lines.l1": true,
+   "CONDUCTOR.a": true,
+   "CONDUCTOR.b": true,
+   "CONDUCTOR.c": true,
+   "CONDUCTOR.hub": true,
+   "CONDUCTOR.bye": true,
+   "FINCH_MEET.a": true,
+   "FINCH_MEET.a2": true,
+   "FINCH_MEET.b": true,
+   "FINCH_MEET.hub": true,
+   "FINCH_MEET.hale": true,
+   "FINCH_MEET.hale2": true,
+   "FINCH_MEET.hale3": true,
+   "FINCH_MEET.tel": true,
+   "FINCH_MEET.tel2": true,
+   "FINCH_MEET.tel3": true,
+   "FINCH_MEET.tel4": true,
+   "FINCH_MEET.talk": true,
+   "FINCH_MEET.talk2": true,
+   "FINCH_MEET.talk3": true,
+   "FINCH_MEET.close": true,
+   "FINCH_MEET.kind": true,
+   "FINCH_MEET.kind2": true,
+   "GABLE.intro": true,
+   "GABLE.intro2": true,
+   "GABLE.intro3": true,
+   "GABLE.intro4": true,
+   "GABLE.intro5": true,
+   "GABLE.hub": true,
+   "GABLE.hale": true,
+   "GABLE.hale2": true,
+   "GABLE.bye": true,
+   "FINCH_PARLOR.steady": true,
+   "FINCH_PARLOR.steady1": true,
+   "FINCH_PARLOR.steady2": true,
+   "FINCH_PARLOR.shub": true,
+   "FINCH_PARLOR.s_which": true,
+   "GABLE.r4": true,
+   "GABLE.r4_wait": true,
+   "GABLE.r4_wait2": true,
+   "GABLE.r4_wait3": true,
+   "GABLE.reg": true,
+   "GABLE.reg2": true,
+   "GABLE.reg3": true,
+   "BED.a": true,
+   "BED.sleep": true,
+   "GABLE_NIGHT.a": true,
+   "GABLE_NIGHT.b": true,
+   "GABLE_NIGHT.c": true,
+   "GABLE_NIGHT.d": true,
+   "GABLE_NIGHT.hub": true,
+   "GABLE_NIGHT.help": true,
+   "GABLE_NIGHT.help2": true
+  },
+  "flags": {
+   "receivedTelegram": true,
+   "trappedInVillage": true,
+   "introDone": true,
+   "talkedConductor": true,
+   "trainDeparted": true,
+   "curtainDrawn": true,
+   "showedFinchTelegram": true,
+   "metFinch": true,
+   "parlorEntered": true,
+   "hasRoom4Key": true,
+   "finchParlorDone": true,
+   "enteredRoom4": true,
+   "askedGableAboutRoom4": true,
+   "gableUneasy": true,
+   "confrontedGableRegister": true,
+   "deductionHintShown": true,
+   "heardScream": true,
+   "gableUnbolted": true,
+   "gableNightTalk": true,
+   "foundSheriffBody": true,
+   "ridgeLightStart": true,
+   "ridgeLightSeen": true
+  },
+  "chars": {
+   "silas": {
+    "alive": true
+   },
+   "conductor": {
+    "alive": true
+   },
+   "finch": {
+    "alive": true,
+    "trust": "STEADY"
+   },
+   "gable": {
+    "alive": true,
+    "cooperation": "COOL"
+   },
+   "hale": {
+    "alive": false,
+    "found": true
+   },
+   "clara": {
+    "alive": true,
+    "location": "UNKNOWN"
+   }
+  },
+  "eventsDone": [
+   "INTRO",
+   "ROAD_ENTER",
+   "VILLAGE_WATCHER",
+   "FINCH_MEET",
+   "HOTEL_STREET_ENTER",
+   "PARLOR_ENTER",
+   "ROOM4_ENTER",
+   "DEDUCTION_HINT",
+   "GABLE_NIGHT",
+   "CREEK_ENTER",
+   "SAWMILL_BODY",
+   "RIDGE_LIGHT"
+  ],
+  "map": {
+   "visited": [
+    "station",
+    "road",
+    "village",
+    "store",
+    "hotel",
+    "creek",
+    "sawmill"
+   ],
+   "paths": [
+    "path_station_road",
+    "path_road_village",
+    "path_village_creek",
+    "path_creek_sawmill"
+   ]
+  },
+  "timeline": [
+   {
+    "t": "18:40",
+    "text": "Arrived at Blackwood Station in the snow."
+   },
+   {
+    "t": "18:40",
+    "text": "The train went back down the line. The pass is closing."
+   },
+   {
+    "t": "18:59",
+    "text": "Met Constable Finch outside the Black Ram."
+   },
+   {
+    "t": "19:02",
+    "text": "Took Room 4 at the Black Ram Hotel."
+   },
+   {
+    "t": "02:15",
+    "text": "A scream, from the direction of the creek."
+   },
+   {
+    "t": "02:29",
+    "text": "Found Sheriff Hale at the old sawmill."
+   },
+   {
+    "t": "02:29",
+    "text": "A lantern on the ridge, watching. Then dark."
+   }
+  ],
+  "consequences": {
+   "shotsFired": 0,
+   "peopleKilled": [],
+   "peopleWounded": [],
+   "threatsMade": []
+  }
+ }
+}

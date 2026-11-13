@@ -74,13 +74,18 @@ export class Silas {
     const shiver = this.shiverT > 0 && !moving && Math.floor(this.shiverT * 12) % 40 < 3 ? 1 : 0;
     if (moving) drawSprite(ctx, 'silas_walk', Math.floor(this.walkT), x, y, this.facing);
     else drawSprite(ctx, 'silas_idle', Math.floor(this.idleT / 1.1) % 2, x + shiver, y, this.facing);
-    // lantern carried at his side, swinging with the stride
-    const swing = moving ? Math.round(Math.sin(this.walkT * Math.PI / 2)) : 0;
+    // The lantern is in his hand only while it is lit. Shuttered, it is put away (on his belt, under the coat), so
+    // nothing hangs from the hand and no light is cast (Game.collectLights checks the same state).
+    if (!lanternOn) return;
+    const swing = moving ? Math.round(Math.sin(this.walkT * Math.PI / 2)) : 0; // swings with the stride
     const native = getSprite('lantern_on').native;
     // native lantern hangs from the gloved hand (the redrawn hand closes at ~10.7 world units above the boots, 4.7 ahead of the body)
     const lx = x + this.facing * (native ? 4.7 : 4) + swing;
-    drawSprite(ctx, lanternOn ? 'lantern_on' : 'lantern_off', 0, lx, y - (native ? 3.3 : 7), this.facing);
+    drawSprite(ctx, 'lantern_on', 0, lx, y - (native ? 3.3 : 7), this.facing);
   }
+
+  // Is the lantern drawn in his hand this frame? (tests; mirrors draw())
+  lanternShown(lanternOn) { return !this.hidden && !!lanternOn; }
 
   lanternPos() { return { x: this.x + this.facing * 3.5, y: this.y - 7 }; }
 }

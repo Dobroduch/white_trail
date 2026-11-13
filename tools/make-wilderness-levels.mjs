@@ -73,7 +73,7 @@ build('road_to_crows_hollow.tmj', 'road', {
       put(L.behindFence, c, 13, G(post ? 'fence_post_top' : 'fence_span_top'));
       if (post) put(L.behindFence, c, 14, G('fence_post_foot'));
     }
-    blk(L.behind, 'sign_crow', 12, 11, 4, 4); // CROW'S HOLLOW (rd_sign)
+    blk(L.behind, 'sign_crow_wide', 12, 11, 6, 4); // CROW'S HOLLOW (rd_sign); the 4-wide sign_crow block clipped the board
     blk(L.behind, 'orecar', 32, 12, 3, 3); // half-buried ore car (rd_orecar)
     blk(L.behind, 'notice', 67, 11, 3, 4); // the notice board near the village (rd_notice)
   },

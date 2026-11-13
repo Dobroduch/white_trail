@@ -175,7 +175,9 @@ export const SCRIPTS = {
 
   SLICE_END: [
     { control: false },
+    { casePrompt: 'HALE' }, // decide (or leave open) what happened to Hale before going back up
     { fade: { to: 1, dur: 2.0 } },
+    { aftermath: 'HALE' }, // what that decision sets in motion, at first light
     { set: { sliceComplete: true } },
     { checkpoint: true },
     { endCard: true },
@@ -184,6 +186,6 @@ export const SCRIPTS = {
   DEDUCTION_HINT: [
     { ambient: true },
     { set: { deductionHintShown: true } },
-    { hint: 'Some of what you have seen may connect. Notebook (N) → Deductions.', dur: 9 },
+    { hint: 'Some of what you have seen may connect. Notebook (N) → Deductions: mark two statements that bear on each other.', dur: 9 },
   ],
 };

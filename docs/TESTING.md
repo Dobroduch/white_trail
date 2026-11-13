@@ -42,6 +42,7 @@ The game is served by `tools/serve.mjs` on port 8094 (`PW_PORT`), started automa
 | `audio` | bus routing; recorded sfx, ambience and music with crossfades (generated WAVs); missing-file fallback |
 | `tiled` | layers built from the map, parallax, night layers, hot reload, broken-map isolation |
 | `visual` | deterministic frames (same seed ⇒ identical pixels across loads; real time doesn't matter) and screenshot baselines |
+| `case` | case 1 (Sheriff Hale) played to every outcome: the true account with and without the hidden wheel pit, both wrong accounts, and leaving it open; the review never ranks accounts and refuses an unsupported commitment; the pit entrance is absent until known (furrow closer look, or Mrs. Gable); hints (delay, request-only, pause / hidden tab, reset); People and Mind map pages; reload mid-investigation; saves from the previous build (`tests/e2e/fixtures/save-v1-*.json`); lantern only in hand while lit; Silas's speaker styling; the Road sign; the night sky. Review captures go to `test-results/review/` |
 
 ## Deterministic mode (for screenshots and exact tests)
 
@@ -56,12 +57,20 @@ URL parameters (see [`src/engine/testMode.js`](../src/engine/testMode.js)):
 | `&phase=NIGHT`, `&spawn=key` | story phase and spawn for `?scene` |
 | `?nopause=1` | don't auto-pause on blur (for real-time tests) |
 | `?dpr=N` | force the device pixel ratio |
+| `?hintDelay=N` | seconds of stuck play before the first hint can be asked for (`&hintFollowUp=N` for the follow-up; default half). Works without `test=1`, for playtesting |
 
 In `?test=1` mode nothing moves until the test calls `TWT_TEST.step(n)` (n fixed 1/60 s steps, then a
 render). Snowfall, wind gusts, fog drift, lantern flicker, fire, NPC idle animation and breath all depend
 only on the step count and the seeded `Math.random`, so a frame is a pure function of
 **(seed, steps, inputs, viewport)**. `tools/harness.js` (`T.walkTo`, `T.press`, `T.talkThrough`,
 `T.fullRun`, `T.info`) is loaded by the tests and works the same way in the browser console.
+
+`T.fullRun()` takes `{ finchKind, examineAll, conclusion, pit }`: `conclusion` (`C_STAGED`, `C_TONIGHT`, `C_RITE`) forms the Hale
+deductions, sets the readings and commits to it at the footbridge; without it the case is left open. `pit: true` climbs down into the
+wheel pit. `T.deduce(a, b)` marks two key statements on the Deductions page; `T.decide(cid)` sets readings and commits in the case review.
+
+The save fixtures were captured from the build before the case system (commit 32fb956) by playing `T.fullRun()` there and keeping the
+saves it wrote; they must keep loading.
 
 ## Screenshot baselines
 
@@ -73,7 +82,7 @@ the browser and OS (text rendering and GPU differ), so a different machine may n
 npm run test:visual:update      # (re)create baselines after an intended visual change
 ```
 
-Review the new PNGs before committing them. A failing comparison writes `*-actual.png` and
+Review the new PNGs before committing them. Note that `maxDiffPixels: 0` still uses Playwright's default per-pixel colour threshold (0.2), so a very dark, subtle change (the night-sky tint on the forecourt was one) can pass against an old baseline: after an intended change to dark scenes, regenerate those baselines explicitly (delete the PNG, then `--update-snapshots`). A failing comparison writes `*-actual.png` and
 `*-diff.png` into `test-results/artifacts/`.
 
 Add a scene to `SHOTS` in `tests/e2e/visual.spec.mjs` to cover it.

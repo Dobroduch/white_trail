@@ -1,5 +1,5 @@
 // Game orchestration: modes, scenes, update order, render passes, overlays and checkpoints.
-import { Display, makeCanvas, VIEW_W, VIEW_H, WORLD_SCALE, FB_W, FB_H, FB_SCALE, FB_PER_WORLD, UI_W, UI_H, UI_SCALE, UI_OX, UI_OY, UI_DEV, UI_LEFT, UI_RIGHT, UI_TOP, UI_BOTTOM, nativeToUI, snapN } from './display.js';
+import { Display, makeCanvas, VIEW_W, VIEW_H, WORLD_SCALE, NATIVE_W, NATIVE_H, FB_W, FB_H, FB_SCALE, FB_PER_WORLD, UI_W, UI_H, UI_SCALE, UI_OX, UI_OY, UI_DEV, UI_LEFT, UI_RIGHT, UI_TOP, UI_BOTTOM, nativeToUI, snapN } from './display.js';
 import { Camera } from './camera.js';
 import { artMode } from '../world/artMode.js';
 import { getLayers } from '../world/painters.js';
@@ -23,8 +23,15 @@ import { DialogueView } from '../ui/dialogueView.js';
 import { Notebook } from '../ui/notebook.js';
 import { TitleMenu, PauseMenu, SettingsMenu, ControlsHelp, Confirm, Inventory, DocumentView, EndCard } from '../ui/menus.js';
 import { UI, font, text, wrap } from '../ui/text.js';
+import { CaseReview } from '../ui/caseReview.js';
+import { Hints } from '../systems/hints.js';
+import { commit, caseOpenForDecision, outcomeOf, migrateCaseState } from '../systems/caseSystem.js';
+import { TEST } from './testMode.js';
 
 const INTERACT_RADIUS = 20;
+// Night sky over exterior scenes (see Game.drawNightSky): RGB at the top of the frame and at `fadeAt` of its height,
+// with the opacity laid over the darkened sky. Runtime light, not art, so it is not bound to the 64-colour palette.
+export const NIGHT_SKY = { top: [5, 10, 34], horizon: [10, 21, 56], alphaTop: 0.8, alphaHorizon: 0.72, fadeAt: 0.62 };
 
 export class Game {
   constructor({ display, input, audio, settings }) {
@@ -48,6 +55,10 @@ export class Game {
     this.eventTimers = {};
     this.npcs = []; this.props = [];
     this.errorsSeen = new Set();
+    // Investigation hints (data/hints.js). ?hintDelay / &hintFollowUp override the delays for playtesting.
+    const ht = {};
+    if (TEST.hintDelay != null && TEST.hintDelay >= 0) { ht.firstDelay = TEST.hintDelay; ht.followUpDelay = TEST.hintFollowUp != null ? TEST.hintFollowUp : TEST.hintDelay / 2; }
+    this.hints = new Hints(ht);
     this.applySettings(false);
     this.toTitle();
   }
@@ -112,6 +123,8 @@ export class Game {
   }
   startPlay(sceneId, spawn, x, facing) {
     this.mode = 'play';
+    migrateCaseState(this.state);
+    this.hints.reset(null);
     this.overlays = [];
     this.hud.clear();
     this.cutscene = null; this.scriptQueue = [];
@@ -276,6 +289,16 @@ export class Game {
       return;
     }
     if (act === 'confirmNew') { this.newGame(); return; }
+    if (typeof act === 'string' && act.startsWith('commit:')) { // confirmed in the case review
+      this.popOverlay();
+      if (commit(this.state, act.slice(7))) {
+        this.audio.sfx('pen');
+        this.checkpoint();
+        if (this.overlay instanceof CaseReview) this.overlay.onCommitted();
+      }
+      return;
+    }
+    if (act === 'leaveCase') { this.popOverlay(); if (this.overlay instanceof CaseReview) this.popOverlay(); return; }
     if (act === 'confirmRestart') { this.newGame(); return; }
     if (act === 'confirmTitle') { this.checkpoint(); this.toTitle(); return; }
     if (act === 'back' || act === 'close' || act === 'resume') { this.popOverlay(); this.audio.resume(); return; }
@@ -334,6 +357,24 @@ export class Game {
     });
   }
 
+  // ---------------- hints ----------------
+  // The stuck timer runs only during active play: in the world, in dialogue, or reading the notebook / inventory /
+  // map (or the case review). It stops while paused (pause menu, settings, confirmations), during cutscenes that hold
+  // control, during scene transitions, and whenever the tab is hidden.
+  hintClockRunning() {
+    if (this.mode !== 'play' || this.transition || this.cutsceneBlocking()) return false;
+    if (typeof document !== 'undefined' && document.hidden) return false;
+    const o = this.overlay;
+    return !o || !!o.panelKind || o instanceof CaseReview;
+  }
+  updateHints(dt) { this.hints.update(dt, this.state, this.hintClockRunning()); }
+  askForHint() {
+    const t = this.hints.request(this.state);
+    if (t) { this.audio.sfx('page'); this.camera.setMode('exploration'); this.dialogue.startLines([t], { who: 'note' }); return true; }
+    this.hud.bark(this.hints.last(this.state) ? 'Nothing new comes to mind. Not yet.' : 'Nothing comes to mind. Not yet.', 2.6);
+    return false;
+  }
+
   // ---------------- per-step update ----------------
   update(dt) {
     try {
@@ -366,6 +407,7 @@ export class Game {
       }
     }
     if (ov) {
+      if (ov.panelKind || ov instanceof CaseReview) this.updateHints(dt); // reading the case file is still play
       const act = ov.update(input);
       if (act) this.handleOverlayAction(act);
       if (this.mode === 'title') this.updateWorld(dt, true);
@@ -380,14 +422,19 @@ export class Game {
     if (input.pressed('notebook') && free) { this.openPanel('notebook'); return; }
     if (input.pressed('inventory') && free) { this.openPanel('inventory'); return; }
     if (input.pressed('map') && free) { this.openPanel('map'); return; }
+    if (input.pressed('hint') && this.canInteractUI()) this.askForHint();
     if (input.pressed('lantern') && this.playerControl && !this.dialogue.active) {
-      if (toggleLantern(this.state)) this.audio.sfx(this.state.lanternOn ? 'lanternOn' : 'lanternOff');
+      if (toggleLantern(this.state)) {
+        this.audio.sfx(this.state.lanternOn ? 'lanternOn' : 'lanternOff');
+        this.checkpointSoon = true; // a reload comes back with the lantern as the player left it
+      }
     }
 
     if (this.dialogue.active) this.dialogueView.update(dt, input);
     if (this.dialogueCooldown > 0) this.dialogueCooldown -= dt;
 
     this.updateWorld(dt, false);
+    this.updateHints(dt);
 
     // interaction
     this.prompt = this.findPrompt();
@@ -449,7 +496,7 @@ export class Game {
     const out = [];
     // hx/hy/hw/hh: the clickable hotspot box in world space (used by the optional mouse support)
     for (const n of this.npcs) if (!n.hidden && !n.moving && n.dialogue) out.push({ kind: 'npc', x: n.x, y: n.y - 30, hy: n.y - 14, hw: 9, hh: 15, label: `Talk — ${n.name}`, ref: n, radius: 26 });
-    for (const d of this.scene.doors || []) { const g = this.groundAt(d.x); out.push({ kind: 'door', x: d.x, y: g - 30, hy: g - 16, hw: 12, hh: 18, label: `${d.verb} — ${d.label}`, ref: d }); }
+    for (const d of this.scene.doors || []) { if (d.showIf && !test(d.showIf, s)) continue; const g = this.groundAt(d.x); out.push({ kind: 'door', x: d.x, y: g - 30, hy: g - 16, hw: 12, hh: 18, label: `${d.verb} — ${d.label}`, ref: d }); }
     for (const it of this.scene.interactables || []) {
       if (!test(it.if, s)) continue;
       let verb = it.verb || 'Examine';
@@ -583,6 +630,7 @@ export class Game {
       else if (ev.detail && !rec.examined) {
         lines = [ev.detail]; effects.push({ examine: it.evidence });
         if (ev.collect) effects.push({ item: ev.collect });
+        if (ev.onExamine) effects.push(...ev.onExamine); // what the closer look teaches Silas (e.g. where the furrow starts)
       } else lines = [ev.observed];
     } else if (it.variants) {
       lines = (it.variants.find((v) => test(v.if, s)) || it.variants[0]).lines;
@@ -691,6 +739,7 @@ export class Game {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       renderLighting(ctx, this.collectLights(camX), this.ambient(), cam.sub);
     }
+    if (this.mode === 'play' && this.scene.exterior && this.scene.nightSky !== false && this.state.phase === 'NIGHT') this.drawNightSky(ctx, list, L, layerX, camX, worldT);
     // emissive pixels
     worldT();
     this.drawEmissive(ctx, list, L, layerX, camX, worldT);
@@ -769,6 +818,41 @@ export class Game {
       ctx.drawImage(this.glowBuf, 0, 0);
       worldT();
     }
+  }
+
+  // Night sky. At night the darkness pass covers the sky art at ~80%, so on screen every night sky read as the same
+  // grey-black. This lays a deep blue over the sky only, after lighting: a native-resolution banded gradient, with
+  // every silhouette in front of the sky (ranges, ridge, pines, buildings, props, characters, foreground) cut out of
+  // it, so their values and the paths/clues below are untouched and the skyline reads more clearly against it.
+  drawNightSky(ctx, list, L, layerX, camX, worldT) {
+    const sky = NIGHT_SKY;
+    if (!this.skyTint) {
+      this.skyTint = makeCanvas(NATIVE_W, NATIVE_H);
+      const t = this.skyTint.getContext('2d');
+      for (let y = 0; y < NATIVE_H; y++) { // hard 9 px bands, like the light pools
+        const k = Math.min(1, Math.floor(y / 9) * 9 / (NATIVE_H * sky.fadeAt));
+        const c = sky.top.map((v, i) => Math.round(v + (sky.horizon[i] - v) * k));
+        t.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${(sky.alphaTop + (sky.alphaHorizon - sky.alphaTop) * k).toFixed(3)})`;
+        t.fillRect(0, y, NATIVE_W, 1);
+      }
+    }
+    if (!this.skyBuf || this.skyBuf.width !== FB_W) { this.skyBuf = makeCanvas(FB_W, FB_H); this.skyBuf.getContext('2d').imageSmoothingEnabled = false; }
+    const b = this.skyBuf.getContext('2d');
+    b.setTransform(1, 0, 0, 1, 0, 0);
+    b.globalCompositeOperation = 'source-over';
+    b.globalAlpha = 1;
+    b.clearRect(0, 0, FB_W, FB_H);
+    b.drawImage(this.skyTint, 0, 0, FB_W, FB_H);
+    b.globalCompositeOperation = 'destination-out';
+    b.setTransform(FB_PER_WORLD, 0, 0, FB_PER_WORLD, -Math.round(this.camera.sub * FB_PER_WORLD), 0);
+    const blit = this.blit;
+    for (const l of L.back) if (l.factor > 0) blit(b, l.canvas, layerX(l), l.native); // the sky itself (factor 0) stays
+    for (const it of list) it.fn(b);
+    for (const f of L.front) blit(b, f.canvas, layerX(f), f.native);
+    b.globalCompositeOperation = 'source-over';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(this.skyBuf, 0, 0);
+    worldT();
   }
 
   drawCard(ctx) {

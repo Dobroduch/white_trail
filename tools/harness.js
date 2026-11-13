@@ -38,7 +38,40 @@ export function install() {
       return T.info();
     },
     // Full scripted playthrough of the vertical slice using real inputs. Returns a report.
-    fullRun({ finchKind = true, examineAll = true } = {}) {
+    // Notebook must be open on the Deductions page: mark statement a, then b (real Up/Down/E input).
+    deduce(a, b) {
+      const nb = G().notebook;
+      for (const id of [a, b]) {
+        const i = nb.listFor(nb.tab).indexOf('S:' + id);
+        if (i < 0) return false;
+        for (let k = 0; k < 60 && nb.sel !== i; k++) T.press(nb.sel < i ? 'ArrowDown' : 'ArrowUp', 1);
+        T.press('KeyE', 1);
+      }
+      return true;
+    },
+    // In the case review (top overlay): set each reading the conclusion rests on, then commit and confirm.
+    decide(cid) {
+      const g = G();
+      const ov = () => g.overlay;
+      const goRow = (pred) => { for (let k = 0; k < 40; k++) { const rows = ov().rows(); const i = rows.findIndex(pred); if (i < 0) return false; if (ov().sel === i) return true; T.press('ArrowDown', 1); } return false; };
+      const row = ov().rows().find((r) => r.kind === 'c' && r.id === cid);
+      if (!row) return false;
+      for (const req of row.row.rows) {
+        if (!goRow((r) => r.kind === 'd' && r.id === req.did)) return false;
+        for (let k = 0; k < 3 && g.state.readings[req.did] !== req.key; k++) T.press('ArrowRight', 1);
+      }
+      goRow((r) => r.kind === 'c' && r.id === cid);
+      T.press('KeyE', 2);
+      if (g.overlay && g.overlay.constructor.name === 'Confirm') { T.press('ArrowUp', 1); T.press('KeyE', 2); }
+      return !!(g.state.cases.HALE && g.state.cases.HALE.conclusion === cid);
+    },
+    leaveOpen() {
+      const g = G();
+      for (let k = 0; k < 40 && g.overlay.rows()[g.overlay.sel].kind !== 'leave'; k++) T.press('ArrowDown', 1);
+      T.press('KeyE', 2);
+      if (g.overlay && g.overlay.constructor.name === 'Confirm') { T.press('ArrowUp', 1); T.press('KeyE', 2); }
+    },
+    fullRun({ finchKind = true, examineAll = true, conclusion = null, pit = false } = {}) {
       const g = G();
       const rep = { steps: [], errors: [] };
       const check = (name, cond) => { rep.steps.push((cond ? 'PASS ' : 'FAIL ') + name); if (!cond) rep.errors.push(name); };
@@ -121,19 +154,50 @@ export function install() {
       const n0 = Object.keys(g.state.evidence).length, c0 = g.state.evidenceCount;
       look(292, 2); look(350, 2);
       check('re-examining does not duplicate evidence', Object.keys(g.state.evidence).length === n0 && g.state.evidenceCount === c0);
-      // deduction via the notebook
+      // the optional wheel pit (its entrance exists only after the furrow's closer look, or Mrs. Gable's word)
+      if (pit) {
+        check('the wheel pit is known before going down', !!g.state.flags.knowsWheelPit);
+        T.walkTo(437); T.step(30); T.talkThrough();
+        check('the pit entrance is offered once known', g.prompt && /Wheel pit/.test(g.prompt.label));
+        T.press('KeyE'); T.step(80);
+        check('climbed down into the wheel pit', g.scene.id === 'WHEEL_PIT');
+        T.talkThrough(); look(144, 2);
+        check('the hollow in the ice recorded and examined', g.state.evidence.PIT_HOLLOW && g.state.evidence.PIT_HOLLOW.examined);
+        T.walkTo(44); T.press('KeyE'); T.step(80);
+        check('back up in the mill yard', g.scene.id === 'SAWMILL');
+      }
+      // deduction via the notebook (key statements, not raw records)
       T.press('Tab');
       const nb = g.notebook; while (nb.tab !== 4) T.press('ArrowRight', 1);
-      const goTo = (id) => { const i = nb.listFor(nb.tab).indexOf(id); for (let k = 0; k < 60 && nb.sel !== i; k++) T.press(nb.sel < i ? 'ArrowDown' : 'ArrowUp', 1); };
       if (g.state.evidence.SAWMILL_BODY) {
-        goTo('SAWMILL_BODY'); T.press('KeyE'); goTo('SAWMILL_ROPE'); T.press('KeyE');
-        check('deduction formed: the scene was arranged', g.state.deductions.includes('D_SCENE_ARRANGED'));
+        T.deduce('S_LITTLE_BLOOD', 'S_HOISTED');
+        check('deduction formed: he did not bleed here', g.state.deductions.includes('D_SCENE_ARRANGED'));
+        T.deduce('S_LITTLE_BLOOD', 'S_LEDGER');
+        check('a wrong pair is refused without a hint', nb.result && !nb.result.ok && g.state.deductions.length === 1);
       } else {
         // fairness: without the body examined, the deduction is not on offer at all
-        check('no deduction without its evidence', !nb.listFor(nb.tab).includes('SAWMILL_BODY') && !g.state.deductions.includes('D_SCENE_ARRANGED'));
+        check('no deduction without its evidence', !nb.listFor(nb.tab).includes('S:S_LITTLE_BLOOD') && !g.state.deductions.includes('D_SCENE_ARRANGED'));
+      }
+      if (conclusion) {
+        for (const [a, b] of [['S_OLD_BLOOD', 'S_MISSING'], ['S_MARKS', 'S_LEDGER'], ['S_SCREAM', 'S_RIDGE']]) T.deduce(a, b);
+        if (pit) T.deduce('S_PIT', 'S_FROM_CREEK');
+        check('the four Hale deductions formed', ['D_SCENE_ARRANGED', 'D_LONG_DEAD', 'D_SAME_COUNTING', 'D_THE_SCREAM'].every((d) => g.state.deductions.includes(d)));
       }
       T.press('Escape');
-      T.walkTo(6); T.hold('KeyA', 20); T.step(240);
+      // leaving the mill: decide (commit) or leave it open, then the aftermath at first light, then the end card
+      T.walkTo(6); T.hold('KeyA', 20); T.step(20);
+      check('asked what I make of it before leaving', g.dialogue.active && g.dialogue.id === 'CASE_PROMPT');
+      if (conclusion) {
+        T.talkThrough([0]); // "Settle it now."
+        check('the case review opens before leaving', g.overlay && g.overlay.constructor.name === 'CaseReview' && g.overlay.prompt);
+        T.decide(conclusion);
+      } else T.talkThrough(); // the last choice: go back up and leave it open
+      check(conclusion ? `committed to ${conclusion}` : 'left the case open', conclusion ? g.state.cases.HALE && g.state.cases.HALE.conclusion === conclusion : !g.state.cases.HALE);
+      if (g.overlay && g.overlay.constructor.name === 'CaseReview') T.press('Escape', 2);
+      for (let i = 0; i < 600 && !g.dialogue.active; i++) g.update(1 / 60);
+      rep.aftermath = g.dialogue.id;
+      T.talkThrough([], 4000); T.step(60);
+      check('aftermath played once', !!g.state.flags.aftermath_HALE);
       check('slice end card shown', g.overlay && g.overlay.constructor.name === 'EndCard' && g.state.flags.sliceComplete);
       check('no player-caused deaths, no shots', g.state.consequences.shotsFired === 0 && g.state.consequences.peopleKilled.length === 0);
       check('revolver untouched (3 of 6)', g.state.revolver.loaded === 3);
