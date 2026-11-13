@@ -187,12 +187,175 @@ export const EVIDENCE = {
     interpretation: 'She knew where it came from without having to think about it.',
     related: { people: ['GABLE'], places: ['SAWMILL'], evidence: [] },
   },
+  // ======================= Chapter 2: the second day =======================
+  // `chapter: 2` marks the records of the second day (counted on its end card).
+  // ---------------- Rusk's store ----------------
+  STORE_LEDGER: {
+    title: 'Rusk\'s account book', category: 'DOCUMENT', location: 'RUSK_STORE', importance: 'KEY', chapter: 2,
+    observed: 'The account book I saw through the window last night, open on the counter now. Freight in, goods out, sums in red. The last freight came up from the railhead nine days ago.',
+    detail: 'One line on the freight page has been scraped with a knife and written over: "Lamp oil, 40 lb." When I tilt the page to the window, the first word underneath still shows: "Powd—".',
+    interpretation: 'Forty pounds of something came up on the last freight, and somebody wanted the book to say lamp oil.',
+    related: { people: ['RUSK'], places: ['RUSK_STORE'], evidence: ['STORE_OIL', 'STORE_CRATE'] },
+    tags: ['POWDER', 'ALTERED_RECORD'],
+  },
+  STORE_OIL: {
+    title: 'The oil barrels', category: 'PHYSICAL', location: 'RUSK_STORE', importance: 'CORROBORATING', chapter: 2,
+    observed: 'Two oil barrels by the window, stencilled OIL. I knock on them both. Near empty.',
+    interpretation: 'If forty pounds of lamp oil came up nine days ago, it did not stay in this store.',
+    related: { people: ['RUSK'], places: ['RUSK_STORE'], evidence: ['STORE_LEDGER'] },
+    tags: ['POWDER'],
+  },
+  STORE_CRATE: {
+    title: 'An empty crate in the store', category: 'PHYSICAL', location: 'RUSK_STORE', importance: 'KEY', chapter: 2,
+    observed: 'A long crate in the back corner, its lid leaned against the wall. Packed with sawdust. Empty.',
+    detail: 'Stencilled on the lid: GIANT POWDER. Dynamite, shipped up from the coast. In the sawdust, a torn paper band printed with a date this autumn.',
+    interpretation: 'Dynamite came through this store this year, new. Whatever was in the crate is somewhere else now.',
+    related: { people: ['RUSK'], places: ['RUSK_STORE'], evidence: ['STORE_LEDGER', 'GRAVE_CACHE'] },
+    tags: ['POWDER'],
+  },
+  STORE_BOOTS: {
+    title: 'Rusk\'s boot rack', category: 'ENVIRONMENT', location: 'RUSK_STORE', importance: 'OPTIONAL', chapter: 2,
+    observed: 'Miners\' boots, gum boots and overshoes on the rack. Not one pair of riding boots.',
+    interpretation: 'Whoever wears a cavalry heel in this town did not buy it here.',
+    related: { people: ['RUSK'], places: ['RUSK_STORE'], evidence: ['SAWMILL_BOOTPRINTS'] },
+    tags: ['BOOTS'],
+  },
+  // ---------------- The chapel and the graves ----------------
+  GRAVE_STONE: {
+    title: 'Amos Pell\'s headstone', category: 'ENVIRONMENT', location: 'GRAVEYARD', importance: 'CORROBORATING', chapter: 2,
+    observed: 'A better stone than its neighbours: AMOS PELL. Killed in the Pale workings, 1872. Erected by his friends of the Order.',
+    interpretation: 'A man killed in the Order\'s mine twenty years ago, and his grave is the one somebody has been at.',
+    related: { people: [], places: ['GRAVEYARD'], evidence: ['GRAVE_DISTURBED', 'SAWMILL_LEDGER'] },
+    tags: ['PALE_ORDER'],
+  },
+  GRAVE_DISTURBED: {
+    title: 'A disturbed grave', category: 'PHYSICAL', location: 'GRAVEYARD', importance: 'KEY', chapter: 2,
+    observed: 'One grave by the fence has been opened and closed again since the snow came. The snow is scraped away, frozen clods thrown back, raw earth showing.',
+    detail: 'A skin of earth, then boards. I pry one up. Underneath: a crate of dynamite, a coil of fuse, a tin of blasting caps, all of it wrapped in an old grey cavalry jacket stiff with blood long dried.',
+    onExamine: [{ set: { graveOpened: true } }, { script: 'GRAVE_OPENED' }],
+    interpretation: 'Somebody keeps blasting powder in a dead miner\'s grave, and visits it.',
+    related: { people: [], places: ['GRAVEYARD'], evidence: ['GRAVE_STONE', 'GRAVE_CACHE', 'GRAVE_PRINTS'] },
+    tags: ['POWDER', 'CACHE'],
+  },
+  GRAVE_CACHE: {
+    title: 'What was buried', category: 'PHYSICAL', location: 'GRAVEYARD', importance: 'KEY', chapter: 2,
+    observed: 'The jacket is old: moth-eaten, the yellow on the cuff gone brown, the stains black. The sticks inside it are wrapped in clean paper, the printing crisp.',
+    detail: 'Round the sticks, a paper band with the same printed date as the band in the sawdust of Rusk\'s crate. The powder is this year\'s. Only the jacket is old.',
+    interpretation: 'An old uniform round new powder. Somebody wanted whoever found it to think of the war.',
+    related: { people: [], places: ['GRAVEYARD', 'RUSK_STORE'], evidence: ['STORE_CRATE', 'GRAVE_DISTURBED'] },
+    tags: ['POWDER', 'CACHE'],
+  },
+  GRAVE_PRINTS: {
+    title: 'Prints by the fence', category: 'PHYSICAL', location: 'GRAVEYARD', importance: 'KEY', chapter: 2,
+    observed: 'In the lee of the iron fence, where the wind has not filled them: boot prints around the grave. A narrow heel, a long, straight sole.',
+    interpretation: 'Riding boots, cavalry pattern. The same as under the mill roof.',
+    related: { people: [], places: ['GRAVEYARD', 'SAWMILL'], evidence: ['SAWMILL_BOOTPRINTS'] },
+    tags: ['BOOTS'],
+  },
+  // ---------------- The telegraph tower ----------------
+  TOWER_WIRE: {
+    title: 'The hanging wire', category: 'PHYSICAL', location: 'TELEGRAPH', importance: 'KEY', chapter: 2,
+    observed: 'One of the two wires has come down from the cross-arm. It hangs to the snow, its end trailing.',
+    detail: 'The strands at the end are bright and even, every one the same length. Cut, not snapped. Somebody bent the end back on itself afterward, so that from the ground it would look torn.',
+    interpretation: 'The line did not fail in the storm. It was cut, and made to look as if the weather did it.',
+    related: { people: ['ADA'], places: ['TELEGRAPH'], evidence: [] },
+    tags: ['ISOLATION'],
+  },
+  TOWER_SOOT: {
+    title: 'Soot at the tower', category: 'PHYSICAL', location: 'TELEGRAPH', importance: 'KEY', chapter: 2,
+    observed: 'Up on the platform rail, an iron hook, and the timber above it blacked with fresh soot. A lantern has hung there, and not for a few minutes.',
+    interpretation: 'Someone stood up here with a lantern long enough to blacken the wood. The light I saw on the ridge.',
+    related: { people: [], places: ['TELEGRAPH', 'SAWMILL'], evidence: ['TOWER_VIEW'] },
+    tags: ['LANTERN'],
+  },
+  TOWER_VIEW: {
+    title: 'The view from the tower', category: 'ENVIRONMENT', location: 'TELEGRAPH', importance: 'OPTIONAL', chapter: 2,
+    observed: 'From the shoulder of the ridge the valley lies open: the roofs of Crow\'s Hollow, the chapel, the creek, and the mill wheel, plain as a picture. The back windows of the Black Ram too.',
+    interpretation: 'A man with a lantern up here can see everything that moves below, and be seen from all of it.',
+    related: { people: [], places: ['TELEGRAPH', 'SAWMILL', 'PARLOR'], evidence: ['TOWER_SOOT'] },
+    tags: ['LANTERN'],
+  },
+  // ---------------- Testimony (the second day) ----------------
+  T_FINCH_FREIGHT: {
+    title: 'Finch, on what Hale carried', category: 'TESTIMONY', speaker: 'Constable Finch', location: 'VILLAGE', chapter: 2,
+    observed: '"A freight bill, folded small in his coat. Rusk\'s store. I didn\'t think anything of it till now."',
+    interpretation: 'Hale went out the last night with a freight bill in his pocket.',
+    related: { people: ['FINCH', 'HALE', 'RUSK'], places: ['VILLAGE'], evidence: ['STORE_LEDGER'] },
+  },
+  T_FINCH_BOOTS: {
+    title: 'Finch, on riding boots', category: 'TESTIMONY', speaker: 'Constable Finch', location: 'VILLAGE', chapter: 2,
+    observed: '"Half the old men who came up here after the war. They don\'t ride much now. They keep the boots."',
+    interpretation: 'Old soldiers, then. Which side, he didn\'t say, and I didn\'t ask.',
+    related: { people: ['FINCH'], places: ['VILLAGE'], evidence: ['SAWMILL_BOOTPRINTS', 'GRAVE_PRINTS'] },
+  },
+  T_RUSK_FREIGHT: {
+    title: 'Rusk, on his last freight', category: 'TESTIMONY', speaker: 'Jonah Rusk', location: 'RUSK_STORE', chapter: 2,
+    observed: '"Freight\'s freight. I write what the waybill says. What was on it was paid in coin and fetched after dark, and I don\'t ask men their business."',
+    interpretation: 'Paid in coin, collected at night, no name. He knows how that sounds, and says it anyway.',
+    related: { people: ['RUSK'], places: ['RUSK_STORE'], evidence: ['STORE_LEDGER'] },
+  },
+  T_RUSK_SCRAPED: {
+    title: 'Rusk, on the scraped page', category: 'TESTIMONY', speaker: 'Jonah Rusk', location: 'RUSK_STORE', chapter: 2,
+    observed: '"I scraped nothing. The page came to me like that, or it got that way after. I keep the book on the counter, Mister Vance. Anybody can lean on a counter."',
+    interpretation: 'Either a careless man or a careful one. A man who keeps accounts is not usually careless about them.',
+    related: { people: ['RUSK'], places: ['RUSK_STORE'], evidence: ['STORE_LEDGER', 'STORE_OIL'] },
+  },
+  T_RUSK_HALE: {
+    title: 'Rusk, on the sheriff', category: 'TESTIMONY', speaker: 'Jonah Rusk', location: 'RUSK_STORE', chapter: 2,
+    observed: '"A fortnight back he was in here reading my freight book like scripture. Asked about that same freight. I told him what I\'m telling you."',
+    interpretation: 'Hale had my question a fortnight before he died.',
+    related: { people: ['RUSK', 'HALE'], places: ['RUSK_STORE'], evidence: ['STORE_LEDGER'] },
+  },
+  T_GABLE_VALE: {
+    title: 'Mrs. Gable, on the Reverend', category: 'TESTIMONY', speaker: 'Mrs. Gable', location: 'PARLOR', chapter: 2,
+    observed: '"The Pale Figure. He preaches it every winter, when the snow shuts the pass. It fills his pews."',
+    interpretation: 'She doesn\'t believe a word of it, and she doesn\'t say so in public either.',
+    related: { people: ['GABLE', 'VALE'], places: ['PARLOR', 'GRAVEYARD'], evidence: [] },
+  },
+  T_VALE_FIGURE: {
+    title: 'Reverend Vale, on the Pale Figure', category: 'TESTIMONY', speaker: 'Reverend Vale', location: 'GRAVEYARD', chapter: 2,
+    observed: '"It walks the ridge in the white months, Mister Vance. It carries a lamp. Those who follow it up to the old workings do not come down again."',
+    interpretation: 'He tells it well, and he has told it often. A lamp on the ridge, and a reason to keep people off it.',
+    related: { people: ['VALE'], places: ['GRAVEYARD', 'RIDGE'], evidence: ['TOWER_SOOT'] },
+  },
+  T_VALE_PELL: {
+    title: 'Reverend Vale, on the opened grave', category: 'TESTIMONY', speaker: 'Reverend Vale', location: 'GRAVEYARD', chapter: 2,
+    observed: '"Dogs dig, in a hard winter. I keep the ground, Mister Vance, not the graves." Told dogs don\'t put boards back: "Then pray for whoever did."',
+    interpretation: 'He did not look at the grave once while he said it.',
+    related: { people: ['VALE'], places: ['GRAVEYARD'], evidence: ['GRAVE_DISTURBED'] },
+  },
+  T_VALE_ORDER: {
+    title: 'Reverend Vale, on Amos Pell', category: 'TESTIMONY', speaker: 'Reverend Vale', location: 'GRAVEYARD', chapter: 2,
+    observed: '"A miner. The Pale workings fell in on him and four others in seventy-two. The Order paid for his stone. It paid for a great many things, then."',
+    interpretation: 'The Pale Order as a mining company, by his account. A company that buys headstones.',
+    related: { people: ['VALE'], places: ['GRAVEYARD'], evidence: ['GRAVE_STONE', 'SAWMILL_LEDGER'] },
+  },
+  T_ADA_LINE: {
+    title: 'Ada Bell, on the dead line', category: 'TESTIMONY', speaker: 'Ada Bell', location: 'TELEGRAPH', chapter: 2,
+    observed: '"Six o\'clock, the evening you came. I had a message half sent to the county seat. Nothing since." And: "The next stretch is down too, along the ridge. Somebody walked the line with cutters."',
+    interpretation: 'Cut the evening I arrived, and a mile of it. That is not a storm, and it is not a night\'s mischief.',
+    related: { people: ['ADA'], places: ['TELEGRAPH', 'STATION'], evidence: ['TOWER_WIRE'] },
+  },
+  T_ADA_MEND: {
+    title: 'Ada Bell, on mending it', category: 'TESTIMONY', speaker: 'Ada Bell', location: 'TELEGRAPH', chapter: 2,
+    observed: '"This span, yes. A mile of it along the ridge, in this, no. We\'re shut in, Mister Vance, till the pass opens or somebody walks the line."',
+    interpretation: 'Shut in, and whoever cut it knows how long that will last.',
+    related: { people: ['ADA'], places: ['TELEGRAPH'], evidence: ['TOWER_WIRE'] },
+  },
+  T_ADA_TELEGRAM: {
+    title: 'Ada Bell, on my telegram', category: 'TESTIMONY', speaker: 'Ada Bell', location: 'TELEGRAPH', chapter: 2,
+    observed: '"I send what\'s handed in, and I write down who hands it in." Asked who handed in mine: "Not up here. Not with the line down and nobody to send for."',
+    interpretation: 'She knows who sent for me. She is afraid of who might hear her say it.',
+    related: { people: ['ADA', 'FINCH', 'CLARA'], places: ['TELEGRAPH', 'STATION'], evidence: [] },
+  },
 };
 
 export const PLACE_NAMES = {
   STATION: 'Blackwood Station', ROAD: 'The road', VILLAGE: "Crow's Hollow", PARLOR: 'Black Ram Hotel',
   ROOM4: 'Room 4', CREEK: 'The creek path', SAWMILL: 'The old sawmill', WHEEL_PIT: 'The wheel pit', RIDGE: 'The ridge',
+  RUSK_STORE: 'Rusk\'s store', GRAVEYARD: 'The chapel and the graves', TELEGRAPH: 'The telegraph tower',
 };
 export const PEOPLE_NAMES = {
   HALE: 'Sheriff Nathaniel Hale', FINCH: 'Constable Edgar Finch', GABLE: 'Mrs. Gable', CLARA: 'Clara Mercer',
+  RUSK: 'Jonah Rusk', VALE: 'Reverend Elias Vale', ADA: 'Ada Bell',
 };

@@ -11,8 +11,8 @@
  "infinite": false,
  "compressionlevel": -1,
  "backgroundcolor": "#000000",
- "nextlayerid": 16,
- "nextobjectid": 16,
+ "nextlayerid": 17,
+ "nextobjectid": 22,
  "properties": [
   {
    "name": "name",
@@ -58,6 +58,16 @@
    "name": "night",
    "type": "string",
    "value": "{\"darkness\":0.84,\"ambience\":\"village_night\",\"weather\":{\"snow\":0.9,\"wind\":0.85,\"fog\":0.4}}"
+  },
+  {
+   "name": "day",
+   "type": "string",
+   "value": "{\"darkness\":0.3,\"ambience\":\"village\",\"weather\":{\"snow\":0.55,\"wind\":0.5,\"fog\":0.2}}"
+  },
+  {
+   "name": "chapter2",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -131,6 +141,24 @@
        "name": "phase",
        "type": "string",
        "value": "NIGHT"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "sky_day",
+     "type": "imagelayer",
+     "image": "../export/environments/parallax/town_sky_day.png",
+     "x": 0,
+     "y": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 0,
+     "properties": [
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
       }
      ]
     },
@@ -4252,6 +4280,16 @@
        "name": "spawn",
        "type": "string",
        "value": "fromVillage"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"any\":[{\"phase\":\"EVENING\"},{\"phase\":\"NIGHT\"}]}"
+      },
+      {
+       "name": "blockedLines",
+       "type": "string",
+       "value": "The road goes down to the station. No train will come up today, and nothing I need is down there."
       }
      ]
     },
@@ -4305,7 +4343,7 @@
       {
        "name": "variants",
        "type": "string",
-       "value": "[{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"Dark now, like every window on the street.\"]},{\"if\":{\"flag\":\"curtainDrawn\"},\"lines\":[\"The curtain is drawn. Whoever was watching would rather I didn't see them do it.\"]},{\"if\":{},\"lines\":[\"Someone is standing at the window, watching the street.\"]}]"
+       "value": "[{\"if\":{\"phase\":\"DAY\"},\"lines\":[\"A cabin window, the curtain drawn even by day.\"]},{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"Dark now, like every window on the street.\"]},{\"if\":{\"flag\":\"curtainDrawn\"},\"lines\":[\"The curtain is drawn. Whoever was watching would rather I didn't see them do it.\"]},{\"if\":{},\"lines\":[\"Someone is standing at the window, watching the street.\"]}]"
       }
      ]
     },
@@ -4328,9 +4366,9 @@
        "value": "General store"
       },
       {
-       "name": "lines",
+       "name": "variants",
        "type": "string",
-       "value": "Rusk's general store. Dark. Through the glass: sacks, barrels, a counter, and an account book left open on it, too far off to read."
+       "value": "[{\"if\":{\"phase\":\"DAY\"},\"lines\":[\"Rusk's store, open: smoke from the stovepipe, the door on the latch. The account book is gone from the window.\"]},{\"if\":{},\"lines\":[\"Rusk's general store. Dark. Through the glass: sacks, barrels, a counter, and an account book left open on it, too far off to read.\"]}]"
       }
      ]
     },
@@ -4355,7 +4393,7 @@
       {
        "name": "variants",
        "type": "string",
-       "value": "[{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"The lamp is out. It has been out for some time; the glass is frosted over from inside.\"]},{\"if\":{},\"lines\":[\"A street lamp, lit. The only one on this stretch that is.\"]}]"
+       "value": "[{\"if\":{\"phase\":\"DAY\"},\"lines\":[\"The street lamp, cold. Someone has trimmed the wick ready for tonight.\"]},{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"The lamp is out. It has been out for some time; the glass is frosted over from inside.\"]},{\"if\":{},\"lines\":[\"A street lamp, lit. The only one on this stretch that is.\"]}]"
       }
      ]
     },
@@ -4534,6 +4572,195 @@
        "name": "if",
        "type": "string",
        "value": "{\"all\":[{\"notFlag\":\"metFinch\"},{\"phase\":\"EVENING\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "storeDoor",
+     "type": "door",
+     "x": 296,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Rusk's store"
+      },
+      {
+       "name": "verb",
+       "type": "string",
+       "value": "Go in"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "RUSK_STORE"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromStreet"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "chapelLane",
+     "type": "door",
+     "x": 560,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Chapel lane"
+      },
+      {
+       "name": "verb",
+       "type": "string",
+       "value": "Walk up"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "GRAVEYARD"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromVillage"
+      },
+      {
+       "name": "minutes",
+       "type": "float",
+       "value": 4
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "name": "fromStore",
+     "type": "spawn",
+     "x": 296,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "name": "fromChapel",
+     "type": "spawn",
+     "x": 560,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "name": "finch",
+     "type": "npc",
+     "x": 150,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Constable Finch"
+      },
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "finch_idle"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "FINCH_DAY"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "name": "VILLAGE_DAY",
+     "type": "event",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "bark",
+       "type": "string",
+       "value": "Main Street by daylight. Smoke from the chimneys, and nobody out who doesn't have to be."
+      },
+      {
+       "name": "do",
+       "type": "string",
+       "value": "[{\"set\":{\"villageDaySeen\":true}}]"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"phase\":\"DAY\"},{\"notFlag\":\"villageDaySeen\"}]}"
       }
      ]
     }

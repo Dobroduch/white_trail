@@ -1,0 +1,58 @@
+/* Touch controls and the rotate prompt (src/ui/touchControls.js). Colours are the game palette
+   (src/data/palette.js); panels copy the in-game HUD's look: dark navy, a 1px slate edge, square corners. */
+#touch { position: fixed; inset: 0; pointer-events: none; z-index: 5; display: none; }
+html.touch #touch { display: block; }
+#touch .tc { position: absolute; display: none; pointer-events: auto; }
+#touch .tc.on { display: flex; }
+#touch button {
+  appearance: none; -webkit-appearance: none; margin: 0; padding: 0;
+  font: inherit; color: #cbd5e1;
+  background: rgba(9, 13, 22, 0.62);
+  border: 2px solid rgba(71, 85, 105, 0.85);
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgba(5, 7, 12, 0.9), 0 2px 0 rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  touch-action: none; -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  line-height: 1;
+}
+#touch button.is-down, #touch button.active { background: rgba(40, 26, 14, 0.85); border-color: #f59e0b; color: #fcd34d; }
+#touch button[disabled] { opacity: 0.35; }
+#touch svg { width: 46%; height: 46%; shape-rendering: crispEdges; fill: currentColor; }
+#touch .lbl { font-size: var(--tc-lbl, 11px); margin-top: 2px; letter-spacing: 0.04em; color: #94a3b8; white-space: nowrap; }
+#touch button.is-down .lbl, #touch button.active .lbl { color: #fcd34d; }
+#touch .icon16 {
+  width: 62%; height: 62%; image-rendering: pixelated; image-rendering: crisp-edges;
+  background-image: url('../../assets/export/ui/hud_icons.png'); background-repeat: no-repeat;
+  background-size: 300% 100%;
+}
+/* the interaction button: brighter and labelled with what it will do */
+#touch .tc-act button.act { border-color: rgba(180, 83, 9, 0.95); background: rgba(27, 20, 16, 0.7); color: #f59e0b; }
+#touch .tc-act button.act.idle { border-color: rgba(71, 85, 105, 0.6); color: #64748b; background: rgba(9, 13, 22, 0.45); }
+#touch .tc-act button.act.idle .lbl { color: #64748b; }
+#touch button.lit { color: #fcd34d; border-color: #b45309; }
+#touch button.ready { border-color: #f59e0b; color: #f59e0b; animation: tc-pulse 1.6s ease-in-out infinite; }
+@keyframes tc-pulse { 50% { box-shadow: inset 0 0 0 1px rgba(5, 7, 12, 0.9), 0 0 8px rgba(245, 158, 11, 0.55); } }
+/* quieter while someone is talking or a cutscene holds the camera */
+html.touch[data-tc='dialogue'] #touch .tc-sys, html.touch[data-tc='cutscene'] #touch .tc-sys { opacity: 0.55; }
+@media (prefers-reduced-motion: reduce) { #touch button.ready { animation: none; } }
+
+/* ---------- rotate prompt (portrait on a touch device) ---------- */
+#rotate {
+  position: fixed; inset: 0; z-index: 20; display: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: #05070c; color: #cbd5e1; text-align: center; padding: 24px; box-sizing: border-box;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+}
+html.portrait-block #rotate { display: flex; }
+#rotate h2 { margin: 6px 0 0; font-weight: normal; letter-spacing: 0.35em; font-size: 18px; color: #f1f5f9; }
+#rotate p { margin: 0; font-size: 15px; color: #cbd5e1; }
+#rotate .rotate-small { font-size: 12px; font-style: italic; color: #94a3b8; }
+#rotate .rotate-phone {
+  width: 34px; height: 58px; border: 3px solid #94a3b8; position: relative; margin-bottom: 8px;
+  animation: tc-rotate 2.4s ease-in-out infinite; box-shadow: 0 0 0 1px #05070c;
+}
+#rotate .rotate-phone span { position: absolute; left: 50%; bottom: 3px; width: 8px; height: 3px; margin-left: -4px; background: #f59e0b; }
+@keyframes tc-rotate { 0%, 30% { transform: rotate(0deg); } 55%, 100% { transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) { #rotate .rotate-phone { animation: none; transform: rotate(-90deg); } }

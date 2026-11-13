@@ -52,8 +52,14 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
+  // Desktop (keyboard + mouse) runs every spec except the mobile one. The three mobile projects emulate phones in
+  // landscape (viewport, device pixel ratio, isMobile, touch input) on the same Chromium-based browser and run only
+  // tests/e2e/mobile.spec.mjs. Emulation is not a real iOS / Android device: see docs/TESTING.md.
   projects: [
-    { name: channel, use: browserUse },
+    { name: channel, use: browserUse, testIgnore: '**/mobile.spec.mjs' },
+    { name: 'mobile-android-small', testMatch: '**/mobile.spec.mjs', use: { ...browserUse, viewport: { width: 640, height: 360 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
+    { name: 'mobile-android-large', testMatch: '**/mobile.spec.mjs', use: { ...browserUse, viewport: { width: 915, height: 412 }, deviceScaleFactor: 2.625, isMobile: true, hasTouch: true } },
+    { name: 'mobile-iphone', testMatch: '**/mobile.spec.mjs', use: { ...browserUse, viewport: { width: 844, height: 390 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1' } },
   ],
   webServer: {
     command: `node tools/serve.mjs ${port}`,

@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 6,
- "nextobjectid": 23,
+ "nextobjectid": 24,
  "properties": [
   {
    "name": "name",
@@ -47,6 +47,16 @@
    "name": "night",
    "type": "string",
    "value": "{\"npcs\":[{\"id\":\"gable\",\"sprite\":\"gable_idle\",\"x\":300,\"facing\":-1,\"if\":{},\"dialogue\":\"GABLE_NIGHT_AGAIN\",\"name\":\"Mrs. Gable\",\"candle\":true}],\"lights\":[],\"darkness\":0.8,\"ambience\":\"parlor_night\"}"
+  },
+  {
+   "name": "day",
+   "type": "string",
+   "value": "{\"darkness\":0.24,\"ambience\":\"parlor\"}"
+  },
+  {
+   "name": "chapter2",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -2060,6 +2070,50 @@
        "name": "if",
        "type": "string",
        "value": "{\"all\":[{\"phase\":\"NIGHT\"},{\"notFlag\":\"gableNightTalk\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "name": "gable",
+     "type": "npc",
+     "x": 414,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Mrs. Gable"
+      },
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "gable_idle"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "GABLE_DAY"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      },
+      {
+       "name": "z",
+       "type": "float",
+       "value": 2
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
       }
      ]
     }

@@ -94,9 +94,12 @@ export function sceneFromTiled(map, id) {
   }
   const night = json(mp.night, `${id}.night`, errors);
   if (night) scene.night = night;
+  const day = json(mp.day, `${id}.day`, errors); // overrides for the DAY phase (Chapter 2's daylight), like `night`
+  if (day) scene.day = day;
 
   let groundY = mp.groundY != null ? w(num(mp.groundY, 225)) : null; // native px, like everything in the map
   const lightsNight = [];
+  const lightsDay = [];
   let phased = false;
 
   walkLayers(map.layers, (layer) => {
@@ -138,6 +141,7 @@ export function sceneFromTiled(map, id) {
           if (p.minutes != null) d.minutes = num(p.minutes, 1);
           if (cond) d.if = cond;
           if (p.showIf) d.showIf = json(p.showIf, where + '.showIf', errors); // hidden entrance: no prompt at all until this holds
+          if (p.scriptIf) d.scriptIf = json(p.scriptIf, where + '.scriptIf', errors); // { if, script }: run a script instead of going through
           if (p.blockedLines) d.blockedLines = lines(p.blockedLines);
           scene.doors.push(d);
           break;
@@ -171,8 +175,9 @@ export function sceneFromTiled(map, id) {
           if (p.warm != null) L.warm = num(p.warm, 0);
           if (p.strength != null) L.strength = num(p.strength, 1);
           const ph = p.phase ? String(p.phase).toUpperCase() : 'ALL';
-          if (ph !== 'NIGHT') scene.lights.push(L); // evening set = untagged + EVENING
-          if (ph !== 'EVENING') lightsNight.push(L); // night set = untagged + NIGHT
+          if (ph === 'ALL' || ph === 'EVENING') scene.lights.push(L); // evening set = untagged + EVENING
+          if (ph === 'ALL' || ph === 'NIGHT') lightsNight.push(L); // night set = untagged + NIGHT
+          if (ph === 'ALL' || ph === 'DAY') lightsDay.push(L); // day set = untagged + DAY
           if (ph !== 'ALL') phased = true;
           break;
         }
@@ -214,7 +219,10 @@ export function sceneFromTiled(map, id) {
 
   // Lights tagged with a phase: the night set replaces the evening set at night (scenes.js `night`
   // overrides keys). Untagged lights are shared by both phases.
-  if (phased) scene.night = Object.assign({}, scene.night || {}, { lights: lightsNight });
+  if (phased) {
+    scene.night = Object.assign({}, scene.night || {}, { lights: lightsNight });
+    scene.day = Object.assign({}, scene.day || {}, { lights: lightsDay }); // lamps lit for the evening are out by day
+  }
 
   if (!scene.ground) {
     if (groundY == null) groundY = 150;

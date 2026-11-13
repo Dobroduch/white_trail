@@ -7,13 +7,36 @@ import { revolverDescription } from '../systems/survival.js';
 import { isFullscreen, toggleFullscreen } from '../engine/display.js';
 import { test, countAt } from '../systems/storyState.js';
 import { drawItemIcon } from './itemIcons.js';
-import { CONCLUSIONS, OPEN_OUTCOME } from '../data/caseData.js';
+import { CONCLUSIONS, OPEN_OUTCOMES } from '../data/caseData.js';
 
 function menuNav(self, input, n, audio) {
   if (input.pressed('up')) { self.sel = (self.sel + n - 1) % n; audio.sfx('tick'); }
   if (input.pressed('down')) { self.sel = (self.sel + 1) % n; audio.sfx('tick'); }
 }
+// Mouse / touch: the index of the menu line that was clicked or tapped this step (consuming that click), else -1.
+// `self.rects` is what drawMenu returned the last time the menu was drawn.
+function menuTap(self, input) {
+  if (!input.clicks || !input.clicks.length || !self.rects) return -1;
+  const disp = self.game.display;
+  let hit = -1;
+  input.clicks = input.clicks.filter((c) => {
+    const u = disp.clientToUI(c.x, c.y);
+    const i = u ? self.rects.findIndex((r) => u.x >= r.x && u.x <= r.x + r.w && u.y >= r.y && u.y <= r.y + r.h) : -1;
+    if (i < 0 || hit >= 0) return true;
+    hit = i;
+    return false;
+  });
+  return hit;
+}
+// Up/Down plus a tap: a tapped line is chosen at once (sel moves to it). Returns true when it should be confirmed.
+function menuPick(self, input, n) {
+  menuNav(self, input, n, self.game.audio);
+  const i = menuTap(self, input);
+  if (i >= 0 && i < n && !(self.items && self.items[i] && self.items[i].disabled)) { self.sel = i; return true; }
+  return input.pressed('confirm');
+}
 function drawMenu(ctx, items, sel, x, y, { align = 'left', size = 6.4, gap = 10 } = {}) {
+  const rects = [];
   items.forEach((it, i) => {
     const s = i === sel;
     font(ctx, size, { italic: !s && false });
@@ -25,7 +48,10 @@ function drawMenu(ctx, items, sel, x, y, { align = 'left', size = 6.4, gap = 10 
       ctx.fillStyle = UI.amber; ctx.fillRect(lx, yy - 3, 3, 1.2);
     }
     text(ctx, it.label, x, yy, col, align);
+    const w = Math.max(60, ctx.measureText(it.label).width + 16); // a generous tap target
+    rects.push({ x: align === 'center' ? x - w / 2 : x - 10, y: yy - gap * 0.62, w, h: gap });
   });
+  return rects;
 }
 
 // ---------------- Title ----------------
@@ -43,8 +69,7 @@ export class TitleMenu {
   update(input) {
     this.t += 1 / 60;
     if (!this.pressed) { if (input.anyPressed && this.t > 0.4) { this.pressed = true; this.game.input.clearAll(); this.game.audio.music('title'); } return null; }
-    menuNav(this, input, this.items.length, this.game.audio);
-    if (input.pressed('confirm')) return this.items[this.sel].act;
+    if (menuPick(this, input, this.items.length)) return this.items[this.sel].act;
     return null;
   }
   draw(ctx) {
@@ -57,16 +82,16 @@ export class TitleMenu {
     text(ctx, 'Crow\'s Hollow, in the Rocky Mountains. Winter, 1892.', UI_CX, 79, UI.dim, 'center');
     ctx.globalAlpha = 1;
     if (!this.pressed) {
-      if (this.t > 1.2 && Math.floor(this.t * 1.4) % 2 === 0) { font(ctx, 5.4); text(ctx, 'Press any key', UI_CX, 130, UI.dim, 'center'); }
+      if (this.t > 1.2 && Math.floor(this.t * 1.4) % 2 === 0) { font(ctx, 5.4); text(ctx, this.game.touchUI() ? 'Tap to begin' : 'Press any key', UI_CX, 130, UI.dim, 'center'); }
       ctx.fillStyle = 'rgba(5,7,12,0.75)'; ctx.fillRect(UI_LEFT, UI_H - 18, UI_RIGHT - UI_LEFT, 18);
       font(ctx, 4.5, { italic: true });
       text(ctx, 'Sound is part of this game. Headphones recommended.', UI_CX, 172, UI.dim, 'center');
       return;
     }
-    drawMenu(ctx, this.items, this.sel, UI_CX, 110, { align: 'center', size: 6.2, gap: 10 });
+    this.rects = drawMenu(ctx, this.items, this.sel, UI_CX, 110, { align: 'center', size: 6.2, gap: 10 });
     ctx.fillStyle = 'rgba(5,7,12,0.75)'; ctx.fillRect(UI_LEFT, UI_H - 18, UI_RIGHT - UI_LEFT, 18);
     font(ctx, 4.5, { italic: true });
-    text(ctx, 'Up / Down  choose    E / Enter confirm', UI_CX, 172, UI.dim, 'center');
+    text(ctx, this.game.touchUI() ? 'Tap a line to choose it' : 'Up / Down  choose    E / Enter confirm', UI_CX, 172, UI.dim, 'center');
   }
 }
 
@@ -82,15 +107,14 @@ export class PauseMenu {
   }
   update(input) {
     if (input.pressed('pause')) return 'resume';
-    menuNav(this, input, this.items.length, this.game.audio);
-    if (input.pressed('confirm')) return this.items[this.sel].act;
+    if (menuPick(this, input, this.items.length)) return this.items[this.sel].act;
     return null;
   }
   draw(ctx) {
     ctx.fillStyle = 'rgba(5,7,12,0.72)'; ctx.fillRect(UI_LEFT, UI_TOP, UI_RIGHT - UI_LEFT, UI_BOTTOM - UI_TOP);
     panel(ctx, 96, 30, 128, 114, UI.panel, UI.edgeHi);
     font(ctx, 6.4); spaced(ctx, 'PAUSED', UI_CX, 50, UI.bone, 2, 'center');
-    drawMenu(ctx, this.items, this.sel, 112, 66, { size: 5.8, gap: 9.4 });
+    this.rects = drawMenu(ctx, this.items, this.sel, 112, 66, { size: 5.8, gap: 9.4 });
   }
 }
 
@@ -113,6 +137,7 @@ export class SettingsMenu {
       { key: 'scanlines', label: 'Scanlines', val: s.scanlines ? 'on' : 'off', kind: 'bool' },
       { key: 'scaling', label: 'Display scaling', val: s.scaling === 'integer' ? 'whole pixels' : 'fill window', kind: 'enum', opts: ['auto', 'integer'] },
       { key: 'fullscreen', label: 'Fullscreen  (Alt+Enter)', val: isFullscreen() ? 'on' : 'off', kind: 'action' },
+      { key: 'touchControls', label: 'Touch controls', val: s.touchControls || 'auto', kind: 'enum', opts: ['auto', 'on', 'off'] },
       { key: 'back', label: 'Back', kind: 'back' },
     ];
   }
@@ -120,11 +145,15 @@ export class SettingsMenu {
     const rows = this.rows();
     if (input.pressed('pause') || input.pressed('back')) return 'back';
     menuNav(this, input, rows.length, this.game.audio);
+    // a tap selects a row; a tap on the selected row changes it (like E)
+    const tapped = menuTap(this, input);
+    let tapConf = false;
+    if (tapped >= 0) { if (tapped === this.sel) tapConf = true; else { this.sel = tapped; this.game.audio.sfx('tick'); } }
     const r = rows[this.sel];
     const s = this.game.settings;
     const dir = (input.pressed('right') ? 1 : 0) - (input.pressed('left') ? 1 : 0);
-    if (r.kind === 'back') { if (input.pressed('confirm')) return 'back'; return null; }
-    const conf = input.pressed('confirm');
+    if (r.kind === 'back') { if (input.pressed('confirm') || tapConf) return 'back'; return null; }
+    const conf = input.pressed('confirm') || tapConf;
     if (!dir && !conf) return null;
     const d = dir || 1;
     if (r.kind === 'action') { toggleFullscreen(); this.game.audio.sfx('tick'); return null; }
@@ -139,8 +168,10 @@ export class SettingsMenu {
     ctx.fillStyle = 'rgba(5,7,12,0.78)'; ctx.fillRect(UI_LEFT, UI_TOP, UI_RIGHT - UI_LEFT, UI_BOTTOM - UI_TOP);
     panel(ctx, 66, 16, 188, 152, UI.panel, UI.edgeHi);
     font(ctx, 6.4); spaced(ctx, 'SETTINGS', UI_CX, 30, UI.bone, 2, 'center');
+    this.rects = [];
     this.rows().forEach((r, i) => {
-      const y = 42 + i * 9; // 13 rows fit above the footer
+      const y = 42 + i * 8.4; // 14 rows fit above the footer
+      this.rects.push({ x: 66, y: y - 6, w: 188, h: 8.4 });
       const sel = i === this.sel;
       font(ctx, 5.6);
       if (sel) { ctx.fillStyle = UI.amber; ctx.fillRect(76, y - 3, 3, 1.2); }
@@ -148,7 +179,7 @@ export class SettingsMenu {
       if (r.val) text(ctx, (sel && r.kind !== 'back' ? '‹ ' : '') + r.val + (sel ? ' ›' : ''), 246, y, sel ? UI.amber : UI.dim, 'right');
     });
     font(ctx, 4.3, { italic: true });
-    text(ctx, 'Up / Down  choose    Left / Right  change    Esc back', UI_CX, 163, UI.faint, 'center');
+    text(ctx, this.game.touchUI() ? 'Tap a line, tap it again to change it    ◀ ▶ change    Back' : 'Up / Down  choose    Left / Right  change    Esc back', UI_CX, 163, UI.faint, 'center');
   }
 }
 
@@ -189,6 +220,8 @@ export class Confirm {
   update(input) {
     if (input.pressed('pause') || input.pressed('back')) return this.no;
     if (input.pressed('up') || input.pressed('down') || input.pressed('left') || input.pressed('right')) { this.sel = 1 - this.sel; this.game.audio.sfx('tick'); }
+    const tap = menuTap(this, input);
+    if (tap >= 0) return tap === 0 ? this.yes : this.no;
     if (input.pressed('confirm')) return this.sel === 0 ? this.yes : this.no;
     return null;
   }
@@ -197,7 +230,7 @@ export class Confirm {
     panel(ctx, 70, 62, 180, 54, UI.panel, UI.edgeHi);
     font(ctx, 5.8);
     wrap(ctx, this.q, 160).forEach((l, i) => text(ctx, l, UI_CX, 78 + i * 7, UI.bone, 'center'));
-    drawMenu(ctx, [{ label: 'Yes' }, { label: 'No' }], this.sel, UI_CX, 98, { align: 'center', size: 5.8, gap: 8 });
+    this.rects = drawMenu(ctx, [{ label: 'Yes' }, { label: 'No' }], this.sel, UI_CX, 98, { align: 'center', size: 5.8, gap: 9 });
   }
 }
 
@@ -289,12 +322,12 @@ export class Inventory {
       font(ctx, 5, { italic: true });
       const desc = it.revolver ? revolverDescription(s) : it.text;
       wrap(ctx, desc, rw).slice(0, 7).forEach((l, i) => text(ctx, l, rx, INV.y + 95 + i * 6.2, UI.dim));
-      if (it.doc) { font(ctx, 4.6, { italic: true }); text(ctx, 'E — read it', rx, INV.y + INV.h - 6, UI.amber); }
+      if (it.doc) { font(ctx, 4.6, { italic: true }); text(ctx, this.game.touchUI() ? 'Tap it again to read' : 'E — read it', rx, INV.y + INV.h - 6, UI.amber); }
     } else {
       font(ctx, 5.4, { italic: true }); text(ctx, 'Empty pockets.', rcx, INV.y + 60, UI.faint, 'center');
     }
     font(ctx, 4.3, { italic: true });
-    text(ctx, 'Arrows choose · I / Esc close', INV.gx, INV.y + INV.h - 6, UI.faint);
+    text(ctx, this.game.touchUI() ? 'Tap to choose · Back closes' : 'Arrows choose · I / Esc close', INV.gx, INV.y + INV.h - 6, UI.faint);
   }
 }
 
@@ -303,7 +336,8 @@ export class DocumentView {
   constructor(game, id) { this.game = game; this.id = id; this.t = 0; }
   update(input) {
     this.t += 1 / 60;
-    if (this.t > 0.6 && (input.pressed('confirm') || input.pressed('pause') || input.pressed('back') || input.pressed('inventory'))) return 'close';
+    const tapped = input.clicks && input.clicks.length > 0; // a tap anywhere folds it away
+    if (this.t > 0.6 && (tapped || input.pressed('confirm') || input.pressed('pause') || input.pressed('back') || input.pressed('inventory'))) { if (tapped) input.clicks = []; return 'close'; }
     return null;
   }
   draw(ctx) {
@@ -321,18 +355,24 @@ export class DocumentView {
     let yy = y + 24;
     for (const l of TELEGRAM_TEXT) for (const ln of wrap(ctx, l, w - 20)) { text(ctx, ln, x + 10, yy, '#2a2118'); yy += 6.6; }
     ctx.globalAlpha = 1;
-    if (this.t > 0.6) { font(ctx, 4.6, { italic: true }); text(ctx, 'E — fold it away', UI_CX, 146, UI.dim, 'center'); }
+    if (this.t > 0.6) { font(ctx, 4.6, { italic: true }); text(ctx, this.game.touchUI() ? 'Tap to fold it away' : 'E — fold it away', UI_CX, 146, UI.dim, 'center'); }
   }
 }
 
 // ---------------- End of the slice ----------------
 export class EndCard {
-  constructor(game) { this.game = game; this.t = 0; this.sel = 0; this.items = [{ label: 'Keep investigating at the mill', act: 'continue' }, { label: 'Return to the title', act: 'title' }]; }
+  // chapter 1: the close of the first night, leading straight on into the second day.
+  // chapter 2: the close of the second day (the story so far ends here).
+  constructor(game, chapter = 1) {
+    this.game = game; this.chapter = chapter; this.t = 0; this.sel = 0;
+    this.items = chapter === 1
+      ? [{ label: 'Go on: the second day', act: 'nextChapter' }, { label: 'Save and return to the title', act: 'title' }]
+      : [{ label: 'Walk the town a while longer', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }];
+  }
   update(input) {
     this.t += 1 / 60;
     if (this.t < 2) return null;
-    menuNav(this, input, this.items.length, this.game.audio);
-    if (input.pressed('confirm')) return this.items[this.sel].act;
+    if (menuPick(this, input, this.items.length)) return this.items[this.sel].act;
     return null;
   }
   draw(ctx) {
@@ -341,6 +381,7 @@ export class EndCard {
     const a = Math.min(1, this.t / 1.5);
     ctx.globalAlpha = a;
     font(ctx, 13); spaced(ctx, 'THE WHITE TRAIL', UI_CX, 34, UI.bone, 3, 'center');
+    if (this.chapter === 2) { this.drawChapter2(ctx, s); ctx.globalAlpha = 1; if (this.t >= 2) this.rects = drawMenu(ctx, this.items, this.sel, UI_CX, 156, { align: 'center', size: 5.6, gap: 8.5 }); return; }
     font(ctx, 5.2, { italic: true });
     text(ctx, 'The first night ends here. The storm does not.', UI_CX, 45, UI.dim, 'center');
     const total = Object.keys(EVIDENCE).filter((id) => EVIDENCE[id].location === 'SAWMILL').length;
@@ -358,7 +399,7 @@ export class EndCard {
     font(ctx, 5.6, { bold: true });
     text(ctx, k ? CONCLUSIONS[k.conclusion].title : 'Left open', UI_CX, y, UI.bone, 'center'); y += 7;
     font(ctx, 5, { italic: true });
-    for (const ln of wrap(ctx, (k ? CONCLUSIONS[k.conclusion].outcome : OPEN_OUTCOME).epilogue, 262)) { text(ctx, ln, UI_CX, y, UI.bone, 'center'); y += 6.2; }
+    for (const ln of wrap(ctx, (k ? CONCLUSIONS[k.conclusion].outcome : OPEN_OUTCOMES.HALE).epilogue, 262)) { text(ctx, ln, UI_CX, y, UI.bone, 'center'); y += 6.2; }
     y += 3;
     font(ctx, 4.8, { bold: true }); spaced(ctx, 'STILL OPEN', UI_CX, y, UI.amber, 1.2, 'center'); y += 7;
     font(ctx, 5, { italic: true });
@@ -367,6 +408,28 @@ export class EndCard {
     const open = all.length > 5 ? [...all.slice(0, 2), ...all.slice(-3)] : all;
     for (const v of open) { text(ctx, v.text, UI_CX, y, UI.dim, 'center'); y += 6.1; }
     ctx.globalAlpha = 1;
-    if (this.t >= 2) drawMenu(ctx, this.items, this.sel, UI_CX, 156, { align: 'center', size: 5.6, gap: 8.5 });
+    if (this.t >= 2) this.rects = drawMenu(ctx, this.items, this.sel, UI_CX, 156, { align: 'center', size: 5.6, gap: 8.5 });
+  }
+  drawChapter2(ctx, s) {
+    font(ctx, 5.2, { italic: true });
+    text(ctx, 'The second day ends here. The line is still dead, and the pass is still shut.', UI_CX, 45, UI.dim, 'center');
+    const ch2 = Object.keys(s.evidence).filter((id) => EVIDENCE[id] && EVIDENCE[id].chapter === 2);
+    const total = Object.keys(EVIDENCE).filter((id) => EVIDENCE[id].chapter === 2).length;
+    font(ctx, 5.4);
+    let y = 56;
+    text(ctx, `Recorded today: ${ch2.length} of ${total}     Deductions: ${s.deductions.length}     Places on my map: ${(s.map && s.map.visited.length) || 0}`, UI_CX, y, UI.dim, 'center'); y += 7;
+    const k = s.cases && s.cases.ORDER;
+    font(ctx, 4.8, { bold: true }); spaced(ctx, 'THE PALE ORDER, NOW', UI_CX, y + 2, UI.amber, 1.2, 'center'); y += 9;
+    font(ctx, 5.6, { bold: true });
+    text(ctx, k ? CONCLUSIONS[k.conclusion].title : 'Kept to myself', UI_CX, y, UI.bone, 'center'); y += 7;
+    font(ctx, 5, { italic: true });
+    for (const ln of wrap(ctx, (k ? CONCLUSIONS[k.conclusion].outcome : OPEN_OUTCOMES.ORDER).epilogue, 262)) { text(ctx, ln, UI_CX, y, UI.bone, 'center'); y += 6.2; }
+    y += 3;
+    font(ctx, 4.8, { bold: true }); spaced(ctx, 'STILL OPEN', UI_CX, y, UI.amber, 1.2, 'center'); y += 7;
+    font(ctx, 5, { italic: true });
+    const all = LEADS.filter((l) => l.chapter === 2 || l.id === 'L_CLARA').map((l) => l.variants.find((v) => test(v.if, s))).filter(Boolean);
+    for (const v of all.slice(0, 5)) { text(ctx, v.text, UI_CX, y, UI.dim, 'center'); y += 6.1; }
+    font(ctx, 4.6, { italic: true });
+    if (y < 146) text(ctx, 'The story continues in the next chapter.', UI_CX, 146, UI.faint, 'center');
   }
 }

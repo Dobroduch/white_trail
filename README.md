@@ -2,7 +2,12 @@
 
 A 2D side-scrolling pixel-art detective mystery. Crow's Hollow, Rocky Mountains, winter 1892.
 
-This repository contains **the first playable vertical slice** (about 10–20 minutes). It covers Silas Vance's arrival at Blackwood Station, the walk into Crow's Hollow, Constable Finch, the Black Ram Hotel and Room 4, the 02:15 scream, and the discovery of Sheriff Nathaniel Hale's body at the old sawmill.
+This repository contains **two chapters, played as one continuous game**:
+
+- **I. The first night.** Silas Vance arrives at Blackwood Station and walks into Crow's Hollow. He meets Constable Finch, takes Room 4 at the Black Ram Hotel, hears the 02:15 scream, and finds Sheriff Nathaniel Hale's body at the old sawmill. He then decides what happened to Hale, or leaves the question open.
+- **II. Deceit and Isolation.** The second day follows straight on from the first night's end card. It visits Rusk's store and its account book, the chapel and Reverend Vale, an opened grave, and the telegraph tower with Ada Bell. It ends with a second case, *What is the Pale Order doing now?*, and supper with Finch at dusk.
+
+The first night's outcome carries into the second day. A full playthrough takes about 30–50 minutes. The game plays on desktop (keyboard and mouse) and in mobile browsers held sideways (touch).
 
 Built with vanilla JavaScript (ES modules), HTML5 Canvas 2D and the Web Audio API. There are no runtime dependencies, no build step and no network assets (Playwright is a development-only dependency for the tests).
 
@@ -18,7 +23,7 @@ The game uses native ES modules, so browsers will not load it from `file://`. Se
 node tools/serve.mjs
 ```
 
-Then open <http://localhost:8080> in a desktop browser (Chrome, Edge or Firefox).
+Then open <http://localhost:8080> in a desktop browser (Chrome, Edge or Firefox), or from a phone on the same network at `http://<this computer's address>:8080` (see "Phones and tablets" below).
 
 Any other static file server also works if you run it from this folder, for example `python -m http.server 8080` or `npx serve`.
 
@@ -38,6 +43,22 @@ Click or press any key on the title screen. Browsers only allow audio to start a
 | `Alt` + `Enter` | Toggle fullscreen (also in Pause → Settings) |
 
 Inside the notebook, `←` / `→` switch tabs, `↑` / `↓` choose an entry, and `E` marks records to compare on the **Deductions** tab.
+
+### Phones and tablets
+
+Open the game in a mobile browser (Chrome on Android, Safari on iOS) and hold the device **sideways**; in portrait it waits behind a "turn your device" prompt, exactly where you left it. Touch controls appear by themselves:
+
+| On screen | Does |
+|---|---|
+| ◀ ▶ (bottom-left, hold) | Walk. Or tap the ground to walk there, or tap a person or clue to go to it and use it |
+| The magnifier button (bottom-right) | Examine, speak, open: it is labelled with what it will do |
+| Lantern, ? | Light or shutter the lantern; ask for a hint (it glows when one has come to mind) |
+| Notebook, Inventory, Map, ≡ (top-right) | The three panels and the pause menu |
+| Tap the dialogue / a choice / a menu line | Continue, choose, confirm |
+| In the notebook | Tap a tab; tap a line to select it, tap it again to use it (mark, choose a reading); ▲ ▼ scroll; Next question, Review case, Back |
+| ◀ ▲ ▼ ▶, OK, Back | In menus and the case review |
+
+On Android the first tap of a visit also asks for fullscreen and a landscape lock, where the browser allows it. iPhone Safari has no fullscreen for pages; add the game to the Home Screen for the most screen space. Settings → **Touch controls** can force them on or off.
 
 The game is fully playable with the keyboard. The mouse is optional: click something (the cursor changes over it) to walk to it and use it, click empty ground to walk there, click dialogue to continue, click a choice to pick it. There is no jump and no combat in this chapter.
 

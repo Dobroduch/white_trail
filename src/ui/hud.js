@@ -4,6 +4,7 @@ import { UI, font, text, spaced, panel, keycap, wrap, UI_W, UI_H, UI_CX, UI_LEFT
 import { timeString } from '../systems/storyState.js';
 import { EVIDENCE } from '../data/evidence.js';
 import { drawItemIcon } from './itemIcons.js';
+import { touchify } from './touchText.js';
 
 // Dedicated panel buttons (top-right): Notebook, Inventory, Map. Pixel icons from
 // assets/export/ui/hud_icons.png (assets/source/pixelorama/ui/hud_icons.pxo): three 16x16 icons.
@@ -40,7 +41,7 @@ export class HUD {
     this.label = { text: `${scene.name}  —  ${timeString(state.time)}`, t: 0 };
   }
   showTitle() { this.titleT = 0; }
-  hint(msg, dur = 6) { this.hintMsg = { text: msg, t: 0, dur }; }
+  hint(msg, dur = 6) { this.hintMsg = { text: this.game.touchUI && this.game.touchUI() ? touchify(msg) : msg, t: 0, dur }; }
   bark(msg, dur = 4.2) { this.barkMsg = { text: msg, t: 0, dur }; }
   noted(id, detail) {
     const ev = EVIDENCE[id];
@@ -63,7 +64,7 @@ export class HUD {
 
   drawButtons(ctx) {
     const g = this.game;
-    if (g.mode !== 'play') return;
+    if (g.mode !== 'play' || g.touchUI()) return; // touch: larger on-screen buttons take their place
     const active = g.overlay && g.overlay.panelKind;
     const usable = active || g.canOpenPanel();
     for (const r of hudButtonRects()) {
@@ -108,26 +109,30 @@ export class HUD {
     }
     // interaction prompt near the target
     const p = g.prompt;
+    const touch = g.touchUI();
     if (p && g.canInteractUI()) {
       font(ctx, 5);
       const label = p.label;
       const tw = ctx.measureText(label).width;
-      const w = tw + 20, h = 9;
+      const kw = touch ? 0 : 10; // touch: the act button carries the verb, so no key cap
+      const w = tw + 10 + kw, h = 9;
       let x = Math.round(p.sx - w / 2), y = Math.round(p.sy - h - 3);
       x = Math.max(UI_LEFT + 4, Math.min(UI_RIGHT - 4 - w, x)); y = Math.max(22, Math.min(118, y));
-      panel(ctx, x, y, w, h, 'rgba(9,13,22,0.82)', UI.edgeHi);
-      keycap(ctx, 'E', x + 3, y + 7, UI.amber);
-      text(ctx, label, x + 13, y + 6.6, UI.bone);
+      panel(ctx, x, y, w, h, 'rgba(9,13,22,0.82)', touch ? UI.amberDim : UI.edgeHi);
+      if (!touch) keycap(ctx, 'E', x + 3, y + 7, UI.amber);
+      text(ctx, label, x + 3 + kw, y + 6.6, UI.bone);
     }
-    // hint (tutorial-style, bottom-left)
+    // hint (tutorial-style, bottom-left; above the walk buttons in touch mode)
     if (this.hintMsg && !g.dialogue.active) {
       const a = fadeIO(this.hintMsg.t, 0.5, this.hintMsg.dur - 1.5, 1);
       ctx.globalAlpha = a * 0.95;
       font(ctx, 4.9);
       const lines = wrap(ctx, this.hintMsg.text, 180);
       const h = lines.length * 6.5 + 4;
-      panel(ctx, 8, 170 - h, 188, h, 'rgba(9,13,22,0.7)', null);
-      lines.forEach((l, i) => text(ctx, l, 12, 170 - h + 7 + i * 6.5, UI.dim));
+      const bottom = touch ? 134 : 170;
+      const x0 = touch ? Math.max(8, UI_LEFT + 10) : 8;
+      panel(ctx, x0, bottom - h, 188, h, 'rgba(9,13,22,0.7)', null);
+      lines.forEach((l, i) => text(ctx, l, x0 + 4, bottom - h + 7 + i * 6.5, UI.dim));
       ctx.globalAlpha = 1;
     }
     // bark: Silas's passing observation
@@ -149,7 +154,8 @@ export class HUD {
       font(ctx, 5.2);
       const iw = t.icon ? 14 : 0; // a taken item shows its own illustration
       const w = Math.max(60, ctx.measureText(t.text).width + 12 + iw);
-      const y = 146 - (this.toasts.length - 1 - i) * 17;
+      // touch: top-right under the panel buttons, clear of the act button in the bottom-right corner
+      const y = touch ? 30 + i * 17 : 146 - (this.toasts.length - 1 - i) * 17;
       panel(ctx, UI_RIGHT - 8 - w, y, w, 15, 'rgba(9,13,22,0.78)', UI.edge);
       if (t.icon) drawItemIcon(ctx, t.icon, UI_RIGHT - 8 - w + 10, y + 7.5, 13);
       font(ctx, 4.3, { italic: true });
@@ -161,7 +167,7 @@ export class HUD {
     this.drawButtons(ctx);
     // a hint can be asked for (only after the stuck delay; nothing is shown unasked)
     const tier = g.hints ? g.hints.available() : 0;
-    if (tier && g.canInteractUI() && !this.hintMsg) {
+    if (tier && g.canInteractUI() && !this.hintMsg && !touch) { // touch: the hint button glows instead
       const a = 0.55 + Math.sin(g.time * 2) * 0.15;
       ctx.globalAlpha = a;
       const w = keycap(ctx, 'H', 10, 170, UI.amber);
@@ -171,7 +177,10 @@ export class HUD {
     }
     // small status cues
     const s = g.state;
-    if (g.mode === 'play' && !g.dialogue.active) {
+    if (g.mode === 'play' && !g.dialogue.active && touch) {
+      // touch: the lantern button shows its own state; the cold cue moves to the top-left, under the place name
+      if (s.warmth < 35) { font(ctx, 4.4, { italic: true }); text(ctx, 'cold', Math.max(12, UI_LEFT + 12), 28, '#94a3b8'); }
+    } else if (g.mode === 'play' && !g.dialogue.active) {
       let cx = UI_RIGHT - 8;
       if (s.lanternOn) {
         ctx.fillStyle = UI.amber; ctx.globalAlpha = 0.8;

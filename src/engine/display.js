@@ -97,6 +97,8 @@ export class Display {
     this.dpr = 1;
     this.resize = this.resize.bind(this);
     window.addEventListener('resize', this.resize);
+    window.addEventListener('orientationchange', this.resize);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', this.resize); // mobile browser bars
     document.addEventListener('fullscreenchange', this.resize);
     this.resize();
   }
@@ -110,15 +112,20 @@ export class Display {
   ensureSize() {
     if (this.currentKey() !== this.sizeKey) this.resize();
   }
-  currentKey() { return window.innerWidth + 'x' + window.innerHeight + '@' + window.devicePixelRatio + ':' + this.mode; }
+  currentKey() { return window.innerWidth + 'x' + window.innerHeight + '@' + window.devicePixelRatio + ':' + this.mode + ':' + safeKey(); }
 
   resize() {
     this.sizeKey = this.currentKey();
     // ?dpr=N overrides the device pixel ratio (debug / capture tooling only).
+    // On touch devices the backing store is capped at 2 device px per CSS px: a 3x phone would otherwise
+    // composite ~2.3x more pixels every frame for no visible gain at arm's length (heat, battery, frame rate).
     const forced = Number(new URLSearchParams(location.search).get('dpr'));
-    const dpr = forced > 0 ? forced : window.devicePixelRatio || 1;
-    const vw = Math.max(1, Math.floor(window.innerWidth * dpr));
-    const vh = Math.max(1, Math.floor(window.innerHeight * dpr));
+    const dpr = forced > 0 ? forced : Math.min(window.devicePixelRatio || 1, isCoarsePointer() ? 2 : Infinity);
+    // Fit inside the safe area (notches, rounded corners, home indicator); the page background fills the rest.
+    const ins = safeInsets();
+    this.insets = ins;
+    const vw = Math.max(1, Math.floor((window.innerWidth - ins.l - ins.r) * dpr));
+    const vh = Math.max(1, Math.floor((window.innerHeight - ins.t - ins.b) * dpr));
     const out = fitSize(vw, vh, this.mode);
     setLogicalWidth(out.nw);
     if (!this.fb || this.fb.width !== FB_W) {
@@ -204,6 +211,19 @@ export class Display {
     const n = this.clientToNative(clientX, clientY);
     return n && nativeToUI(n.x, n.y);
   }
+}
+
+// Safe-area insets in CSS px, read from #safe-probe (padded with env(safe-area-inset-*) in index.html).
+export function safeInsets() {
+  const el = typeof document !== 'undefined' && document.getElementById('safe-probe');
+  if (!el) return { l: 0, r: 0, t: 0, b: 0 };
+  const cs = getComputedStyle(el);
+  return { l: parseFloat(cs.paddingLeft) || 0, r: parseFloat(cs.paddingRight) || 0, t: parseFloat(cs.paddingTop) || 0, b: parseFloat(cs.paddingBottom) || 0 };
+}
+function safeKey() { const i = safeInsets(); return i.l + ',' + i.r + ',' + i.t + ',' + i.b; }
+// A phone or tablet (a finger is the primary pointer). Used for the DPR cap and the touch controls.
+export function isCoarsePointer() {
+  try { return window.matchMedia('(pointer: coarse)').matches; } catch { return false; }
 }
 
 // Output size in device px for a device-px viewport, plus the logical width `nw` (native px).

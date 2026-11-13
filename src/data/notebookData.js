@@ -22,9 +22,17 @@ export const LEADS = [
     { if: { flag: 'millKeptClosed' }, text: 'Where was Hale\'s body kept, those three nights?' },
   ] },
   { id: 'L_RIDGE', variants: [
+    { if: { evidence: 'TOWER_SOOT' }, text: 'Who keeps a lantern at the telegraph tower?' },
+    { if: { all: [{ flag: 'ridgeLightSeen' }, { flag: 'ch2Started' }] }, text: 'Who carried the lantern on the ridge, the night I found Hale?' },
     { if: { flag: 'ridgeLightSeen' }, text: 'Who carried the lantern on the ridge tonight?' },
     { if: { evidence: 'T_FINCH_RIDGE' }, text: 'Lights on the ridge — "old stories"?' },
   ] },
+  // Chapter 2 (the second day); `chapter: 2` leads are the ones its end card lists
+  { id: 'L_POWDER', chapter: 2, variants: [{ if: { examined: 'STORE_LEDGER' }, text: 'Who paid coin for forty pounds of powder, and fetched it after dark?' }] },
+  { id: 'L_GRAVE', chapter: 2, variants: [{ if: { examined: 'GRAVE_DISTURBED' }, text: 'Who comes back to Amos Pell\'s grave, and when?' }] },
+  { id: 'L_WIRE', chapter: 2, variants: [{ if: { examined: 'TOWER_WIRE' }, text: 'Who walked the telegraph line with cutters?' }] },
+  { id: 'L_SENDER', chapter: 2, variants: [{ if: { flag: 'adaKnowsSender' }, text: 'Ada Bell knows who handed in my telegram. She would not say it up there.' }] },
+  { id: 'L_WORKINGS', chapter: 2, variants: [{ if: { evidence: 'T_VALE_FIGURE' }, text: 'What is up at the old Pale workings, that a lamp keeps watch over?' }] },
 ];
 
 // The People page. An entry appears once its `if` holds; `variants` give Silas's current summary, and each of
@@ -82,6 +90,40 @@ export const PEOPLE = [
       { if: {}, text: 'Brought me up the line to Blackwood. Keen to be off again.' },
     ],
     notes: [{ if: { evidence: 'T_CONDUCTOR_PASS' }, text: 'If the pass closes: three days. Could be a week.' }] },
+  // Chapter 2
+  { id: 'RUSK', name: 'Jonah Rusk', role: 'Keeps the general store', if: { flag: 'storeEntered' },
+    portrait: { sprite: 'rusk_idle', crop: [2, 0, 18, 18] },
+    variants: [
+      { if: { evidence: 'T_RUSK_SCRAPED' }, text: 'Keeps the store and its accounts. Says anybody can lean on a counter.' },
+      { if: {}, text: 'Keeps the general store. Watches customers the way a man watches weather.' },
+    ],
+    notes: [
+      { if: { evidence: 'T_RUSK_FREIGHT' }, text: 'His last freight was paid in coin and fetched after dark. He does not ask men their business.' },
+      { if: { evidence: 'T_RUSK_HALE' }, text: 'Hale read his freight book a fortnight before he died.' },
+      { if: { flag: 'townFrightened' }, text: 'Blames me for the town bolting its doors.' },
+    ] },
+  { id: 'VALE', name: 'Reverend Elias Vale', role: 'Keeps the chapel', if: { flag: 'graveyardEntered' },
+    portrait: { sprite: 'vale_idle', crop: [3, 0, 18, 18] },
+    variants: [
+      { if: { flag: 'valeEmboldened' }, text: 'Preached the Pale Figure to a full chapel at dusk, with my words for his text.' },
+      { if: {}, text: 'Keeps the chapel and the burying ground. Preaches the Pale Figure every winter.' },
+    ],
+    notes: [
+      { if: { evidence: 'T_VALE_FIGURE' }, text: 'The Figure carries a lamp on the ridge; those who follow it to the old workings do not come down.' },
+      { if: { evidence: 'T_VALE_ORDER' }, text: 'Says the Order paid for Amos Pell\'s stone, "and for a great many things, then".' },
+      { if: { evidence: 'T_VALE_PELL' }, text: 'Blamed the opened grave on dogs. Never once looked at it.' },
+    ] },
+  { id: 'ADA', name: 'Ada Bell', role: 'Telegraph operator, Blackwood Station', if: { any: [{ flag: 'towerEntered' }, { flag: 'knowsAda' }] },
+    portrait: { sprite: 'ada_idle', crop: [3, 0, 18, 18], if: { flag: 'towerEntered' } },
+    variants: [
+      { if: { flag: 'towerEntered' }, text: 'Keeps the telegraph. Went up the line herself to see why it was dead.' },
+      { if: {}, text: 'Keeps the telegraph at the station, Finch says.' },
+    ],
+    notes: [
+      { if: { evidence: 'T_ADA_LINE' }, text: 'The line died at six the evening I came, and a mile of it is cut.' },
+      { if: { flag: 'adaKnowsSender' }, text: 'Knows who handed in my telegram. Would not say, up there.' },
+      { if: { flag: 'adaWarned' }, text: 'I told her to go home. "Neither is the station" safe, she said.' },
+    ] },
 ];
 
 export const TELEGRAM_TEXT = [

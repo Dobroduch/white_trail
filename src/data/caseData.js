@@ -15,6 +15,8 @@
 export const QUESTIONS = [
   { id: 'Q_HALE', case: 'HALE', title: 'What happened to Sheriff Hale?', short: 'The sheriff', if: { flag: 'foundSheriffBody' } },
   { id: 'Q_ROOM4', title: 'Whose blood was scrubbed from Room 4?', short: 'Room 4', if: { evidence: 'HOTEL_ROOM4_BOARDS' } },
+  // Chapter 2, the second day
+  { id: 'Q_ORDER', case: 'ORDER', title: 'What is the Pale Order doing now?', short: 'The Order, now', if: { flag: 'ch2Started' } },
 ];
 
 // ---------------- key statements ----------------
@@ -45,6 +47,31 @@ export const STATEMENTS = {
     { if: {}, text: 'Mrs. Gable says a guest took ill in Room 4.' },
   ] },
   S_REGISTER: { q: 'Q_ROOM4', label: 'No one in the register', text: 'The register shows no guest in Room 4 for a fortnight.', sources: ['HOTEL_REGISTER'] },
+  // --- Q_ORDER (Chapter 2) ---
+  S2_FREIGHT: { q: 'Q_ORDER', label: 'The scraped freight entry', sources: ['STORE_LEDGER'], variants: [
+    { if: { examined: 'STORE_LEDGER' }, text: 'Forty pounds came up on Rusk\'s last freight, and the book was scraped to say lamp oil. Under it: "Powd—".' },
+    { if: {}, text: 'Rusk\'s last freight came up from the railhead nine days ago.' },
+  ] },
+  S2_COIN: { q: 'Q_ORDER', label: 'Paid in coin, fetched at night', sources: ['T_RUSK_FREIGHT'], variants: [
+    { if: { evidence: 'T_RUSK_SCRAPED' }, text: 'Rusk: the freight was paid in coin and fetched after dark, no name on it; the page "came to him like that".' },
+    { if: {}, text: 'Rusk: the freight was paid in coin and fetched after dark, no name on it.' },
+  ] },
+  S2_CRATE: { q: 'Q_ORDER', label: 'An empty powder crate', sources: ['STORE_CRATE'], variants: [
+    { if: { examined: 'STORE_CRATE' }, text: 'An empty GIANT POWDER crate in Rusk\'s back corner, a paper band in the sawdust dated this autumn.' },
+    { if: {}, text: 'A long crate in Rusk\'s back corner, packed with sawdust, empty.' },
+  ] },
+  S2_CACHE: { q: 'Q_ORDER', label: 'Powder in a miner\'s grave', text: 'Dynamite, fuse and caps buried in Amos Pell\'s grave, wrapped in an old cavalry jacket.', sources: ['GRAVE_DISTURBED'], if: { examined: 'GRAVE_DISTURBED' } },
+  S2_HEELS: { q: 'Q_ORDER', label: 'Riding boots at the grave', text: 'Riding-boot prints around the opened grave: a narrow heel, a long straight sole.', sources: ['GRAVE_PRINTS'] },
+  S2_MILL_HEELS: { q: 'Q_ORDER', label: 'Riding boots at the mill', text: 'The same narrow heel under the mill roof, the night Hale was hung.', sources: ['SAWMILL_BOOTPRINTS'], if: { all: [{ flag: 'ch2Started' }, { evidence: 'SAWMILL_BOOTPRINTS' }] } },
+  S2_WIRE: { q: 'Q_ORDER', label: 'The wire was cut', text: 'The telegraph wire was cut clean, and the end bent back to look torn.', sources: ['TOWER_WIRE'], if: { examined: 'TOWER_WIRE' } },
+  S2_LINE_DEAD: { q: 'Q_ORDER', label: 'Dead since I came', text: 'Ada Bell: the line went dead at six the evening I arrived; the next mile is cut too.', sources: ['T_ADA_LINE'] },
+  S2_SOOT: { q: 'Q_ORDER', label: 'A lantern kept at the tower', text: 'Fresh soot over a lantern hook on the tower platform, which looks straight down on the mill.', sources: ['TOWER_SOOT'] },
+  S2_FIGURE: { q: 'Q_ORDER', label: 'Vale\'s Pale Figure', text: 'Vale: the Pale Figure carries a lamp on the ridge, and those who follow it to the old workings do not come down.', sources: ['T_VALE_FIGURE'] },
+  S2_WATCHER: { q: 'Q_ORDER', label: 'The watcher on the ridge', text: 'Last night a lantern on the ridge watched me find Hale, swung once, and went dark.', sources: [], if: { all: [{ flag: 'ch2Started' }, { flag: 'ridgeLightSeen' }] } },
+  S2_HALE_ASKED: { q: 'Q_ORDER', label: 'Hale asked about the freight', sources: ['T_RUSK_HALE', 'T_FINCH_FREIGHT'], variants: [
+    { if: { evidence: 'T_RUSK_HALE' }, text: 'Hale read Rusk\'s freight book "like scripture" a fortnight before he died, and asked about that freight.' },
+    { if: {}, text: 'Hale went out the last night with one of Rusk\'s freight bills folded in his coat.' },
+  ] },
 };
 
 // ---------------- deductions ----------------
@@ -127,6 +154,76 @@ export const DEDUCTIONS = {
   },
 };
 
+// --- Q_ORDER (Chapter 2) ---
+Object.assign(DEDUCTIONS, {
+  D2_BOUGHT_QUIET: {
+    q: 'Q_ORDER', title: 'Bought quietly',
+    pairs: [['S2_FREIGHT', 'S2_COIN'], ['S2_FREIGHT', 'S2_CRATE']],
+    text: 'Powder came up on Rusk\'s freight this autumn, paid for in coin, collected in the dark, and entered in the book as lamp oil.',
+    limits: 'Who paid, Rusk says he never asked. Whether he scraped the page himself, I cannot tell.',
+    details: ['STORE_OIL', 'T_RUSK_SCRAPED'],
+    links: ['D2_GRAVE_POWDER', 'D2_HALE_KNEW'],
+    map: { x: 0.12, y: 0.3 },
+  },
+  D2_GRAVE_POWDER: {
+    q: 'Q_ORDER', title: 'Powder in the ground',
+    pairs: [['S2_CACHE', 'S2_CRATE'], ['S2_CACHE', 'S2_FREIGHT']],
+    text: 'There is dynamite in Amos Pell\'s grave, and a crate that held dynamite stands empty in Rusk\'s store.',
+    limits: 'Who buried it, and what for, the grave does not say.',
+    readings: {
+      OLD: { label: 'Left from the war', text: 'An old military cache, wrapped in a dead trooper\'s jacket and kept in the ground for thirty years.' },
+      NEW: { label: 'This winter\'s freight', text: 'New powder, bought this autumn and hidden in the grave. The old jacket is only a wrapping.' },
+    },
+    details: ['GRAVE_CACHE', 'STORE_CRATE'],
+    links: ['D2_SAME_HEELS'],
+    map: { x: 0.48, y: 0.3 },
+  },
+  D2_SAME_HEELS: {
+    q: 'Q_ORDER', title: 'The same boots',
+    pairs: [['S2_HEELS', 'S2_MILL_HEELS']],
+    text: 'The riding boots that stood under the mill roof the night Hale was hung have stood by the opened grave too.',
+    limits: 'Old troopers keep their boots, Finch says. That is a good many men.',
+    details: ['T_FINCH_BOOTS', 'STORE_BOOTS'],
+    links: [],
+    map: { x: 0.88, y: 0.3 },
+  },
+  D2_CUT_OFF: {
+    q: 'Q_ORDER', title: 'Cut off on purpose',
+    pairs: [['S2_WIRE', 'S2_LINE_DEAD']],
+    text: 'The line did not fail in the storm. It was cut, the evening I came, and a mile more of it along the ridge.',
+    limits: 'Whose hand held the cutters, there is nothing up there to say.',
+    readings: {
+      OUT: { label: 'To keep word in', text: 'Cut so that no word of Hale\'s death could go out of the valley.' },
+      IN: { label: 'To keep help out', text: 'Cut so that nobody can be sent for, until something here is done.' },
+    },
+    details: ['T_ADA_LINE', 'T_CONDUCTOR_PASS', 'T_ADA_MEND'],
+    links: [],
+    map: { x: 0.12, y: 0.85 },
+  },
+  D2_TOWER_LIGHT: {
+    q: 'Q_ORDER', title: 'The light on the ridge',
+    pairs: [['S2_SOOT', 'S2_WATCHER'], ['S2_SOOT', 'S2_FIGURE']],
+    text: 'Somebody keeps a lantern at the telegraph tower, where the whole valley can be seen. A lantern on the ridge is what the town calls the Pale Figure.',
+    limits: 'Who holds the lantern, I have not seen.',
+    readings: {
+      FIGURE: { label: 'The Pale Figure\'s lamp', text: 'The thing the Reverend preaches walks the ridge with its lamp, as the town says.' },
+      SIGNAL: { label: 'A man, signalling', text: 'A man stands up there with a lantern to watch, and to signal down into the valley.' },
+    },
+    details: ['TOWER_SOOT', 'TOWER_VIEW', 'T_VALE_FIGURE'],
+    links: ['D2_CUT_OFF'],
+    map: { x: 0.82, y: 0.85 },
+  },
+  D2_HALE_KNEW: {
+    q: 'Q_ORDER', title: 'Hale was on the same trail',
+    pairs: [['S2_HALE_ASKED', 'S2_FREIGHT'], ['S2_HALE_ASKED', 'S2_COIN']],
+    text: 'A fortnight before he died, Sheriff Hale was asking about the same freight I am asking about now.',
+    limits: 'That he died for asking, I believe. I cannot prove it.',
+    details: ['T_RUSK_HALE', 'T_FINCH_FREIGHT'],
+    links: ['D2_BOUGHT_QUIET'],
+    map: { x: 0.62, y: 0.55 },
+  },
+});
+
 export const DEDUCTION_REFUSAL = 'The evidence does not establish that.';
 
 // ---------------- conclusions ----------------
@@ -165,12 +262,56 @@ export const CONCLUSIONS = {
   },
 };
 
-// The aftermath when Silas leaves the mill without committing to anything.
-export const OPEN_OUTCOME = {
-  aftermath: 'AFTER_OPEN',
-  do: [{ log: 'Left the mill without a conclusion.' }],
-  epilogue: 'I told Finch what I had seen, and nothing of what I made of it. He cut the sheriff down at first light, because somebody had to. The question stays open in my notebook.',
+// Chapter 2: what the Order is doing now. Exactly one is true; the readings of the three exclude each other. The
+// single-reading deductions (bought quietly, the same boots, Hale on the same trail) support the picture without
+// being required by any account.
+Object.assign(CONCLUSIONS, {
+  C2_BLAST: {
+    q: 'Q_ORDER', title: 'Someone means to blast the old workings', truth: true,
+    requires: { D2_GRAVE_POWDER: 'NEW', D2_CUT_OFF: 'IN', D2_TOWER_LIGHT: 'SIGNAL' },
+    text: 'Powder was bought quietly this autumn and hidden in a miner\'s grave, an old jacket round it so it would pass for war stores. The wire was cut to keep the valley shut until the work is done, and a man keeps watch from the tower with a lantern. Somebody means to open the old Pale workings, and soon.',
+    outcome: {
+      aftermath: 'AFTER2_BLAST',
+      do: [{ set: { watchGrave: true } }, { log: 'Told Finch: someone means to blast the old workings. We left the grave as it was.' }],
+      epilogue: 'I put the boards back the way I found them. Whoever buried that powder will come back for it, and when they do, I mean to be in the dark by the chapel wall.',
+    },
+  },
+  C2_WAR: {
+    q: 'Q_ORDER', title: 'Old soldiers, guarding old stores',
+    requires: { D2_GRAVE_POWDER: 'OLD', D2_CUT_OFF: 'OUT' },
+    text: 'The powder is a war cache, buried long ago in a dead trooper\'s jacket. Whoever wears the riding boots guards it still, and cut the wire so no word of Hale\'s death would get out of the valley.',
+    outcome: {
+      aftermath: 'AFTER2_WAR',
+      do: [{ set: { powderMoved: true } }, { log: 'Told Finch it was an old war cache. He had it dug out and carried to the jail.' }],
+      epilogue: 'Finch had the grave dug out and the powder carried to the jail as war stores. By dark every soul in Crow\'s Hollow knew where it was kept, and the grave had nothing more to tell me.',
+    },
+  },
+  C2_RITE: {
+    q: 'Q_ORDER', title: 'The Order keeps its rites',
+    requires: { D2_TOWER_LIGHT: 'FIGURE', D2_GRAVE_POWDER: 'NEW' },
+    text: 'The Pale Order lives again. Its people buy powder for whatever they mean to do in the Figure\'s name, and the Figure\'s lamp watches over them from the ridge.',
+    outcome: {
+      aftermath: 'AFTER2_RITE',
+      do: [{ set: { valeEmboldened: true } }, { log: 'Told Finch the Order keeps its rites on the ridge. By evening the Reverend had heard it.' }],
+      epilogue: 'Vale rang the bell at dusk and preached the Pale Figure to a full chapel. I had given him his text.',
+    },
+  },
+});
+
+// The aftermath when Silas leaves a case without committing to anything (per case).
+export const OPEN_OUTCOMES = {
+  HALE: {
+    aftermath: 'AFTER_OPEN',
+    do: [{ log: 'Left the mill without a conclusion.' }],
+    epilogue: 'I told Finch what I had seen, and nothing of what I made of it. He cut the sheriff down at first light, because somebody had to. The question stays open in my notebook.',
+  },
+  ORDER: {
+    aftermath: 'AFTER2_OPEN',
+    do: [{ log: 'Kept what I found today to myself.' }],
+    epilogue: 'I kept what I had found to myself: a scraped ledger, a dead wire, a grave somebody visits. Tomorrow I will know more, or someone will make sure I don\'t.',
+  },
 };
+export const OPEN_OUTCOME = OPEN_OUTCOMES.HALE; // (the first chapter's name for it)
 
 // Mind-map positions of the key statements (0..1 of the map area), around the deductions they support. Deduction
 // positions are on the deductions themselves (`map`). Only formed deductions and their supporting statements are drawn.
@@ -181,4 +322,7 @@ export const STATEMENT_MAP = {
   S_SCREAM: { x: 0.67, y: 1.0 }, S_TRACKS: { x: 1.0, y: 1.0 }, S_RIDGE: { x: 1.0, y: 0.5 },
   S_PIT: { x: 0.5, y: 0.5 },
   S_GABLE_GUEST: { x: 0.1, y: 0.15 }, S_REGISTER: { x: 0.9, y: 0.15 }, S_BOARDS: { x: 0.5, y: 0.95 },
+  S2_FREIGHT: { x: 0.0, y: 0.0 }, S2_CRATE: { x: 0.3, y: 0.0 }, S2_CACHE: { x: 0.58, y: 0.0 }, S2_HEELS: { x: 1.0, y: 0.0 },
+  S2_COIN: { x: 0.0, y: 0.46 }, S2_HALE_ASKED: { x: 0.3, y: 0.6 }, S2_MILL_HEELS: { x: 1.0, y: 0.48 }, S2_FIGURE: { x: 1.0, y: 0.66 },
+  S2_WIRE: { x: 0.0, y: 1.0 }, S2_LINE_DEAD: { x: 0.33, y: 1.0 }, S2_SOOT: { x: 0.64, y: 1.0 }, S2_WATCHER: { x: 1.0, y: 1.0 },
 };

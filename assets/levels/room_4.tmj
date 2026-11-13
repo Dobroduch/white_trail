@@ -47,6 +47,16 @@
    "name": "night",
    "type": "string",
    "value": "{\"lights\":[{\"x\":116,\"y\":119,\"r\":34,\"warm\":0.14},{\"x\":156,\"y\":86,\"r\":30,\"warm\":0}],\"darkness\":0.7}"
+  },
+  {
+   "name": "day",
+   "type": "string",
+   "value": "{\"darkness\":0.3}"
+  },
+  {
+   "name": "chapter2",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [

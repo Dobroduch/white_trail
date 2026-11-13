@@ -33,6 +33,10 @@ export function newState() {
       gable: { alive: true, cooperation: 'GUARDED' },
       hale: { alive: false, found: false },
       clara: { alive: true, location: 'UNKNOWN' },
+      // Chapter 2
+      rusk: { alive: true, trust: 'GUARDED' },
+      vale: { alive: true },
+      ada: { alive: true, trust: 'WARY' },
     },
     eventsDone: [],
     map: { visited: [], paths: [] }, // Silas's own map: places he has been, ways he has walked
@@ -120,6 +124,7 @@ export function advanceTime(s, minutes) {
   let total = s.time.h * 60 + s.time.m + minutes;
   if (s.phase === 'EVENING') total = Math.min(total, 22 * 60 + 30); // the evening never runs past 22:30
   if (s.phase === 'NIGHT') total = Math.min(total, 3 * 60 + 30);
+  if (s.phase === 'DAY') total = Math.min(total, 17 * 60 + 40); // the second day's light is gone by a quarter to six
   s.time.h = Math.floor(total / 60) % 24;
   s.time.m = total % 60;
 }

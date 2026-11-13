@@ -22,10 +22,13 @@ export const LOCATIONS = [
   { id: 'road', name: 'the road up', scenes: ['ROAD'], art: 'road', label: [120, 127], minor: true },
   { id: 'village', name: "Crow's Hollow", scenes: ['VILLAGE'], art: 'village', label: [170, 103] },
   // Rusk's store is noted once Silas has walked past its window.
-  { id: 'store', name: "Rusk's", scenes: ['VILLAGE'], xMin: 140, xMax: 215, art: 'store', label: [158, 65], minor: true },
+  { id: 'store', name: "Rusk's", scenes: ['VILLAGE', 'RUSK_STORE'], xMin: 140, xMax: 215, art: 'store', label: [158, 65], minor: true },
   { id: 'hotel', name: 'Black Ram', scenes: ['BLACK_RAM_EXTERIOR', 'PARLOR', 'ROOM4'], art: 'hotel', label: [208, 67] },
   { id: 'creek', name: 'the creek', scenes: ['CREEK'], art: 'creek', label: [212, 128], minor: true },
   { id: 'sawmill', name: 'old mill', scenes: ['SAWMILL', 'WHEEL_PIT'], art: 'sawmill', label: [271, 99] },
+  // Chapter 2
+  { id: 'chapel', name: 'chapel', scenes: ['GRAVEYARD'], art: 'chapel', label: [104, 70] },
+  { id: 'tower', name: 'the wire', scenes: ['TELEGRAPH'], art: 'tower', label: [64, 74], minor: true },
 ];
 
 export const PATHS = [
@@ -33,6 +36,8 @@ export const PATHS = [
   { id: 'path_road_village', between: ['ROAD', 'VILLAGE'], art: 'path_road_village' },
   { id: 'path_village_creek', between: ['BLACK_RAM_EXTERIOR', 'CREEK'], art: 'path_village_creek' },
   { id: 'path_creek_sawmill', between: ['CREEK', 'SAWMILL'], art: 'path_creek_sawmill' },
+  { id: 'path_village_chapel', between: ['VILLAGE', 'GRAVEYARD'], art: 'path_village_chapel' },
+  { id: 'path_chapel_tower', between: ['GRAVEYARD', 'TELEGRAPH'], art: 'path_chapel_tower' },
 ];
 
 // Where Silas's pencil mark goes, per scene: a fixed point, or a line interpolated by his x
@@ -47,4 +52,7 @@ export const POSITION = {
   CREEK: { from: [205, 97], to: [226, 101] },
   SAWMILL: { from: [244, 90], to: [282, 90] },
   WHEEL_PIT: { at: [268, 95] }, // under the wheel, at the mill
+  RUSK_STORE: { at: [160, 82] },
+  GRAVEYARD: { from: [98, 60], to: [128, 62] },
+  TELEGRAPH: { from: [52, 66], to: [70, 64] },
 };

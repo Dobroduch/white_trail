@@ -142,6 +142,10 @@ export const NATIVE_SHEETS = [
   { url: 'assets/export/characters/gable.png', fw: 26, fh: 42, anchor: 11, sprites: { gable_idle: [0, 1] } },
   { url: 'assets/export/characters/patron.png', fw: 18, fh: 21, anchor: 8.5, sprites: { patron: [0], patron_look: [1], patron_b: [2], patron_b_look: [3], patron_c: [4], patron_c_look: [5] } },
   { url: 'assets/export/characters/hale_body.png', fw: 18, fh: 40, anchor: 9, sprites: { hale_body: [0] } },
+  // Chapter 2 (tools/make-chapter2-art.mjs): re-dressed from the conductor, Finch and Mrs. Gable sheets
+  { url: 'assets/export/characters/rusk.png', fw: 26, fh: 42, anchor: 11, sprites: { rusk_idle: [0, 1] } },
+  { url: 'assets/export/characters/vale.png', fw: 26, fh: 42, anchor: 10.5, sprites: { vale_idle: [0, 1] } },
+  { url: 'assets/export/characters/ada.png', fw: 26, fh: 42, anchor: 11, sprites: { ada_idle: [0, 1] } },
 ];
 
 function loadImage(url) {

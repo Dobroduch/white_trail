@@ -16,6 +16,7 @@ import { loadHudIcons } from './ui/hud.js';
 import { loadItemIcons } from './ui/itemIcons.js';
 import { loadLevels, reloadLevel, levelStatus } from './world/tiled/levels.js';
 import { loadAudioBank } from './audio/samples.js';
+import { TouchControls } from './ui/touchControls.js';
 
 async function boot() {
   const canvas = document.getElementById('game');
@@ -37,6 +38,8 @@ async function boot() {
   const game = new Game({ display, input, audio, settings });
   // Exposed for debugging and automated play-testing only.
   window.TWT = game;
+  // Touch controls (phones / tablets, landscape). Created after the game so they can read its state.
+  game.touch = new TouchControls(game);
   game.levels = { reload: async (id = game.scene && game.scene.id) => { const ok = await reloadLevel(id); if (ok && game.scene && game.scene.id === id) game.reloadScene(); return ok; }, status: levelStatus };
   if (TEST.scene) game.startAt(TEST.scene, { phase: TEST.phase, spawn: TEST.spawn });
 
@@ -69,6 +72,14 @@ async function boot() {
   window.addEventListener('focus', () => { loop.last = performance.now(); });
   // Resume audio on the next interaction after returning.
   input.onKey(() => audio.resume());
+  // Browsers (iOS Safari above all) only let audio start inside a user gesture's own handler, and count a touch
+  // as a gesture only when it ends: unlock there, not from the game loop. The first touch also asks for
+  // fullscreen and a landscape lock where the browser allows it (never in automated tests).
+  const gesture = (e) => {
+    audio.unlock(); audio.resume();
+    if (!TEST.enabled && e.pointerType !== 'mouse' && e.type !== 'keydown') game.touch.tryFullscreen();
+  };
+  for (const ev of ['pointerup', 'touchend', 'click', 'keydown']) window.addEventListener(ev, gesture, { passive: true });
 }
 
 boot().catch((err) => {

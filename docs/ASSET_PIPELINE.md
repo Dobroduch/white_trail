@@ -9,6 +9,8 @@ new exports (the dev server sends `Cache-Control: no-cache`).
 |---|---|---|
 | Lospec | — | palette: `.gpl` / `.hex` |
 | Pixelorama | `.pxo` in `assets/source/pixelorama/` | `.png` in `assets/export/` |
+
+Chapter 2's art is painted by `tools/make-chapter2-art.mjs` (palette colours only): the day sky, the `store_interior` and `hillside_exterior` tilesets, three people re-dressed from existing sheets by explicit colour maps (Rusk, Vale, Ada), and four map pieces. Each PNG gets a Pixelorama source written by `tools/lib/pxo.mjs` (`assets/source/pixelorama/{environments,tilesets,characters,map}/…`); once one is edited by hand in Pixelorama, the `.pxo` is the source of truth.
 | Tiled | `.tmj` / `.tsj` in `assets/levels/` (JSON is both source and export) | the same files |
 | Audacity | `.aup3` in `assets/source/audacity/` | `.ogg` (or `.wav`) in `assets/export/audio/` |
 

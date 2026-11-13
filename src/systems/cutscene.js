@@ -47,6 +47,11 @@ export class Cutscene {
     const s = st.step;
     const finish = () => { st.done = true; };
     if (s.ambient) return finish();
+    if (s.ifFlag && !g.state.flags[s.ifFlag]) return finish(); // a step that happens only when this flag is set
+    // { afterDialogue: true }: wait until the conversation or examination on screen is finished
+    if (s.afterDialogue) { st.poll = () => !g.dialogue.active; return; }
+    // { clock: [h, m] }: move the clock on to at least this time (never back)
+    if (s.clock) { const t = g.state.time; if (t.h * 60 + t.m < s.clock[0] * 60 + s.clock[1]) { t.h = s.clock[0]; t.m = s.clock[1]; } return finish(); }
     if ('control' in s) { g.playerControl = s.control; return finish(); }
     if (s.wait != null) { st.poll = () => st.t >= s.wait; return; }
     if (s.fade) { g.fadeTo(s.fade.to, s.fade.dur); st.poll = () => st.t >= s.fade.dur; return; }
@@ -61,6 +66,7 @@ export class Cutscene {
     if (s.phase) {
       g.state.phase = s.phase;
       if (s.time) { g.state.time.h = s.time[0]; g.state.time.m = s.time[1]; }
+      if (s.day) g.state.time.day = s.day;
       g.reloadScene();
       return finish();
     }
@@ -90,7 +96,11 @@ export class Cutscene {
       st.poll = () => !g.overlay;
       return;
     }
-    if (s.endCard) { g.openEndCard(); st.poll = () => !g.overlay; return; }
+    if (s.endCard) { g.openEndCard(s.endCard === true ? 1 : s.endCard); st.poll = () => !g.overlay; return; }
+    // { scene: { id, spawn } }: move to another scene inside a script (behind a fade or a card), e.g. the next morning
+    if (s.scene) { g.loadScene(s.scene.id, s.scene.spawn); g.hud.clear(); return finish(); }
+    // { reload: true }: re-read the scene's data after a story change (a grave opened, a door unbarred), keeping Silas in place
+    if (s.reload) { g.reloadScene(); return finish(); }
     // Before Silas leaves the mill: if the case can be decided and has not been, open the case review in prompt mode
     // (commit, or leave it open). Waits until it is closed.
     // The choice (DIALOGUE.CASE_PROMPT): settle it now (only when an account can be put together), go back to the
@@ -101,7 +111,7 @@ export class Cutscene {
       const q = QUESTIONS.find((x) => x.case === s.casePrompt);
       f._caseDecidable = caseOpenForDecision(g.state, s.casePrompt);
       delete f._leaveChoice;
-      g.startDialogue('CASE_PROMPT');
+      g.startDialogue(s.prompt || 'CASE_PROMPT');
       st.poll = () => {
         if (g.dialogue.active) return false;
         if (!st.opened) {
@@ -125,7 +135,7 @@ export class Cutscene {
       const flag = 'aftermath_' + s.aftermath;
       if (g.state.flags[flag]) return finish();
       const out = outcomeOf(g.state, s.aftermath);
-      g.card = { lines: ['First light.'], t: 0 };
+      g.card = { lines: s.cardText || ['First light.'], t: 0 };
       st.poll = () => {
         if (!st.talking && st.t >= 2.2) { st.talking = true; g.card = null; g.startDialogue(out.aftermath); }
         if (st.talking && !g.dialogue.active) {

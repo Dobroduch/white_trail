@@ -183,6 +183,83 @@ export const SCRIPTS = {
     { endCard: true },
   ],
 
+  // ======================= Chapter 2: the second day =======================
+  // Straight on from the first night's end card: the chapter title over black, then first light on the hotel forecourt,
+  // where the aftermath with Finch (at the top of the creek path) has just ended.
+  CH2_OPEN: [
+    { control: false },
+    { fade: { to: 1, dur: 0 } },
+    { card: { lines: ['II', 'DECEIT AND ISOLATION'], dur: 3.6 } },
+    { phase: 'DAY', time: [7, 50], day: 2 },
+    { set: { ch2Started: true } },
+    { scene: { id: 'BLACK_RAM_EXTERIOR', spawn: 'fromCreek' } },
+    { fade: { to: 0, dur: 2.0 } },
+    { label: true },
+    { say: 'CH2_OPEN' },
+    { log: 'The second day. The storm has not let up, and the pass is still shut.' },
+    { checkpoint: true },
+    { control: true },
+    { hint: 'The second day. Rusk\'s store is back along Main Street, to the west.', dur: 8 },
+  ],
+
+  STORE_ENTER: [
+    { ambient: true },
+    { set: { storeEntered: true } },
+    { wait: 0.6 },
+    { bark: 'Warm in here. Tins and sacks, and a man by the counter watching me the way a man watches weather.' },
+  ],
+
+  GRAVEYARD_ENTER: [
+    { ambient: true },
+    { set: { graveyardEntered: true } },
+    { wait: 0.8 },
+    { bark: 'The chapel, and the town\'s dead in rows behind it. One grave by the fence is darker than the rest.' },
+  ],
+
+  // the closer look at the disturbed grave opens it (onExamine); shown once the examination text has been read
+  GRAVE_OPENED: [
+    { afterDialogue: true },
+    { control: false },
+    { reload: true },
+    { wait: 0.4 },
+    { line: { who: 'silas', text: 'Somebody means to come back for this.' } },
+    { log: 'Found dynamite, fuse and caps buried in Amos Pell\'s grave.' },
+    { checkpoint: true },
+    { control: true },
+  ],
+
+  TOWER_ENTER: [
+    { ambient: true },
+    { set: { towerEntered: true } },
+    { wait: 0.8 },
+    { bark: 'Wind straight off the snowfields. The wire sings on the poles, all but one span.' },
+    { wait: 4.2 },
+    { ifFlag: 'millSearched', bark: 'The snow up here is trodden all over: Finch\'s search party came this way in the night.' },
+  ],
+
+  // the day's core finds made: the light starts to go (global event)
+  CH2_DUSK: [
+    { ambient: true },
+    { set: { ch2DuskReady: true } },
+    { clock: [16, 40] },
+    { wait: 1.2 },
+    { bark: 'The light is going. Finch will be at the Black Ram by now, and so should I.' },
+    { hint: 'Go back to the Black Ram before dark. Going in ends the day.', dur: 8 },
+  ],
+
+  // at the hotel door at dusk: settle (or not) what the day adds up to, then supper with Finch, then the chapter's end
+  CH2_END: [
+    { control: false },
+    { casePrompt: 'ORDER', prompt: 'CASE_PROMPT_ORDER' },
+    { fade: { to: 1, dur: 1.6 } },
+    { clock: [17, 40] },
+    { aftermath: 'ORDER', cardText: ['Dusk.'] },
+    { set: { chapter2Complete: true } },
+    { log: 'The second day ended at the Black Ram, with Finch.' },
+    { checkpoint: true },
+    { endCard: 2 },
+  ],
+
   DEDUCTION_HINT: [
     { ambient: true },
     { set: { deductionHintShown: true } },

@@ -170,7 +170,8 @@ export const DIALOGUE = {
   BED: {
     start: 'start',
     nodes: {
-      start: { branch: [{ if: { phase: 'NIGHT' }, next: 'night' }, { next: 'a' }] },
+      start: { branch: [{ if: { phase: 'NIGHT' }, next: 'night' }, { if: { phase: 'DAY' }, next: 'day' }, { next: 'a' }] },
+      day: { who: 'note', text: 'The bed is made, tight as a drum. No sleep now; there is daylight to use, and not much of it.', next: 'END' },
       a: { who: 'note', text: 'The storm leans on the window. Nothing more will happen tonight that I can do anything about.', choices: [
         { text: 'Turn in for the night.', next: 'sleep' },
         { text: 'Not yet.', next: 'END' },
@@ -232,6 +233,201 @@ Object.assign(DIALOGUE, {
   } },
 });
 
+// ======================= Chapter 2: the second day =======================
+// Who Silas talks to on the second day, and how the first night's outcome colours it: the town frightened by the Order
+// story he gave Finch (townFrightened), the mill yard trodden by Finch's search (millSearched), the mill kept shut and
+// the town told "a man did this" (millKeptClosed), or nothing said at all. Finch's trust (STEADY / WARY / GUARDED / COLD)
+// decides how much he gives.
+Object.assign(DIALOGUE, {
+  CH2_OPEN: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Finch went off up the street with his hat still in his hands. The town is awake, after a fashion: smoke from the chimneys, and nobody on the street who doesn\'t have to be.', next: 'b' },
+    b: { branch: [
+      { if: { flag: 'townFrightened' }, next: 'frightened' },
+      { if: { flag: 'millSearched' }, next: 'searched' },
+      { if: { flag: 'millKeptClosed' }, next: 'closed' },
+      { next: 'open' },
+    ] },
+    frightened: { who: 'silas', text: 'By now the whole town has heard what I told Finch. I\'ll be lucky if anyone opens a door to me.', next: 'c' },
+    searched: { who: 'silas', text: 'Finch\'s men will be coming down off the ridge about now, cold and empty-handed.', next: 'c' },
+    closed: { who: 'silas', text: 'Finch has the mill shut. Whoever dressed that scene will be wondering why the town didn\'t scream back.', next: 'c' },
+    open: { who: 'silas', text: 'I gave Finch nothing to tell them. They\'ll have made up their own story by noon.', next: 'c' },
+    c: { who: 'silas', text: 'Somebody here bought new rope, and somebody knows the Order\'s old books. A store keeps accounts.', next: 'END' },
+  } },
+
+  FINCH_DAY: { start: 'start', nodes: {
+    start: { branch: [{ if: { trust: { finch: 'COLD' } }, next: 'cold' }, { next: 'a' }] },
+    cold: { who: 'finch', text: 'I\'ve a town to keep quiet, Mister Vance. You\'ve not made it easier.', again: 'I\'ve nothing for you.', next: 'END' },
+    a: { who: 'finch', text: 'Mister Vance. Did you sleep?', again: 'Something else?', next: 'hub' },
+    hub: { choices: [
+      { text: 'What did Hale have on him, the night he went out?', next: 'hale', once: true },
+      { text: 'Who in this town wears riding boots?', next: 'boots', once: true, if: { evidence: 'SAWMILL_BOOTPRINTS' } },
+      { text: 'Who keeps the telegraph?', next: 'wire', once: true },
+      { text: 'Where does the lane by the woodshed go?', next: 'lane', once: true },
+      { text: 'That\'ll do.', next: 'bye' },
+    ] },
+    hale: { branch: [{ if: { trust: { finch: 'STEADY' } }, next: 'hale_s' }, { next: 'hale_w' }] },
+    hale_s: { who: 'finch', text: 'His coat, his gun, his star. And a freight bill, folded small in the coat. Rusk\'s store. I didn\'t think anything of it till now.', do: [{ evidence: 'T_FINCH_FREIGHT' }], next: 'hub' },
+    hale_w: { who: 'finch', text: 'His coat, his gun, his star. Nothing worth your asking.', next: 'hale_w2' },
+    hale_w2: { who: 'note', text: 'He says it to the snow, not to me.', next: 'hub' },
+    boots: { who: 'finch', text: 'Half the old men who came up here after the war. They don\'t ride much now. They keep the boots.', do: [{ evidence: 'T_FINCH_BOOTS' }], next: 'hub' },
+    wire: { who: 'finch', text: 'Ada Bell, down at the station. Line\'s been dead since the storm. She went up to the tower this morning to see why.', do: [{ set: { knowsAda: true } }], next: 'hub' },
+    lane: { who: 'finch', text: 'Up to the chapel and the graves. Past them the path follows the wire up the ridge. The Reverend will be about.', do: [{ set: { knowsLane: true } }], next: 'hub' },
+    bye: { who: 'finch', text: 'Watch yourself.', next: 'END' },
+  } },
+
+  GABLE_DAY: { start: 'a', nodes: {
+    a: { who: 'gable', text: 'You didn\'t sleep.', again: 'Mister Vance.', next: 'hub' },
+    hub: { choices: [
+      { text: 'What does the Reverend preach, this time of year?', next: 'vale', once: true },
+      { text: 'What lies up past the chapel?', next: 'up', once: true },
+      { text: 'Who buys at Rusk\'s after dark?', next: 'rusk', once: true, if: { evidence: 'T_RUSK_FREIGHT' } },
+      { text: 'Nothing. Good day.', next: 'bye' },
+    ] },
+    vale: { who: 'gable', text: 'The Pale Figure. Every winter, when the snow shuts the pass. It fills his pews.', do: [{ evidence: 'T_GABLE_VALE' }], next: 'hub' },
+    up: { who: 'gable', text: 'The graves, then the wire, then the ridge. Then the old workings, and nobody goes up there. Nobody sensible.', next: 'hub' },
+    rusk: { who: 'gable', text: 'Anybody who\'d rather not be seen buying. Jonah keeps a back door, same as I keep a register.', next: 'rusk2' },
+    rusk2: { who: 'note', text: 'She hears what she has said a moment after I do.', next: 'hub' },
+    bye: { who: 'gable', text: 'Supper\'s at six, if you\'re still with us.', next: 'END' },
+  } },
+
+  RUSK: { start: 'start', nodes: {
+    start: { branch: [{ if: { all: [{ flag: 'townFrightened' }, { notFlag: 'ruskWarmed' }] }, next: 'frightened' }, { next: 'a' }] },
+    frightened: { who: 'rusk', text: 'You\'re the one told Finch it was the Order. Now my customers buy candles and bolt their doors.', next: 'f_hub' },
+    f_hub: { choices: [
+      { text: 'Then you want this settled as much as I do.', next: 'f_warm' },
+      { text: 'I said what I saw.', next: 'f_cold' },
+    ] },
+    f_warm: { who: 'rusk', text: '...Settled. Hm. Ask, then.', do: [{ set: { ruskWarmed: true } }, { char: { rusk: { trust: 'WARY' } } }], next: 'hub' },
+    f_cold: { who: 'rusk', text: 'Then go and see it somewhere else.', next: 'END' },
+    a: { who: 'rusk', text: 'Store\'s open. Don\'t touch what you won\'t buy.', again: 'Still here?', next: 'hub' },
+    hub: { choices: [
+      { text: 'Your last freight. What was on it?', next: 'freight', once: true, if: { evidence: 'STORE_LEDGER' } },
+      { text: 'The book says lamp oil. Your barrels are empty.', next: 'oil', once: true, if: { all: [{ evidence: 'T_RUSK_FREIGHT' }, { evidence: 'STORE_OIL' }, { examined: 'STORE_LEDGER' }] } },
+      { text: 'Did Sheriff Hale ask you about it?', next: 'hale', once: true, if: { evidence: 'T_RUSK_FREIGHT' } },
+      { text: 'Do you sell riding boots?', next: 'boots', once: true, if: { evidence: 'SAWMILL_BOOTPRINTS' } },
+      { text: 'What was in the long crate?', next: 'crate', once: true, if: { examined: 'STORE_CRATE' } },
+      { text: 'That\'s all.', next: 'bye' },
+    ] },
+    freight: { who: 'rusk', text: 'Freight\'s freight. I write what the waybill says. What was on it was paid in coin and fetched after dark, and I don\'t ask men their business.', do: [{ evidence: 'T_RUSK_FREIGHT' }], next: 'hub' },
+    oil: { who: 'rusk', text: '...Then somebody burned a deal of lamp oil.', next: 'oil2' },
+    oil2: { who: 'silas', text: 'Or never bought any.', next: 'oil3' },
+    oil3: { who: 'rusk', text: 'I scraped nothing. The page came to me like that, or it got that way after. I keep the book on the counter, Mister Vance. Anybody can lean on a counter.', do: [{ evidence: 'T_RUSK_SCRAPED' }], next: 'hub' },
+    hale: { who: 'rusk', text: 'A fortnight back he was in here reading my freight book like scripture. Asked about that same freight. I told him what I\'m telling you.', do: [{ evidence: 'T_RUSK_HALE' }], next: 'hale2' },
+    hale2: { who: 'note', text: 'And a fortnight later Hale was dead. Rusk has done that sum too.', next: 'hub' },
+    boots: { who: 'rusk', text: 'No call for them. The old troopers brought their own up from the war, and they keep them oiled.', next: 'hub' },
+    crate: { who: 'rusk', text: 'Kindling, now. It came up empty, far as I know. Crates do.', next: 'crate2' },
+    crate2: { who: 'note', text: 'Crates do not come up the mountain empty. Freight costs by the pound.', next: 'hub' },
+    bye: { who: 'rusk', text: 'Shut the door behind you. Heat costs money.', next: 'END' },
+  } },
+
+  VALE: { start: 'start', nodes: {
+    start: { branch: [
+      { if: { seen: 'VALE.hub' }, next: 'again' },
+      { if: { flag: 'townFrightened' }, next: 'frightened' },
+      { if: { flag: 'millKeptClosed' }, next: 'closed' },
+      { if: { flag: 'millSearched' }, next: 'searched' },
+      { next: 'open' },
+    ] },
+    again: { who: 'vale', text: 'Mister Vance.', next: 'hub' },
+    frightened: { who: 'vale', text: 'Mister Vance. The whole town has your words by heart: the Order took him. You saw it with your own eyes, they say. You\'ll find my door open to you.', next: 'hub' },
+    closed: { who: 'vale', text: 'Constable Finch tells the town a man did this. On your word, I hear. A comfortable thing to tell frightened people.', next: 'hub' },
+    searched: { who: 'vale', text: 'Six men tramped the creek all night after a murderer, I hear. They found snow.', next: 'hub' },
+    open: { who: 'vale', text: 'You are the man from the Black Ram. The one who found him.', next: 'hub' },
+    hub: { who: 'vale', choices: [
+      { text: 'Tell me about the Pale Figure.', next: 'figure', once: true },
+      { text: 'Who was Amos Pell?', next: 'pell', once: true, if: { evidence: 'GRAVE_STONE' } },
+      { text: 'One of your graves has been opened.', next: 'grave', once: true, if: { evidence: 'GRAVE_DISTURBED' } },
+      { text: 'Good day, Reverend.', next: 'bye' },
+    ] },
+    figure: { who: 'vale', text: 'It walks the ridge in the white months, Mister Vance. It carries a lamp. Those who follow it up to the old workings do not come down again.', do: [{ evidence: 'T_VALE_FIGURE' }], next: 'figure2' },
+    figure2: { branch: [{ if: { flag: 'ridgeLightSeen' }, next: 'figure3' }, { next: 'hub' }] },
+    figure3: { who: 'silas', text: 'I saw a lamp on the ridge last night.', next: 'figure4' },
+    figure4: { who: 'vale', text: 'Then you have been warned, and that is more than most are given.', next: 'hub' },
+    pell: { who: 'vale', text: 'A miner. The Pale workings fell in on him and four others in seventy-two. The Order paid for his stone. It paid for a great many things, then.', do: [{ evidence: 'T_VALE_ORDER' }], next: 'hub' },
+    grave: { who: 'vale', text: 'Dogs dig, in a hard winter. I keep the ground, Mister Vance, not the graves.', next: 'grave2' },
+    grave2: { who: 'silas', text: 'Dogs don\'t put the boards back.', next: 'grave3' },
+    grave3: { who: 'vale', text: 'Then pray for whoever did.', do: [{ evidence: 'T_VALE_PELL' }], next: 'hub' },
+    bye: { who: 'vale', text: 'Keep off the ridge, Mister Vance. The town has buried enough this winter.', next: 'END' },
+  } },
+
+  ADA: { start: 'start', nodes: {
+    start: { branch: [{ if: { seen: 'ADA.hub' }, next: 'again' }, { next: 'a' }] },
+    again: { who: 'ada', text: 'Mister Vance.', next: 'hub' },
+    a: { who: 'ada', text: 'You\'ll be the man Constable Finch sent for.', next: 'a2' },
+    a2: { who: 'note', text: 'She says "Finch sent for" carefully, the way you step on ice.', next: 'hub' },
+    hub: { who: 'ada', choices: [
+      { text: 'When did the line go dead?', next: 'line', once: true },
+      { text: 'Can you mend it?', next: 'mend', once: true, if: { evidence: 'T_ADA_LINE' } },
+      { text: 'You sent my telegram.', next: 'tel', once: true, if: { evidence: 'T_ADA_LINE' } },
+      { text: 'Go home, Miss Bell. It isn\'t safe up here.', next: 'home', once: true },
+      { text: 'That\'s all.', next: 'bye' },
+    ] },
+    line: { who: 'ada', text: 'Six o\'clock, the evening you came. I had a message half sent to the county seat. Nothing since.', next: 'line2' },
+    line2: { who: 'ada', text: 'I came up to splice it. The next stretch is down too, along the ridge. Somebody walked the line with cutters.', do: [{ evidence: 'T_ADA_LINE' }], next: 'hub' },
+    mend: { who: 'ada', text: 'This span, yes. A mile of it along the ridge, in this, no. We\'re shut in, Mister Vance, till the pass opens or somebody walks the line.', do: [{ evidence: 'T_ADA_MEND' }], next: 'hub' },
+    tel: { who: 'ada', text: 'I send what\'s handed in, and I write down who hands it in.', next: 'tel2' },
+    tel2: { who: 'silas', text: 'Who handed in mine?', next: 'tel3' },
+    tel3: { who: 'ada', text: 'Not up here. Not with the line down and nobody to send for.', do: [{ evidence: 'T_ADA_TELEGRAM' }, { set: { adaKnowsSender: true } }], next: 'tel4' },
+    tel4: { who: 'note', text: 'She looks down the hill toward the town, not at me.', next: 'hub' },
+    home: { who: 'ada', text: 'Neither is the station.', do: [{ set: { adaWarned: true } }], next: 'hub' },
+    bye: { who: 'ada', text: 'If the line comes back, Mister Vance, I\'ll know it before anyone.', next: 'END' },
+  } },
+
+  CASE_PROMPT_ORDER: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: '_caseDecidable' }, next: 'ready' }, { next: 'unready' }] },
+    ready: { who: 'note', text: 'The light is going, and Finch will be inside with his supper and his questions. Before I go in, I should settle what I make of today.', choices: [
+      { text: 'Settle it now. [Review the case]', next: 'review' },
+      { text: 'Not yet. I\'ll go through my notebook first.', next: 'notebook' },
+      { text: 'Go in and keep it to myself.', next: 'open' },
+    ] },
+    unready: { who: 'note', text: 'Finch will ask what I found today, and I have not yet worked out what it adds up to.', choices: [
+      { text: 'Go through my notebook first.', next: 'notebook' },
+      { text: 'Go in and keep it to myself.', next: 'open' },
+    ] },
+    review: { do: [{ set: { _leaveChoice: 'review' } }], next: 'END' },
+    notebook: { do: [{ set: { _leaveChoice: 'notebook' } }], next: 'END' },
+    open: { do: [{ set: { _leaveChoice: 'open' } }], next: 'END' },
+  } },
+
+  AFTER2_BLAST: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The parlor, the lamps lit. Finch at the corner table with his coat still on and his supper going cold.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'Somebody bought dynamite on Rusk\'s freight and buried it in Amos Pell\'s grave. The wire was cut to keep us shut in until they\'ve used it.', next: 'd' },
+    d: { who: 'finch', text: 'Used it on what?', next: 'e' },
+    e: { who: 'silas', text: 'The old workings. Whatever is in them.', next: 'f' },
+    f: { branch: [{ if: { trust: { finch: 'COLD' } }, next: 'cold' }, { next: 'g' }] },
+    cold: { who: 'finch', text: 'And why should I believe you now?', next: 'cold2' },
+    cold2: { who: 'silas', text: 'Because I\'m not asking you to do anything. Leave the grave as it is. Let them come back for it.', next: 'h' },
+    g: { who: 'finch', text: 'I\'ll have that grave dug out tonight.', next: 'g2' },
+    g2: { who: 'silas', text: 'Don\'t. Leave it as it is, and let them come back for it.', next: 'h' },
+    h: { who: 'finch', text: '...And when they do?', next: 'i' },
+    i: { who: 'silas', text: 'Then we\'ll know who they are.', next: 'END' },
+  } },
+  AFTER2_WAR: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The parlor, the lamps lit. Finch at the corner table with his coat still on and his supper going cold.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'There\'s a war cache in Amos Pell\'s grave. Old powder in an old trooper\'s jacket. Somebody guards it, and cut the wire so nobody hears about Hale.', next: 'd' },
+    d: { who: 'finch', text: 'War stores. Up here.', next: 'e' },
+    e: { who: 'finch', text: 'Then I\'ll have it out of the ground before it takes somebody\'s hand off.', next: 'f' },
+    f: { who: 'note', text: 'By the time the pie came, he had four men and a wagon.', next: 'END' },
+  } },
+  AFTER2_RITE: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The parlor, the lamps lit. Finch at the corner table with his coat still on and his supper going cold.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'The Order is buying powder for whatever it means to do on that ridge, and its lamp keeps watch over the valley.', next: 'd' },
+    d: { who: 'finch', text: 'You\'d best not say that where the Reverend can hear it.', next: 'e' },
+    e: { who: 'note', text: 'At a quarter past six the chapel bell began to ring. The Reverend had heard it anyway.', next: 'END' },
+  } },
+  AFTER2_OPEN: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The parlor, the lamps lit. Finch at the corner table with his coat still on and his supper going cold.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'Snow. A dead wire. A storekeeper who doesn\'t ask questions.', next: 'd' },
+    d: { who: 'finch', text: 'That\'s not much.', next: 'e' },
+    e: { who: 'silas', text: 'No.', next: 'END' },
+  } },
+});
+
 export const SPEAKERS = {
   silas: 'SILAS VANCE', finch: 'CONSTABLE FINCH', gable: 'MRS. GABLE', conductor: 'CONDUCTOR', note: null,
+  rusk: 'JONAH RUSK', vale: 'REVEREND VALE', ada: 'ADA BELL',
 };

@@ -2,9 +2,9 @@
 //   state.deductions  formed deduction ids, in the order they were formed
 //   state.readings    deduction id -> chosen reading key (only for deductions with readings)
 //   state.cases       case id -> { conclusion, readings, t } once the player has committed
-import { QUESTIONS, STATEMENTS, DEDUCTIONS, CONCLUSIONS, OPEN_OUTCOME } from '../data/caseData.js';
+import { QUESTIONS, STATEMENTS, DEDUCTIONS, CONCLUSIONS, OPEN_OUTCOMES } from '../data/caseData.js';
 import { EVIDENCE } from '../data/evidence.js';
-import { test, apply, timeString } from './storyState.js';
+import { test, apply, timeString, newState } from './storyState.js';
 
 export function ensureCaseState(s) {
   if (!s.readings || typeof s.readings !== 'object') s.readings = {};
@@ -115,7 +115,7 @@ export function commit(s, cid) {
 // What follows from the case as it stands (committed conclusion, or left open).
 export function outcomeOf(s, caseId) {
   const k = committed(s, caseId);
-  return k ? CONCLUSIONS[k.conclusion].outcome : OPEN_OUTCOME;
+  return k ? CONCLUSIONS[k.conclusion].outcome : OPEN_OUTCOMES[caseId];
 }
 // Can the case be decided at all yet (any conclusion on the table)?
 export function caseOpenForDecision(s, caseId) {
@@ -128,6 +128,11 @@ export function caseOpenForDecision(s, caseId) {
 // recorded closer look teaches (onExamine) so an old save that had examined the furrow knows about the wheel pit.
 export function migrateCaseState(s) {
   ensureCaseState(s);
+  // people added in a later chapter (Rusk, Vale, Ada Bell) join an older save with their starting state
+  const fresh = newState();
+  if (!s.chars) s.chars = {};
+  for (const [c, v] of Object.entries(fresh.chars)) if (!s.chars[c]) s.chars[c] = { ...v };
+  if (s.time && s.time.day == null) s.time.day = 1;
   s.deductions = s.deductions.filter((d, i, a) => DEDUCTIONS[d] && a.indexOf(d) === i);
   for (const did of Object.keys(s.readings)) if (!s.deductions.includes(did) || !hasReadings(did)) delete s.readings[did];
   for (const [id, rec] of Object.entries(s.evidence || {})) {

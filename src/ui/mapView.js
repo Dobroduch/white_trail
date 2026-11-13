@@ -86,6 +86,6 @@ export class MapView {
     text(ctx, `drawn by S.V. — ${shown.length} place${shown.length === 1 ? '' : 's'} walked`, ox + 16, oy + 28, FADED);
     if (shown.length <= 1) text(ctx, 'Nothing else drawn yet. I only put down what I have seen.', ox + 16, oy + 35, FADED);
     font(ctx, 4.4, { italic: true });
-    text(ctx, 'M / Esc  close', ox + MAP_W - 14, oy + MAP_H - 6, FADED, 'right');
+    text(ctx, this.game.touchUI() ? 'Back closes' : 'M / Esc  close', ox + MAP_W - 14, oy + MAP_H - 6, FADED, 'right');
   }
 }

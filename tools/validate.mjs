@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { DIALOGUE, SPEAKERS } from '../src/data/dialogue.js';
 import { EVIDENCE } from '../src/data/evidence.js';
 import { LEADS, ITEMS, PEOPLE } from '../src/data/notebookData.js';
-import { QUESTIONS, STATEMENTS, DEDUCTIONS, CONCLUSIONS, OPEN_OUTCOME } from '../src/data/caseData.js';
+import { QUESTIONS, STATEMENTS, DEDUCTIONS, CONCLUSIONS, OPEN_OUTCOMES } from '../src/data/caseData.js';
 import { HINT_STEPS, HINT_TIMING } from '../src/data/hints.js';
 import { tryPair, conclusionsFor, setReading, commit, canCommit, migrateCaseState, statementKnown } from '../src/systems/caseSystem.js';
 import { SCRIPTS } from '../src/data/scripts.js';
@@ -100,7 +100,7 @@ console.log('Tiled levels');
 
 console.log('Scenes');
 for (const [id, sc] of Object.entries(SCENES)) {
-  const all = [sc, sc.night].filter(Boolean);
+  const all = [sc, sc.night, sc.day].filter(Boolean);
   for (const ex of sc.exits || []) {
     ok(SCENES[ex.to], `${id}: exit to unknown ${ex.to}`);
     ok(SCENES[ex.to] && SCENES[ex.to].spawns[ex.spawn], `${id}: exit spawn ${ex.to}.${ex.spawn} missing`);
@@ -110,6 +110,7 @@ for (const [id, sc] of Object.entries(SCENES)) {
   }
   for (const d of sc.doors || []) {
     ok(SCENES[d.to] && SCENES[d.to].spawns[d.spawn], `${id}: door ${d.id} -> ${d.to}.${d.spawn} missing`);
+    if (d.scriptIf) { ok(SCRIPTS[d.scriptIf.script], `${id}: door ${d.id} scriptIf script missing`); walkConds(d.scriptIf.if, id); }
     ok(d.x >= sc.bounds[0] - 20 && d.x <= sc.bounds[1] + 20, `${id}: door ${d.id} outside interaction reach`);
     walkConds(d.if, id);
   }
@@ -163,7 +164,7 @@ for (const [id, c] of Object.entries(CONCLUSIONS)) {
   ok(c.outcome.epilogue, `${id}: epilogue missing`);
   walkEffects(c.outcome.do, id);
 }
-ok(DIALOGUE[OPEN_OUTCOME.aftermath], 'open outcome dialogue missing');
+for (const [c, o] of Object.entries(OPEN_OUTCOMES)) ok(DIALOGUE[o.aftermath], `open outcome dialogue for case ${c} missing`);
 for (const q of QUESTIONS.filter((x) => x.case)) {
   const list = Object.values(CONCLUSIONS).filter((c) => c.q === q.id);
   ok(list.filter((c) => c.truth).length === 1, `${q.id}: exactly one conclusion must be the truth`);
@@ -227,8 +228,11 @@ console.log('Sprites');
     }
   }
   const used = new Set();
-  for (const sc of Object.values(SCENES)) for (const v of [sc, sc.night].filter(Boolean)) for (const n of v.npcs || []) used.add(n.sprite.replace(/_idle$/, ''));
-  for (const u of used) ok(data.sprites[u], `npc sprite ${u} missing from sheet`);
+  for (const sc of Object.values(SCENES)) for (const v of [sc, sc.night, sc.day].filter(Boolean)) for (const n of v.npcs || []) used.add(n.sprite.replace(/_idle$/, ''));
+  // a character is drawn from its native-density sheet (src/engine/assets.js NATIVE_SHEETS) or the legacy palette sprite
+  const assetsSrc = await readFile(new URL('../src/engine/assets.js', import.meta.url), 'utf8');
+  const native = new Set([...assetsSrc.matchAll(/sprites: \{([^}]*)\}/g)].flatMap((m) => [...m[1].matchAll(/(\w+):/g)].map((x) => x[1])));
+  for (const u of used) ok(data.sprites[u] || native.has(u + '_idle'), `npc sprite ${u} missing from sheet`);
   for (const n of ['silas_body', 'silas_legs', 'lantern_on', 'lantern_off', 'candle', 'hale_body', 'patron', 'patron_look']) ok(data.sprites[n], `sprite ${n} missing`);
 }
 

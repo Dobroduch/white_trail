@@ -12,6 +12,7 @@ const types = {
   '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.wav': 'audio/wav',
   '.ogg': 'audio/ogg', '.md': 'text/plain; charset=utf-8', '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
 };
 
 createServer(async (req, res) => {

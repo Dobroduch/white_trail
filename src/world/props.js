@@ -510,7 +510,44 @@ export function ridgeLightProp() {
   };
 }
 
+// ---------------- A tileset block shown on a condition (e.g. the opened grave) ----------------
+// args: [tilesetUrl (.tsj, tiles carry a `name` property), blockName, widthInTiles, heightInTiles, x, y] with x, y the block's
+// top-left in native px (Tiled coordinates). Drawn in the playfield plane over the map's own tiles; the prop's `if` decides
+// when it exists (the scene reloads when that changes). Loads once per tileset and draws as soon as it is ready.
+const stampSheets = new Map(); // tsj url -> Promise<{ img, cols, byName }>
+function loadStampSheet(url) {
+  if (!stampSheets.has(url)) {
+    stampSheets.set(url, fetch(url).then((r) => r.json()).then((ts) => new Promise((resolve) => {
+      const img = new Image();
+      const byName = new Map();
+      for (const t of ts.tiles || []) { const n = (t.properties || []).find((p) => p.name === 'name'); if (n) byName.set(n.value, t.id); }
+      img.onload = () => resolve({ img, cols: ts.columns, byName, tw: ts.tilewidth, th: ts.tileheight });
+      img.onerror = () => { console.error(`[props] stamp: could not load ${ts.image}`); resolve(null); };
+      img.src = new URL(ts.image, new URL(url, location.href)).href;
+    })).catch((e) => { console.error(`[props] stamp: ${url}: ${e.message}`); return null; }));
+  }
+  return stampSheets.get(url);
+}
+export function stampProp(tsjUrl, block, wt, ht, x, y) {
+  let sheet = null;
+  loadStampSheet(tsjUrl).then((s) => { sheet = s; });
+  return {
+    z: 1,
+    draw(ctx, camX) {
+      if (!sheet) return;
+      const k = 1 / 1.5; // native px -> world units
+      for (let r = 0; r < ht; r++) for (let c = 0; c < wt; c++) {
+        const id = sheet.byName.get(`${block}_${r}_${c}`);
+        if (id == null) continue;
+        const sx = (id % sheet.cols) * sheet.tw, sy = Math.floor(id / sheet.cols) * sheet.th;
+        ctx.drawImage(sheet.img, sx, sy, sheet.tw, sheet.th, (x + c * sheet.tw) * k - camX, (y + r * sheet.th) * k, sheet.tw * k, sheet.th * k);
+      }
+    },
+  };
+}
+
 export const PROP_FACTORIES = {
+  stamp: stampProp,
   train: trainProp, fire: fireProp, embers: (x, y) => fireProp(x, y, { embersOnly: true }),
   patrons: patronsProp, deskFront: deskFrontProp, watcher: (x, y) => watcherProp(x, y), windowSnow: windowSnowProp,
   lamp: lampLight, body: bodyProp, watch: watchProp, ledger: ledgerProp, ridgeLight: ridgeLightProp,

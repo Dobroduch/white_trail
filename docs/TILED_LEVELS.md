@@ -21,6 +21,8 @@ Walking order: STATION → ROAD → **VILLAGE** (Crow's Hollow Main Street, `mai
 at night only, east from the forecourt → CREEK → SAWMILL. Every playable scene (STATION, ROAD, VILLAGE, BLACK_RAM_EXTERIOR, CREEK, SAWMILL, PARLOR, ROOM4) exists only as a Tiled map; `scenes.js` keeps just the global events. All but the hotel forecourt were rebuilt from tilesets (Pass 2: `tools/make-*-level.mjs` built each map once, Tiled owns it now);
 the hotel forecourt is the original Black Ram map.
 
+**Chapter 2 (the second day, phase `DAY`)** adds `RUSK_STORE` (`rusk_store.tmj`, through the store door on Main Street), `GRAVEYARD` (`chapel_graveyard.tmj`, up the chapel lane) and `TELEGRAPH` (`telegraph_tower.tmj`, east of the graves), built once by `tools/make-chapter2-levels.mjs` from the `store_interior` and `hillside_exterior` tilesets (`tools/make-chapter2-art.mjs`). The same tool patched Main Street, the forecourt, the parlor and Room 4 for daylight: a DAY sky layer, a `day` map property, Finch and Mrs. Gable by day, and the store and lane doors (map property `chapter2` marks them as patched).
+
 ## Update an existing level
 
 1. Edit the map in Tiled and save (Ctrl+S). The `.tmj` is what the game loads, so there's no export step.
@@ -91,8 +93,8 @@ to world units (÷ 1.5). The ground line used by the existing exteriors is **y =
   pan, and the game uses the same value. Factors on a group multiply into its children.
 - A `glow` layer with a factor other than 1 belongs to the nearest layer **below** it with the same factor
   (for example, the far town lights on the 0.5 rooftops layer).
-- **Phase**: a layer with the custom property `phase = EVENING` or `phase = NIGHT` is drawn only in that
-  phase. Use this for different skies or lit windows.
+- **Phase**: a layer with the custom property `phase = EVENING`, `phase = NIGHT` or `phase = DAY` is drawn only in that
+  phase. Use this for different skies or lit windows (the town's exteriors have `sky_evening`, `sky_night` and `sky_day`).
 - **Opacity**, **visibility** and **offset** are respected. *Repeat X* on image layers tiles horizontally.
 - Hidden layers are ignored, so you can keep reference or tracing layers in the map.
 - Not supported (yet): tile animations (the first frame is drawn), tint colour, isometric maps,
@@ -109,11 +111,11 @@ ellipse uses its centre. Properties marked "native" are in pixels.
 | `bounds` | — (rectangle) | — | walkable x-range. Walking into an edge triggers that side's exit |
 | `ground` | — (polyline) | — | the ground profile Silas walks on (default: flat at map property `groundY`, else 225) |
 | `exit` | — | `side` left/right (inferred from position if empty), `to`, `spawn`, `if`, `phase`, `blockedLines`, `blockedScript`, `scriptIf` (JSON `{"if":…,"script":"ID"}`: run the script instead of travelling) | scene-edge exit |
-| `door` | door id | `label`, `verb` (Enter), `to`, `spawn`, `minutes` (1), `if`, `phase`, `blockedLines`, `showIf` (JSON condition: until it holds the door does not exist at all — no prompt, no hotspot; used for hidden entrances such as the wheel pit) | an "Enter — label" prompt at its x |
+| `door` | door id | `label`, `verb` (Enter), `to`, `spawn`, `minutes` (1), `if`, `phase`, `blockedLines`, `scriptIf` (JSON `{"if":…,"script":"ID"}`: run the script instead of going through, e.g. the second day ends at the hotel door), `showIf` (JSON condition: until it holds the door does not exist at all — no prompt, no hotspot; used for hidden entrances such as the wheel pit) | an "Enter — label" prompt at its x |
 | `interactable` | object id | `label`, `lines`, `again`, `variants`, `evidence`, `dialogue`, `verb`, `important`, `warm`, `radius` (native), `if`, `phase` | an "Examine — label" prompt |
 | `npc` | character id (`finch`, `gable`, …) | `label` (display name), `sprite`, `dialogue`, `facing`, `z`, `lantern`, `candle`, `if`, `phase` | a character. Must exist in story state `chars` |
-| `light` | — | `r` radius (native, default 60, or the ellipse size), `warm` 0–1, `strength`, `phase` | a light pool. Untagged lights shine in both phases |
-| `prop` | — | `propType` (a key of `PROP_FACTORIES` in `props.js`), `args` (JSON array), `id`, `if`, `phase` | a scripted prop (fire, steam, …) |
+| `light` | — | `r` radius (native, default 60, or the ellipse size), `warm` 0–1, `strength`, `phase` | a light pool. Untagged lights shine in every phase; EVENING / NIGHT / DAY lights only in theirs |
+| `prop` | — | `propType` (a key of `PROP_FACTORIES` in `props.js`), `args` (JSON array), `id`, `if`, `phase` | a scripted prop (fire, steam, …). `stamp` draws a named block of a tileset on a condition: `args` = `["assets/levels/tilesets/x.tsj", "block", wTiles, hTiles, x, y]` (the opened grave) |
 | `event` | event id (once per playthrough) | `script`, `bark`, `delay`, `do` (JSON effects), `if`, `phase` | a story event. As a **rectangle** it fires only while Silas is inside its x-range |
 
 Text and JSON properties:
@@ -143,6 +145,7 @@ Ids used here (`to`, `spawn`, `dialogue`, `evidence`, `script`, `sprite`) must e
 | `nightSky` | bool | `false` for an exterior with no open sky (the wheel pit): no deep-blue night-sky tint. Every other exterior gets it at NIGHT (`NIGHT_SKY` in `src/engine/game.js`) |
 | `travel` | int | minutes added to the clock when arriving |
 | `groundY` | float | flat ground line in native px if there is no `ground` object |
+| `day` | string (JSON) | overrides for the DAY phase (Chapter 2's daylight), like `night`; without one a scene is simply drawn lighter |
 | `night` | string (JSON) | overrides for the night phase, for example `{"darkness":0.84,"ambience":"village_night","weather":{"snow":0.9,"wind":0.85,"fog":0.4}}` |
 
 ## Troubleshooting

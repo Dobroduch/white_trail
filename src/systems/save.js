@@ -54,6 +54,8 @@ export const DEFAULT_SETTINGS = {
   footsteps: 1, interaction: 1, // sub-mixes of the effects bus
   textSpeed: 'normal', reducedMotion: false, scanlines: false, vignette: false,
   scaling: 'auto', // 'auto' = fill the window (pixel-perfect when it fits well) | 'integer' = whole multiples only
+  touchControls: 'auto', // 'auto' = on for phones/tablets and after the first touch | 'on' | 'off' (ui/touchControls.js)
+  touchFullscreen: true, // touch devices: ask for fullscreen + a landscape lock on the first tap, where allowed
 };
 export function loadSettings() {
   try {

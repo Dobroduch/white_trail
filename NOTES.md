@@ -1,6 +1,6 @@
 # THE WHITE TRAIL — Milestone 1 notes
 
-Status as of 2026-11-11: first playable vertical slice, from the train arrival to the sawmill crime scene and an end-of-chapter card.
+Status as of 2026-11-14: two chapters playable as one continuous game: the first night (train arrival to the sawmill and case 1) and Chapter 2, "Deceit and Isolation" (the second day, case 2), on desktop and in mobile browsers held sideways. See §20 and §21. (First playable vertical slice: 2026-11-11.)
 
 ## 1. What is implemented
 
@@ -472,3 +472,160 @@ The forecourt keeps its Black Ram hotel, annex, boardwalk, lamp and windows. Add
 - The Mind map is keyboard-only (no mouse picking).
 - Real-time feel and audio are still unobserved by a person.
 - Firefox and Safari are untested.
+
+
+## 20. Chapter 2, "Deceit and Isolation": the second day, continuing from the demo (2026-11-14)
+
+**Where the demo really ends** (read from the code, not assumed). Leaving the mill by the footbridge runs `SLICE_END`:
+1. `CASE_PROMPT`, then the case review or leaving the case open;
+2. a fade and the **"First light."** card;
+3. the outcome's aftermath with Finch "at the top of the creek path";
+4. its effects (`millKeptClosed` / `millSearched` / `townFrightened`, Finch's trust);
+5. `sliceComplete` and a checkpoint;
+6. the end card.
+
+The end card used to offer "Keep investigating at the mill" or the title. At that point Silas carries the telegram, lantern, revolver (3 of 6), the Room 4 key, Hale's watch and the half-burned ledger. Night 1 is over, it is first light, and he stands at the top of the creek path, by the hotel forecourt.
+
+**Continuation.** The first night's end card is now a chapter close. It keeps its summary and offers **"Go on: the second day"** or **"Save and return to the title"**. Going on runs `CH2_OPEN`:
+- the chapter title over black (**II · DECEIT AND ISOLATION**);
+- the phase changes to **DAY**, day 2, 07:50;
+- the scene loads the **hotel forecourt at its creek end** (`fromCreek`), right where the aftermath left off;
+- one note line follows. Finch has just gone, so his conversation does not repeat, and the note matches the first night's outcome.
+
+There is no title screen, no new game and no state reset. Every flag, item, evidence record, deduction, reading, the HALE case, the map and the timeline carry over.
+
+A save made on the first night's end card resumes there, including saves from the previous build, since `sliceComplete` was already saved. **Continue** reopens the card, so the story goes on exactly as without the reload (tested).
+
+**Day phase (engine).** `state.phase = 'DAY'`:
+- Tiled maps get a `day` property (like `night`), DAY-tagged lights, and DAY-tagged layers.
+- The town's exteriors gain an overcast `sky_day` layer (`town_sky_day.png`, the evening clouds re-lit, palette-exact).
+- A scene without a `day` override is just lighter.
+- The clock stops at 17:40.
+
+The first night's people, props and beats are EVENING- or NIGHT-tagged or once-only, so by day:
+- nobody from the first night replays a conversation: no patrons, no Finch at the porch, no FINCH_MEET;
+- the bed in Room 4 refuses to start the night over (`BED.day`);
+- the creek path and the road down to the station are closed by day, with a line each.
+
+**The day's places** (new Tiled maps and tilesets; `tools/make-chapter2-art.mjs`, `tools/make-chapter2-levels.mjs`):
+- **Rusk's store** (`RUSK_STORE`, through the store door on Main Street). Pieces: the **account book**, the oil barrels, the stove, the boot rack, the shelves, sacks and the **long crate**. Jonah Rusk stands by the counter.
+- **The chapel and the graves** (`GRAVEYARD`, up the **chapel lane** on Main Street). Pieces: the chapel front with its bell, rows of 1870s graves, **Amos Pell's stone**, the **disturbed grave** (its closer look opens it; a `stamp` prop then draws the opened grave), and the **prints by the fence**. Reverend Vale stands by the chapel door.
+- **The telegraph tower** (`TELEGRAPH`, east of the graves, up the ridge path). Pieces: telegraph poles, the timber tower, the **hanging cut wire**, a **soot-blackened lantern hook** on the platform, and the view over the valley. Ada Bell is at the tower's foot. The ridge path on is closed: "not without knowing what is up there".
+
+Tilesets `store_interior` (120 tiles) and `hillside_exterior` (184 tiles) are palette-exact, with `.pxo` sources written by `tools/lib/pxo.mjs`. Three people are re-dressed from existing sheets by explicit colour maps onto the palette: **Rusk** from the conductor, with an apron; **Vale** from Finch, in black with a white collar; **Ada** from Mrs. Gable, in blue serge with red hair. Silas's map gains the chapel with its graves, the tower and wire, and the two paths. Silas's routes: Main Street → store, Main Street → chapel → tower.
+
+**The investigation.** Case 2, **"What is the Pale Order doing now?"** (`Q_ORDER`, case `ORDER`):
+- 12 key statements. Two draw on first-night evidence: the riding boots at the mill and the watcher on the ridge.
+- 6 deductions. Three of them have readings: *Powder in the ground* (left from the war / this winter's freight), *Cut off on purpose* (to keep word in / to keep help out) and *The light on the ridge* (the Pale Figure's lamp / a man, signalling).
+- 3 accounts whose readings exclude each other (`validate.mjs` checks this):
+  - **Someone means to blast the old workings** (true): new powder, help kept out, a man signalling;
+  - **Old soldiers, guarding old stores**: old powder, word kept in;
+  - **The Order keeps its rites**: the Figure's lamp, new powder.
+- Small details bear on the readings: the dated paper band in Rusk's crate and round the sticks, the empty oil barrels, Ada's "a mile of it cut", and the view from the tower.
+- Day 2 has its own hints (`H2_*`), leads (`L_POWDER`, `L_GRAVE`, `L_WIRE`, `L_SENDER`, `L_WORKINGS`, and a new variant of the ridge lead), and People entries with portraits (Rusk, Vale, Ada).
+
+**How the first night's outcome changes the second day.**
+- *The Order's work* (`townFrightened`, Finch COLD): Rusk first refuses ("my customers buy candles and bolt their doors") until Silas offers to settle it. Vale welcomes Silas as a witness. Finch gives nothing.
+- *Murdered tonight* (`millSearched`): Vale mocks the search. The tower's snow is trodden by the search party.
+- *Hung for show* (`millKeptClosed`, Finch STEADY): Finch adds that Hale carried one of Rusk's freight bills. Vale sneers at "a man did this".
+- *Left open*: Vale only knows Silas found the body.
+- The opening line of the day also varies with the outcome.
+
+**Ending.** Once the ledger, the grave's closer look and the wire's closer look are recorded, the light starts to go (global event `CH2_DUSK`, clock to 16:40). Going in at the Black Ram's door then runs `CH2_END`:
+1. settle the case now, go to the notebook first, or keep it to yourself;
+2. the **"Dusk."** card;
+3. supper with Finch: one of four aftermaths;
+4. the **second day's end card**, with the outcome's epilogue, the day's open questions, "The story continues in the next chapter", and **Walk the town a while longer** or the title.
+
+Outcome flags for later chapters: `watchGrave`, `powderMoved`, `valeEmboldened`. Plus `adaKnowsSender`, `adaWarned` and `ruskWarmed`.
+
+**Engine changes for it** (all generic):
+- doors can carry `scriptIf`;
+- new cutscene steps `scene`, `reload`, `afterDialogue`, `clock` and `ifFlag`;
+- `casePrompt` takes its own `prompt` dialogue, and the aftermath takes `cardText`;
+- `EndCard(chapter)`;
+- `OPEN_OUTCOMES` per case;
+- saves gain the new characters on load (`migrateCaseState`);
+- the dialogue runner now marks branch nodes as seen. This fixes `once` choices that lead to a branch: they were never spent.
+
+**Story decisions invented here; please review.** Approved in outline as the GDD Act III proposal, "Design it as proposed". The details are mine:
+1. **The powder.** Forty pounds of Giant Powder (a real 1860s–90s dynamite maker) came up on Rusk's freight nine days before Silas. It was paid in coin and fetched after dark, and the account book was scraped to read "lamp oil". **Rusk's own part is left open**: he says the page "came to him like that".
+2. **The cache** is in **Amos Pell's grave**, a miner killed in the 1872 collapse of the Pale workings whose stone the Order paid for. It is wrapped in an **old grey cavalry jacket stiff with old blood**: the GDD's "blood-stained uniform remnants" and "military cache" misdirection. Whose jacket it is stays unstated.
+3. **The cut wire.** It was cut at 18:00 on the evening Silas arrived, with a mile more along the ridge, and made to look torn. Who cut it is unstated. The intent the evidence supports is to keep help out until the work is done.
+4. **The ridge lantern** was kept at the telegraph tower, which looks down on the mill and the Black Ram. Who held it is unstated.
+5. **Reverend Vale** preaches the Pale Figure each winter. It "carries a lamp" and warns people off the old workings. He blames the grave on dogs. **Part IX Q5 (how much he knows) stays open.**
+6. **Ada Bell** sent the telegram and wrote down who handed it in, but will not say who "up here". **Part IX Q1 (Finch's complicity) and Clara's part stay open.** No poisoner and no Clara reveal (Q2, Q3). The murder method (Q6) is not touched.
+7. The true account of case 2, *someone means to blast the old workings*, follows GDD §12.2 without naming anyone.
+8. "Hale was on the same trail": Hale read Rusk's freight book a fortnight before he died. The account of Hale reading old records at the office (first night) is kept as it was.
+
+**Tests:** `tests/e2e/chapter2.spec.mjs`, 7 tests:
+- four full runs, each first-night outcome with a different second-day outcome, checking that nothing is lost, that the outcome colours the day, and the end card (captures in `test-results/review/ch2-endcard-*.png`);
+- resuming a save made on the first night's end card;
+- reloading a save made in the middle of the second day;
+- no first-night beats replay by day.
+
+`T.fullRun2({ conclusion, thorough })` in `tools/harness.js` plays the second day with real inputs, or by touch.
+
+**Not done / limits:**
+- Chapter 3 (the old workings, the summit, the poisoned coffee) does not exist. The second day's end card says the story continues.
+- No new audio. The new places use the existing ambience beds (`road`, `room4`).
+- Day 2 has no Finch-office interior and no station / Ada interior; Ada is met at the tower.
+- The road, station, creek and mill are closed by day rather than given day art.
+- The new art (three locations, three people) was reviewed only in test screenshots, not by a person in real time.
+
+## 21. Mobile browsers, landscape, touch (2026-11-14)
+
+**Display.**
+- The page uses `viewport-fit=cover`, and the canvas is fitted **inside the safe area**: notches, rounded corners and the home bar are read from `env(safe-area-inset-*)` through `#safe-probe`.
+- It also follows `visualViewport` resizes, as browser bars show and hide.
+- The game keeps its fixed 270-native-px height and the existing responsive width: the 16:9 frame is widened to the phone's aspect, 4:3 to 2.67:1, rather than letterboxed. So the native resolution is never changed per device, only the visible width, as on desktop.
+- Pinch, double-tap zoom, long-press menus, text selection and page scrolling are blocked on the game.
+- On touch devices the backing store is capped at **2 device px per CSS px**, so a 3× phone does not composite 2.3× the pixels each frame.
+- A web manifest declares landscape and fullscreen for "Add to Home Screen".
+
+**Orientation.** In portrait on a touch device a themed **"Turn your device sideways"** card covers the game. `game.suspended` stops the simulation completely, so nothing advances, and audio is suspended. Turning back resumes exactly where play stopped, and the controls are laid out again. On the first tap the game asks for fullscreen and a landscape `screen.orientation.lock` where the browser allows both (Android Chrome); everywhere else the rotate card is the fallback. This never happens in automated tests.
+
+**Touch controls** (`src/ui/touchControls.js`, `touch.css`). DOM buttons in the corners, styled like the HUD, ≥ 44 CSS px. They press the **same key codes** as the keyboard (`Input.virtualDown/Up`), so every system works unchanged and desktop controls are untouched. Each button handles its own pointer, so several fingers work at once: hold ▶ and tap the lantern.
+
+Which buttons show depends on what is on screen:
+- **World:** ◀ ▶ walk (hold; slide between them; a quick tap is a small step); the **act button**, labelled with what it will do (Talk, Examine, Go in…); lantern; hint (glows when one is ready); Notebook, Inventory, Map, pause ≡.
+- **Dialogue:** only pause; tap the text to continue.
+- **Choices:** taller rows to tap, plus ▲ ▼ OK.
+- **Cutscenes:** only pause, dimmed.
+- **Menus and the case review:** a slim ◀ ▲ ▼ ▶ row with OK and Back.
+- **Notebook, Inventory, Map:** a bottom bar with ▲ ▼, the three panel tabs, *Next question*, *Review case* and Back.
+
+The canvas itself takes taps:
+- tap the ground to walk there, or a person or clue to go and use it;
+- menus (title, pause, settings, confirm, end cards) are tappable;
+- the notebook's **tabs, lines and mind-map nodes** are tappable (tap to select, tap again to use);
+- inventory slots are tappable;
+- tap a document to fold it away.
+
+Key-named hints are rewritten for touch (`touchText.js`). The HUD moves its toasts and hint box clear of the buttons. Audio unlocks inside a real gesture (`pointerup`/`touchend`), as iOS requires. Settings → **Touch controls** can be set to auto / on / off; `?touch=1/0` forces them.
+
+**Tests** (`tests/e2e/mobile.spec.mjs`). Three emulated phones: Android 640×360 @2, Android 915×412 @2.625, iPhone-sized 844×390 @3 with an iOS user agent. Each runs 7 tests:
+- fit and layout (no button under Silas or the dialogue box; buttons ≥ 44 px, inside the frame, not overlapping);
+- portrait → rotate card → landscape, with the state identical;
+- multi-touch walking;
+- tapping dialogue choices, the act button, the Notebook / Inventory / Map / pause buttons, and notebook tabs;
+- a scene change;
+- New game → save → reload → Continue, all by touch;
+- **the whole first chapter, touch only**;
+- **Chapter 2 from the first night's end card to its own end card, touch only.**
+
+"Touch only" means `T.useTouch(true)`: every action goes through a visible on-screen control with real pointer events, and an action without one fails the test (`T.touchMisses` must be empty).
+
+**Not verified on physical devices.** Everything above was tested in **Chromium (Edge) with mobile emulation**. Nothing has been run on a real phone yet. Unverified:
+- iOS Safari / WebKit: rendering, the safe-area insets, the toolbar collapsing, and Web Audio unlock;
+- Android Chrome's fullscreen + orientation lock and the real rotate cycle;
+- real touch latency and accidental-tap rate with thumbs;
+- frame rate and heat on phone GPUs: the 2× DPR cap is a guess, and the snow, lighting and night-sky passes have not been profiled on a phone;
+- readability at arm's length. The smallest UI text is ~9–10 CSS px on a 360 px-tall phone, and was judged only from screenshots.
+
+Firefox for Android was not tried.
+
+**Limits:**
+- iPhone Safari cannot lock orientation or go fullscreen for a page: the rotate card is the fallback, and "Add to Home Screen" gives the most room.
+- On 16:9 phones the bottom bar covers the notebook's key-hint footer, so in touch mode the footer is hidden instead.
+- The hint timer, case review and mind map are unchanged; they are touch-operable through the buttons and taps.

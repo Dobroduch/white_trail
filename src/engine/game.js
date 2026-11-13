@@ -27,6 +27,7 @@ import { CaseReview } from '../ui/caseReview.js';
 import { Hints } from '../systems/hints.js';
 import { commit, caseOpenForDecision, outcomeOf, migrateCaseState } from '../systems/caseSystem.js';
 import { TEST } from './testMode.js';
+import { touchify } from '../ui/touchText.js';
 
 const INTERACT_RADIUS = 20;
 // Night sky over exterior scenes (see Game.drawNightSky): RGB at the top of the frame and at `fadeAt` of its height,
@@ -120,6 +121,10 @@ export class Game {
     if (!s) { this.newGame(); return; }
     this.state = s;
     this.startPlay(s.scene, null, s.playerX, s.facing);
+    // A save made on the first night's end card (this build or the previous one) resumes there, so the story goes on
+    // into the second day exactly as it would have without the reload.
+    if (s.flags.sliceComplete && !s.flags.ch2Started) { this.fade.v = 1; this.openEndCard(1); }
+    else if (s.flags.chapter2Complete && !s.flags.ch2EndCardSeen) { this.fade.v = 1; this.openEndCard(2); }
   }
   startPlay(sceneId, spawn, x, facing) {
     this.mode = 'play';
@@ -143,6 +148,11 @@ export class Game {
     if (!base) { console.error(`[scene] unknown scene "${id}", falling back to STATION`); return this.sceneDef('STATION'); }
     const d = Object.assign({ id }, base);
     if (this.state.phase === 'NIGHT' && base.night) Object.assign(d, base.night);
+    if (this.state.phase === 'DAY') {
+      // Chapter 2's grey storm daylight. A map's `day` property overrides; without one the scene is simply lighter.
+      if (base.day) Object.assign(d, base.day);
+      if (!base.day || base.day.darkness == null) d.darkness = Math.min(d.darkness != null ? d.darkness : 0.5, base.exterior ? 0.3 : 0.24);
+    }
     return d;
   }
 
@@ -273,7 +283,7 @@ export class Game {
   get overlay() { return this.overlays[this.overlays.length - 1] || null; }
   popOverlay() { this.overlays.pop(); this.input.clearAll(); }
   openDocument(id) { this.pushOverlay(new DocumentView(this, id)); this.audio.sfx('page'); }
-  openEndCard() { this.pushOverlay(new EndCard(this)); }
+  openEndCard(chapter = 1) { this.pushOverlay(new EndCard(this, chapter)); }
 
   handleOverlayAction(act) {
     const o = this.overlay;
@@ -314,8 +324,12 @@ export class Game {
     }
     if (o instanceof Inventory && act.startsWith('doc:')) { this.openDocument(act.slice(4)); return; }
     if (o instanceof EndCard) {
-      if (act === 'continue') { this.popOverlay(); this.loadScene('SAWMILL', 'fromCreek'); this.fadeTo(0, 1.2); this.playerControl = true; this.cutscene = null; }
-      if (act === 'title') this.toTitle();
+      // Chapter 1 -> Chapter 2: the end of the first night leads straight on into the second day (no menu, no new game).
+      if (act === 'nextChapter') { this.popOverlay(); this.cutscene = null; this.scriptQueue = []; this.runScript('CH2_OPEN'); }
+      // after Chapter 2: stay in the town at the end of the second day
+      if (o.chapter === 2 && (act === 'stay' || act === 'title')) this.state.flags.ch2EndCardSeen = true;
+      if (act === 'stay') { this.popOverlay(); this.cutscene = null; this.loadScene('BLACK_RAM_EXTERIOR', 'fromHotel'); this.fade.v = 1; this.fadeTo(0, 1.2); this.playerControl = true; this.checkpoint(); }
+      if (act === 'title') { this.checkpoint(); this.toTitle(); }
     }
   }
   notebookOverlay() {
@@ -343,7 +357,7 @@ export class Game {
   // HUD button clicks (UI units); consumed before world clicks so they never move Silas.
   handleHudButtons() {
     const input = this.input;
-    if (this.mode !== 'play') { this.hoverButton = null; return; }
+    if (this.mode !== 'play' || this.touchUI()) { this.hoverButton = null; return; } // touch: the DOM buttons do this
     const l = input.pointer && this.display.clientToUI(input.pointer.x, input.pointer.y);
     const hov = l && hudButtonAt(l.x, l.y);
     this.hoverButton = hov ? hov.kind : null;
@@ -370,13 +384,18 @@ export class Game {
   updateHints(dt) { this.hints.update(dt, this.state, this.hintClockRunning()); }
   askForHint() {
     const t = this.hints.request(this.state);
-    if (t) { this.audio.sfx('page'); this.camera.setMode('exploration'); this.dialogue.startLines([t], { who: 'note' }); return true; }
+    if (t) { this.audio.sfx('page'); this.camera.setMode('exploration'); this.dialogue.startLines([this.touchUI() ? touchify(t) : t], { who: 'note' }); return true; }
     this.hud.bark(this.hints.last(this.state) ? 'Nothing new comes to mind. Not yet.' : 'Nothing comes to mind. Not yet.', 2.6);
     return false;
   }
 
   // ---------------- per-step update ----------------
+  // Touch mode is on (src/ui/touchControls.js): on-screen buttons replace the canvas panel buttons and key hints.
+  touchUI() { return !!(this.touch && this.touch.active); }
+
   update(dt) {
+    // Suspended behind the rotate prompt (portrait on a phone): nothing advances, nothing is lost.
+    if (this.suspended) { this.input.endStep(); return; }
     try {
       this.step(dt);
     } catch (err) {
@@ -612,6 +631,7 @@ export class Game {
     if (o.kind === 'npc') { this.startDialogue(o.ref.dialogue, o.ref); return; }
     if (o.kind === 'door') {
       const d = o.ref;
+      if (d.scriptIf && test(d.scriptIf.if, this.state)) { this.runScript(d.scriptIf.script); return; } // e.g. the second day ends at the hotel door
       if (test(d.if, this.state)) this.transitionTo(d.to, d.spawn, d.minutes != null ? d.minutes : 1);
       else { this.audio.sfx('refuse'); this.dialogue.startLines(d.blockedLines || ['It won\'t open.']); }
       return;
@@ -779,9 +799,10 @@ export class Game {
     }
     for (const o of this.overlays) o.draw(out);
     // the panel buttons stay on top of an open panel, so one click switches Notebook / Inventory / Map
-    if (this.mode === 'play' && this.overlay && this.overlay.panelKind) this.hud.drawButtons(out);
+    if (this.mode === 'play' && this.overlay && this.overlay.panelKind && !this.touchUI()) this.hud.drawButtons(out);
     out.restore();
     out.imageSmoothingEnabled = false;
+    if (this.touch) this.touch.sync(); // show the touch buttons that fit what is happening now
   }
 
   // Emissive pass (lit windows, flames, lamps). It runs after the lighting pass so it stays bright, but

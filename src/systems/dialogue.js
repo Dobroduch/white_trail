@@ -49,6 +49,7 @@ export class DialogueRunner {
       const node = this.def.nodes[nodeId];
       if (!node) { console.error(`[dialogue] missing node ${this.id}.${nodeId}`); return this.finish(); }
       if (node.branch) {
+        s.seen[this.id + '.' + nodeId] = true; // so a `once` choice that leads to a branch is spent too
         const b = node.branch.find((br) => test(br.if, s));
         nodeId = b ? b.next : 'END';
         continue;

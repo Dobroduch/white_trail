@@ -12,4 +12,8 @@ export const LEVELS = [
   { id: 'SAWMILL', url: 'assets/levels/old_sawmill.tmj' },
   // Optional hidden area under the waterwheel; its entrance appears only once Silas knows about it.
   { id: 'WHEEL_PIT', url: 'assets/levels/wheel_pit.tmj' },
+  // Chapter 2, the second day: Rusk's store (off Main Street), the chapel and graveyard up the lane, the telegraph tower above.
+  { id: 'RUSK_STORE', url: 'assets/levels/rusk_store.tmj' },
+  { id: 'GRAVEYARD', url: 'assets/levels/chapel_graveyard.tmj' },
+  { id: 'TELEGRAPH', url: 'assets/levels/telegraph_tower.tmj' },
 ];

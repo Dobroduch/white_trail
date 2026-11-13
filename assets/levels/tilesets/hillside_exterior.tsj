@@ -1,0 +1,1797 @@
+{
+ "type": "tileset",
+ "version": "1.10",
+ "tiledversion": "1.11.0",
+ "name": "hillside_exterior",
+ "tilewidth": 16,
+ "tileheight": 16,
+ "columns": 8,
+ "tilecount": 184,
+ "margin": 0,
+ "spacing": 0,
+ "image": "../../export/tilesets/hillside_exterior.png",
+ "imagewidth": 128,
+ "imageheight": 368,
+ "tiles": [
+  {
+   "id": 0,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_0_0"
+    }
+   ]
+  },
+  {
+   "id": 1,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_0_1"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_0_2"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_0_3"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_0_4"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_0_5"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_0_6"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_0_7"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_1_0"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_1_1"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_1_2"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_1_3"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_1_4"
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_1_5"
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_1_6"
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_1_7"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_2_0"
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_2_1"
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_2_2"
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_2_3"
+    }
+   ]
+  },
+  {
+   "id": 20,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_2_4"
+    }
+   ]
+  },
+  {
+   "id": 21,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_2_5"
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_2_6"
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_2_7"
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_3_0"
+    }
+   ]
+  },
+  {
+   "id": 25,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_3_1"
+    }
+   ]
+  },
+  {
+   "id": 26,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_3_2"
+    }
+   ]
+  },
+  {
+   "id": 27,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_3_3"
+    }
+   ]
+  },
+  {
+   "id": 28,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_3_4"
+    }
+   ]
+  },
+  {
+   "id": 29,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_3_5"
+    }
+   ]
+  },
+  {
+   "id": 30,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_3_6"
+    }
+   ]
+  },
+  {
+   "id": 31,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_3_7"
+    }
+   ]
+  },
+  {
+   "id": 32,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_4_0"
+    }
+   ]
+  },
+  {
+   "id": 33,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_4_1"
+    }
+   ]
+  },
+  {
+   "id": 34,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_4_2"
+    }
+   ]
+  },
+  {
+   "id": 35,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_4_3"
+    }
+   ]
+  },
+  {
+   "id": 36,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_4_4"
+    }
+   ]
+  },
+  {
+   "id": 37,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_4_5"
+    }
+   ]
+  },
+  {
+   "id": 38,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_4_6"
+    }
+   ]
+  },
+  {
+   "id": 39,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_4_7"
+    }
+   ]
+  },
+  {
+   "id": 40,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_5_0"
+    }
+   ]
+  },
+  {
+   "id": 41,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_5_1"
+    }
+   ]
+  },
+  {
+   "id": 42,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_5_2"
+    }
+   ]
+  },
+  {
+   "id": 43,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_5_3"
+    }
+   ]
+  },
+  {
+   "id": 44,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_5_4"
+    }
+   ]
+  },
+  {
+   "id": 45,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_5_5"
+    }
+   ]
+  },
+  {
+   "id": 46,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_5_6"
+    }
+   ]
+  },
+  {
+   "id": 47,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_5_7"
+    }
+   ]
+  },
+  {
+   "id": 48,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_6_0"
+    }
+   ]
+  },
+  {
+   "id": 49,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_6_1"
+    }
+   ]
+  },
+  {
+   "id": 50,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_6_2"
+    }
+   ]
+  },
+  {
+   "id": 51,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_6_3"
+    }
+   ]
+  },
+  {
+   "id": 52,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_6_4"
+    }
+   ]
+  },
+  {
+   "id": 53,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_6_5"
+    }
+   ]
+  },
+  {
+   "id": 54,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_6_6"
+    }
+   ]
+  },
+  {
+   "id": 55,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_6_7"
+    }
+   ]
+  },
+  {
+   "id": 56,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_7_0"
+    }
+   ]
+  },
+  {
+   "id": 57,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_7_1"
+    }
+   ]
+  },
+  {
+   "id": 58,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_7_2"
+    }
+   ]
+  },
+  {
+   "id": 59,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_7_3"
+    }
+   ]
+  },
+  {
+   "id": 60,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_7_4"
+    }
+   ]
+  },
+  {
+   "id": 61,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_7_5"
+    }
+   ]
+  },
+  {
+   "id": 62,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_7_6"
+    }
+   ]
+  },
+  {
+   "id": 63,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_7_7"
+    }
+   ]
+  },
+  {
+   "id": 64,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_8_0"
+    }
+   ]
+  },
+  {
+   "id": 65,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_8_1"
+    }
+   ]
+  },
+  {
+   "id": 66,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_8_2"
+    }
+   ]
+  },
+  {
+   "id": 67,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_8_3"
+    }
+   ]
+  },
+  {
+   "id": 68,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_8_4"
+    }
+   ]
+  },
+  {
+   "id": 69,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_8_5"
+    }
+   ]
+  },
+  {
+   "id": 70,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_8_6"
+    }
+   ]
+  },
+  {
+   "id": 71,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_8_7"
+    }
+   ]
+  },
+  {
+   "id": 72,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_9_0"
+    }
+   ]
+  },
+  {
+   "id": 73,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_9_1"
+    }
+   ]
+  },
+  {
+   "id": 74,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_9_2"
+    }
+   ]
+  },
+  {
+   "id": 75,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_9_3"
+    }
+   ]
+  },
+  {
+   "id": 76,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_9_4"
+    }
+   ]
+  },
+  {
+   "id": 77,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_9_5"
+    }
+   ]
+  },
+  {
+   "id": 78,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_9_6"
+    }
+   ]
+  },
+  {
+   "id": 79,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "chapel_9_7"
+    }
+   ]
+  },
+  {
+   "id": 80,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_round_0_0"
+    }
+   ]
+  },
+  {
+   "id": 81,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_round_1_0"
+    }
+   ]
+  },
+  {
+   "id": 82,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_tall_0_0"
+    }
+   ]
+  },
+  {
+   "id": 83,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_tall_1_0"
+    }
+   ]
+  },
+  {
+   "id": 84,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_lean_0_0"
+    }
+   ]
+  },
+  {
+   "id": 85,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "stone_lean_1_0"
+    }
+   ]
+  },
+  {
+   "id": 86,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "cross_wood_0_0"
+    }
+   ]
+  },
+  {
+   "id": 87,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "cross_wood_1_0"
+    }
+   ]
+  },
+  {
+   "id": 88,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "pell_stone_0_0"
+    }
+   ]
+  },
+  {
+   "id": 89,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "pell_stone_0_1"
+    }
+   ]
+  },
+  {
+   "id": 90,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "pell_stone_1_0"
+    }
+   ]
+  },
+  {
+   "id": 91,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "pell_stone_1_1"
+    }
+   ]
+  },
+  {
+   "id": 92,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_closed_0_0"
+    }
+   ]
+  },
+  {
+   "id": 93,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_closed_0_1"
+    }
+   ]
+  },
+  {
+   "id": 94,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_closed_0_2"
+    }
+   ]
+  },
+  {
+   "id": 95,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_closed_0_3"
+    }
+   ]
+  },
+  {
+   "id": 96,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_open_0_0"
+    }
+   ]
+  },
+  {
+   "id": 97,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_open_0_1"
+    }
+   ]
+  },
+  {
+   "id": 98,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_open_0_2"
+    }
+   ]
+  },
+  {
+   "id": 99,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_open_0_3"
+    }
+   ]
+  },
+  {
+   "id": 100,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_open_1_0"
+    }
+   ]
+  },
+  {
+   "id": 101,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_open_1_1"
+    }
+   ]
+  },
+  {
+   "id": 102,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_open_1_2"
+    }
+   ]
+  },
+  {
+   "id": 103,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "grave_open_1_3"
+    }
+   ]
+  },
+  {
+   "id": 104,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rail"
+    }
+   ]
+  },
+  {
+   "id": 105,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rail_post"
+    }
+   ]
+  },
+  {
+   "id": 106,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_0_0"
+    }
+   ]
+  },
+  {
+   "id": 107,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_0_1"
+    }
+   ]
+  },
+  {
+   "id": 108,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_0_2"
+    }
+   ]
+  },
+  {
+   "id": 109,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_0_3"
+    }
+   ]
+  },
+  {
+   "id": 110,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_0_4"
+    }
+   ]
+  },
+  {
+   "id": 111,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_1_0"
+    }
+   ]
+  },
+  {
+   "id": 112,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_1_1"
+    }
+   ]
+  },
+  {
+   "id": 113,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_1_2"
+    }
+   ]
+  },
+  {
+   "id": 114,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_1_3"
+    }
+   ]
+  },
+  {
+   "id": 115,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_1_4"
+    }
+   ]
+  },
+  {
+   "id": 116,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_2_0"
+    }
+   ]
+  },
+  {
+   "id": 117,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_2_1"
+    }
+   ]
+  },
+  {
+   "id": 118,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_2_2"
+    }
+   ]
+  },
+  {
+   "id": 119,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_2_3"
+    }
+   ]
+  },
+  {
+   "id": 120,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_2_4"
+    }
+   ]
+  },
+  {
+   "id": 121,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_3_0"
+    }
+   ]
+  },
+  {
+   "id": 122,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_3_1"
+    }
+   ]
+  },
+  {
+   "id": 123,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_3_2"
+    }
+   ]
+  },
+  {
+   "id": 124,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_3_3"
+    }
+   ]
+  },
+  {
+   "id": 125,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_3_4"
+    }
+   ]
+  },
+  {
+   "id": 126,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_4_0"
+    }
+   ]
+  },
+  {
+   "id": 127,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_4_1"
+    }
+   ]
+  },
+  {
+   "id": 128,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_4_2"
+    }
+   ]
+  },
+  {
+   "id": 129,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_4_3"
+    }
+   ]
+  },
+  {
+   "id": 130,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_4_4"
+    }
+   ]
+  },
+  {
+   "id": 131,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_5_0"
+    }
+   ]
+  },
+  {
+   "id": 132,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_5_1"
+    }
+   ]
+  },
+  {
+   "id": 133,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_5_2"
+    }
+   ]
+  },
+  {
+   "id": 134,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_5_3"
+    }
+   ]
+  },
+  {
+   "id": 135,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_5_4"
+    }
+   ]
+  },
+  {
+   "id": 136,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_6_0"
+    }
+   ]
+  },
+  {
+   "id": 137,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_6_1"
+    }
+   ]
+  },
+  {
+   "id": 138,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_6_2"
+    }
+   ]
+  },
+  {
+   "id": 139,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_6_3"
+    }
+   ]
+  },
+  {
+   "id": 140,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_6_4"
+    }
+   ]
+  },
+  {
+   "id": 141,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_7_0"
+    }
+   ]
+  },
+  {
+   "id": 142,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_7_1"
+    }
+   ]
+  },
+  {
+   "id": 143,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_7_2"
+    }
+   ]
+  },
+  {
+   "id": 144,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_7_3"
+    }
+   ]
+  },
+  {
+   "id": 145,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_7_4"
+    }
+   ]
+  },
+  {
+   "id": 146,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_8_0"
+    }
+   ]
+  },
+  {
+   "id": 147,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_8_1"
+    }
+   ]
+  },
+  {
+   "id": 148,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_8_2"
+    }
+   ]
+  },
+  {
+   "id": 149,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_8_3"
+    }
+   ]
+  },
+  {
+   "id": 150,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_8_4"
+    }
+   ]
+  },
+  {
+   "id": 151,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_9_0"
+    }
+   ]
+  },
+  {
+   "id": 152,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_9_1"
+    }
+   ]
+  },
+  {
+   "id": 153,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_9_2"
+    }
+   ]
+  },
+  {
+   "id": 154,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_9_3"
+    }
+   ]
+  },
+  {
+   "id": 155,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_9_4"
+    }
+   ]
+  },
+  {
+   "id": 156,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_10_0"
+    }
+   ]
+  },
+  {
+   "id": 157,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_10_1"
+    }
+   ]
+  },
+  {
+   "id": 158,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_10_2"
+    }
+   ]
+  },
+  {
+   "id": 159,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_10_3"
+    }
+   ]
+  },
+  {
+   "id": 160,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "tower_10_4"
+    }
+   ]
+  },
+  {
+   "id": 161,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wire_cut_0_0"
+    }
+   ]
+  },
+  {
+   "id": 162,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wire_cut_0_1"
+    }
+   ]
+  },
+  {
+   "id": 163,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wire_cut_1_0"
+    }
+   ]
+  },
+  {
+   "id": 164,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wire_cut_1_1"
+    }
+   ]
+  },
+  {
+   "id": 165,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wire_cut_2_0"
+    }
+   ]
+  },
+  {
+   "id": 166,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wire_cut_2_1"
+    }
+   ]
+  },
+  {
+   "id": 167,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "soot_hook"
+    }
+   ]
+  },
+  {
+   "id": 168,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "wire_span"
+    }
+   ]
+  },
+  {
+   "id": 169,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rock_big_0_0"
+    }
+   ]
+  },
+  {
+   "id": 170,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rock_big_0_1"
+    }
+   ]
+  },
+  {
+   "id": 171,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rock_big_0_2"
+    }
+   ]
+  },
+  {
+   "id": 172,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rock_big_1_0"
+    }
+   ]
+  },
+  {
+   "id": 173,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rock_big_1_1"
+    }
+   ]
+  },
+  {
+   "id": 174,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rock_big_1_2"
+    }
+   ]
+  },
+  {
+   "id": 175,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rock_small_0_0"
+    }
+   ]
+  },
+  {
+   "id": 176,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "rock_small_0_1"
+    }
+   ]
+  },
+  {
+   "id": 177,
+   "properties": [
+    {
+     "name": "name",
+     "type": "string",
+     "value": "path_stones"
+    }
+   ]
+  }
+ ]
+}

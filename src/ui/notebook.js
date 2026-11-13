@@ -14,6 +14,7 @@ import {
 } from '../systems/caseSystem.js';
 import { getSprite } from '../engine/assets.js';
 import { CaseReview } from './caseReview.js';
+import { touchify } from './touchText.js';
 
 export const TABS = ['CASE', 'EVIDENCE', 'STATEMENTS', 'LEADS', 'DEDUCTIONS', 'MIND MAP', 'PEOPLE'];
 const ROWS = 14;
@@ -23,6 +24,9 @@ const MM = { x: 14, y: 42, w: 188, h: 121, dw: 50, sw: 40 };
 
 export class Notebook {
   constructor(game) { this.game = game; this.tab = 1; this.sel = 0; this.scroll = 0; this.marked = []; this.result = null; this.q = null; }
+
+  tabName() { return TABS[this.tab]; }
+  resultText() { return this.game.touchUI() ? touchify(this.result.text) : this.result.text; }
 
   open(tabName) {
     if (tabName) this.tab = TABS.indexOf(tabName);
@@ -108,7 +112,21 @@ export class Notebook {
     if (input.pressed('right')) { tabTo(this.tab + 1); return null; }
     if (input.pressed('question') && (name === 'DEDUCTIONS' || name === 'MIND MAP')) this.cycleQuestion();
     if (input.pressed('caseReview')) { this.openReview(this.q); return null; }
+    // mouse / touch: tap a tab to open it; tap a line (or a mind-map node) to select it, tap it again to use it (like E)
+    const tap = this.tapAt(input);
+    if (tap && tap.tab != null) { if (tap.tab !== this.tab) tabTo(tap.tab); return null; }
     const list = this.listFor(this.tab);
+    if (tap && tap.i != null && tap.i < list.length) {
+      if (tap.i !== this.sel) {
+        this.sel = tap.i; this.game.audio.sfx('tick');
+        // tapping the first / last visible line scrolls the list on by one, so a finger can page through it
+        if (name !== 'MIND MAP') { if (tap.i >= this.scroll + ROWS - 1 && tap.i < list.length - 1) this.scroll++; else if (tap.i <= this.scroll && this.scroll > 0) this.scroll--; }
+        return null;
+      }
+      const id = list[this.sel];
+      if (typeof id === 'string') this.act(name, id);
+      return null;
+    }
     if (list.length) {
       if (input.pressed('up')) { this.sel = (this.sel + list.length - 1) % list.length; this.game.audio.sfx('tick'); }
       if (input.pressed('down')) { this.sel = (this.sel + 1) % list.length; this.game.audio.sfx('tick'); }
@@ -121,6 +139,25 @@ export class Notebook {
       if (typeof id === 'string') this.act(name, id);
     }
     return null;
+  }
+
+  // The tab or list line under this step's click / tap (consumed), from the rects recorded by draw().
+  tapAt(input) {
+    if (!input.clicks || !input.clicks.length) return null;
+    const disp = this.game.display;
+    let hit = null;
+    const inR = (u, r) => u.x >= r.x && u.x <= r.x + r.w && u.y >= r.y && u.y <= r.y + r.h;
+    input.clicks = input.clicks.filter((c) => {
+      if (hit) return true;
+      const u = disp.clientToUI(c.x, c.y);
+      if (!u) return true;
+      const t = (this.tabRects || []).findIndex((r) => inR(u, r));
+      if (t >= 0) { hit = { tab: t }; return false; }
+      const row = (this.rowRects || []).find((r) => inR(u, r));
+      if (row) { hit = { i: row.i }; return false; }
+      return true;
+    });
+    return hit;
   }
 
   act(tab, id) {
@@ -176,6 +213,8 @@ export class Notebook {
   // ---------------- drawing ----------------
   draw(ctx) {
     const s = this.game.state;
+    Detail.touch = this.game.touchUI();
+    Detail.maxY = Detail.touch ? 150 : 164;
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(UI_LEFT, UI_TOP, UI_RIGHT - UI_LEFT, UI_BOTTOM - UI_TOP);
     panel(ctx, 8, 6, 304, 168, UI.paper, '#3b2f22');
     ctx.fillStyle = 'rgba(90,70,40,0.07)';
@@ -185,8 +224,11 @@ export class Notebook {
     text(ctx, `Case file — S. Vance   ·   ${this.game.scene.name.toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase())}, ${timeString(s.time)}`, 16, 15, UI.inkDim);
     font(ctx, 4.7, { bold: true });
     let tx = 16;
+    this.tabRects = [];
+    this.rowRects = [];
     TABS.forEach((t, i) => {
       const w = spaced(ctx, t, tx, 25, i === this.tab ? UI.inkRed : UI.inkDim, 0.45);
+      this.tabRects.push({ x: tx - 3, y: 17, w: w + 7, h: 12 });
       if (i === this.tab) { ctx.fillStyle = UI.inkRed; ctx.fillRect(tx, 27, w, 0.7); }
       tx += w + 7.5;
     });
@@ -201,7 +243,13 @@ export class Notebook {
       'MIND MAP': 'Left/Right tabs   Up/Down choose a node   E choose a reading   Q question   C review the case   N close',
       CASE: 'Left/Right tabs   Up/Down choose   E review the case   N / Esc close',
     }[name] || 'Left / Right  tabs    Up / Down  choose    N / Esc close';
-    text(ctx, foot, UI_CX, 170, UI.inkDim, 'center');
+    const touchFoot = {
+      DEDUCTIONS: 'Tap a tab   tap a line, tap again to mark it or choose a reading   Next question   Review case',
+      'MIND MAP': 'Tap a node, tap again to choose a reading   Next question   Review case',
+      CASE: 'Tap a tab   tap a line, tap again to review the case   Back closes',
+    }[name] || 'Tap a tab   tap a line to read it   Back closes';
+    if (!this.game.touchUI()) text(ctx, foot, UI_CX, 170, UI.inkDim, 'center'); // touch: the button bar sits here
+    void touchFoot;
   }
 
   drawLeads(ctx) {
@@ -246,6 +294,7 @@ export class Notebook {
       const id = list[i];
       const y = 41 + (i - this.scroll) * 8.6;
       const sel = i === this.sel;
+      this.rowRects.push({ x: 14, y: y - 6.4, w: 106, h: 8.6, i });
       const label = this.label(name, id);
       const isQ = id.startsWith('Q:'), isD = id.startsWith('D:'), isS = id.startsWith('S:');
       const current = isQ && id.slice(2) === this.q;
@@ -342,7 +391,7 @@ export class Notebook {
       if (src.length) { d.heading('FROM MY NOTES'); for (const e of src) d.bullet(EVIDENCE[e].title); }
     } else if (k === 'D') this.detailDeduction(d, ref);
     if (d.y < 140) {
-      if (this.result) { d.heading('COMPARISON'); d.para(this.result.text, { italic: true, col: this.result.ok ? UI.ink : UI.inkRed }); }
+      if (this.result) { d.heading('COMPARISON'); d.para(this.resultText(), { italic: true, col: this.result.ok ? UI.ink : UI.inkRed }); }
       else if (k === 'S') d.hintLine(this.marked.length ? 'Marked one. Choose a second statement to compare.' : 'E marks it. Mark two that bear on each other.');
     }
   }
@@ -431,6 +480,7 @@ export class Notebook {
       font(ctx, 3.9, { italic: true });
       const lines = wrap(ctx, STATEMENTS[id].label, MM.sw - 4);
       const h = lines.length * 4.6 + 2.6, w = MM.sw;
+      this.rowRects.push({ x: p.x - w / 2, y: p.y - h / 2, w, h, i: nodes.indexOf(n) });
       panel(ctx, p.x - w / 2, p.y - h / 2, w, h, sel ? '#efe4c8' : UI.paperDark, sel ? UI.inkRed : hot.has(n) ? '#7a5a3e' : '#a08f6c');
       lines.forEach((ln, i) => text(ctx, ln, p.x, p.y - h / 2 + 4.3 + i * 4.6, UI.ink, 'center'));
     }
@@ -442,6 +492,7 @@ export class Notebook {
       const r = readingOf(s, id);
       const sub = dd.readings ? (r ? dd.readings[r].label : 'reading?') : 'settled';
       const h = lines.length * 4.9 + 7.4, w = MM.dw;
+      this.rowRects.push({ x: p.x - w / 2, y: p.y - h / 2, w, h, i: nodes.indexOf(n) });
       panel(ctx, p.x - w / 2, p.y - h / 2, w, h, sel ? '#f3e9cf' : '#e4d8b9', sel ? UI.inkRed : hot.has(n) ? UI.inkRed : '#5a4a38');
       ctx.fillStyle = UI.inkRed; ctx.fillRect(p.x - w / 2 + 2, p.y - h / 2 + 2, 1.2, 1.2);
       lines.forEach((ln, i) => text(ctx, ln, p.x, p.y - h / 2 + 5 + i * 4.9, UI.ink, 'center'));
@@ -472,12 +523,15 @@ export class Notebook {
         for (const e of src) { d.bullet(EVIDENCE[e].title, 4.6); if (d.y < 140) d.para(EVIDENCE[e].category === 'TESTIMONY' ? EVIDENCE[e].observed : (s.evidence[e].examined && EVIDENCE[e].detail) || EVIDENCE[e].observed, { italic: true, size: 4.2, col: UI.inkDim }); }
       }
     }
-    if (this.result && d.y < 152) d.para(this.result.text, { italic: true, size: 4.4, col: this.result.ok ? UI.ink : UI.inkRed });
+    if (this.result && d.y < 152) d.para(this.resultText(), { italic: true, size: 4.4, col: this.result.ok ? UI.ink : UI.inkRed });
   }
 }
 
-// A small text-layout cursor for the detail panes.
+// A small text-layout cursor for the detail panes. In touch mode the text stops above the button bar and names
+// the on-screen buttons instead of keys.
 class Detail {
+  static touch = false;
+  static maxY = 164;
   constructor(ctx, x, y, w) { this.ctx = ctx; this.x = x; this.y = y; this.w = w; }
   heading(str) { font(this.ctx, 4.5, { bold: true }); spaced(this.ctx, str, this.x, this.y, UI.inkRed, 0.6); this.y += 6.5; }
   title(str, size = 6) { font(this.ctx, size, { bold: true }); for (const ln of wrap(this.ctx, str, this.w)) { text(this.ctx, ln, this.x, this.y, UI.ink); this.y += size + 1; } this.y += 1.5; }
@@ -485,14 +539,15 @@ class Detail {
   para(str, opt = {}) {
     const size = opt.size || 5.3;
     font(this.ctx, size, opt);
-    for (const ln of wrap(this.ctx, str, this.w)) { if (this.y > 164) return; text(this.ctx, ln, this.x, this.y, opt.col || UI.ink); this.y += size * 1.22; }
+    if (Detail.touch) str = touchify(str);
+    for (const ln of wrap(this.ctx, str, this.w)) { if (this.y > Detail.maxY) return; text(this.ctx, ln, this.x, this.y, opt.col || UI.ink); this.y += size * 1.22; }
     this.y += 3;
   }
   bullet(str, size = 4.9) {
     font(this.ctx, size);
     const lines = wrap(this.ctx, str, this.w - 5);
     this.ctx.fillStyle = UI.inkRed; this.ctx.fillRect(this.x + 0.5, this.y - size * 0.45, 1.3, 1.3);
-    for (const ln of lines) { if (this.y > 164) return; text(this.ctx, ln, this.x + 4, this.y, UI.ink); this.y += size * 1.2; }
+    for (const ln of lines) { if (this.y > Detail.maxY) return; text(this.ctx, ln, this.x + 4, this.y, UI.ink); this.y += size * 1.2; }
     this.y += 1;
   }
   choice(on, label, str) {

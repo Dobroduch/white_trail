@@ -160,6 +160,7 @@ export class CaseReview {
     }
     if (this.msg) { font(ctx, 4.8, { italic: true }); text(ctx, this.msg, 160, 155, UI.inkRed, 'center'); }
     font(ctx, 4.3, { italic: true });
-    text(ctx, this.locked ? 'Up/Down review   Esc back' : 'Up/Down choose   Left/Right change a reading   E commit to a supported account   Esc back', UI_CX, 170, UI.inkDim, 'center');
+    const touch = this.game.touchUI();
+    text(ctx, this.locked ? (touch ? '▲ ▼ review   Back' : 'Up/Down review   Esc back') : touch ? '▲ ▼ choose   ◀ ▶ change a reading   OK commit to a supported account   Back' : 'Up/Down choose   Left/Right change a reading   E commit to a supported account   Esc back', UI_CX, 170, UI.inkDim, 'center');
   }
 }

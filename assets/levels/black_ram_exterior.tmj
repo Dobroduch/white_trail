@@ -10,8 +10,8 @@
  "tileheight": 16,
  "infinite": false,
  "compressionlevel": -1,
- "nextlayerid": 16,
- "nextobjectid": 18,
+ "nextlayerid": 17,
+ "nextobjectid": 19,
  "backgroundcolor": "#05070c",
  "properties": [
   {
@@ -58,6 +58,16 @@
    "name": "night",
    "type": "string",
    "value": "{\"darkness\":0.84,\"ambience\":\"village_night\",\"weather\":{\"snow\":0.9,\"wind\":0.85,\"fog\":0.4}}"
+  },
+  {
+   "name": "day",
+   "type": "string",
+   "value": "{\"darkness\":0.3,\"ambience\":\"village\",\"weather\":{\"snow\":0.55,\"wind\":0.5,\"fog\":0.2}}"
+  },
+  {
+   "name": "chapter2",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -127,6 +137,24 @@
        "name": "phase",
        "type": "string",
        "value": "NIGHT"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "sky_day",
+     "type": "imagelayer",
+     "image": "../export/environments/parallax/town_sky_day.png",
+     "x": 0,
+     "y": 0,
+     "opacity": 1,
+     "visible": true,
+     "parallaxx": 0,
+     "properties": [
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
       }
      ]
     },
@@ -5547,6 +5575,11 @@
        "name": "blockedLines",
        "type": "string",
        "value": "The constable is still talking to me."
+      },
+      {
+       "name": "scriptIf",
+       "type": "string",
+       "value": "{\"if\":{\"all\":[{\"phase\":\"DAY\"},{\"flag\":\"ch2DuskReady\"},{\"notFlag\":\"chapter2Complete\"}]},\"script\":\"CH2_END\"}"
       }
      ]
     },
@@ -5612,7 +5645,7 @@
       {
        "name": "blockedLines",
        "type": "string",
-       "value": "The path drops away toward the creek and the old mill. Nothing down there for me tonight."
+       "value": "The path drops away toward the creek and the old mill. Nothing more for me down there now."
       }
      ]
     },
@@ -5658,7 +5691,7 @@
       {
        "name": "variants",
        "type": "string",
-       "value": "[{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"The lamp has been let go out. Oil costs money up here.\"]},{\"if\":{},\"lines\":[\"A kerosene street lamp, the only one on this side of the street.\"]}]"
+       "value": "[{\"if\":{\"phase\":\"DAY\"},\"lines\":[\"The street lamp, out. Oil costs money up here, and daylight is free.\"]},{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"The lamp has been let go out. Oil costs money up here.\"]},{\"if\":{},\"lines\":[\"A kerosene street lamp, the only one on this side of the street.\"]}]"
       }
      ]
     },
@@ -5851,6 +5884,40 @@
        "name": "lines",
        "type": "string",
        "value": "A weathered board: MILL. It points down the bank toward the creek."
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "name": "CH2_DAY_EXIT",
+     "type": "event",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "bark",
+       "type": "string",
+       "value": "The Black Ram by day: the porch swept, the lamp out, every curtain drawn."
+      },
+      {
+       "name": "do",
+       "type": "string",
+       "value": "[{\"set\":{\"forecourtDaySeen\":true}}]"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"phase\":\"DAY\"},{\"notFlag\":\"forecourtDaySeen\"},{\"flag\":\"ch2Started\"}]}"
+      },
+      {
+       "name": "delay",
+       "type": "float",
+       "value": 1.5
       }
      ]
     }

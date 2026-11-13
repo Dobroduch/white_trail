@@ -1,12 +1,90 @@
 // Browser test harness (development only). Drives the fixed-step simulation deterministically,
 // independent of requestAnimationFrame. Usage in the devtools console:
 //   (await import('/tools/harness.js')).install();  T.press('KeyE'); T.walkTo(300); T.info();
+//
+// Touch mode (T.useTouch(true)): every key press the harness makes goes through the on-screen touch controls
+// instead (src/ui/touchControls.js): it finds the VISIBLE button for that action and dispatches real
+// pointerdown / pointerup events (pointerType 'touch') on it; dialogue choices and dialogue advancing are taps
+// on the canvas at the choice / text. A key with no visible touch equivalent is recorded in T.touchMisses, so a
+// touch-only playthrough proves every action it needed has a touch control. Walking holds the walk pads.
+import { UI_OX, UI_OY, UI_DEV } from '/src/engine/display.js';
+
 export function install() {
   const G = () => window.TWT;
+  // keyboard code -> the touch control's code
+  const TOUCH_CODE = { KeyD: 'ArrowRight', KeyA: 'ArrowLeft', KeyW: 'ArrowUp', KeyS: 'ArrowDown', Tab: 'KeyN', KeyJ: 'KeyN', Enter: 'KeyE', Space: 'KeyE', NumpadEnter: 'KeyE', Backspace: 'Escape' };
+  const ptr = (el, type, x, y) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: x, clientY: y }));
+  const visibleButton = (code) => [...document.querySelectorAll('#touch .tc.on button')].find((b) => b.dataset.code === code && b.offsetParent && b.style.display !== 'none' && !b.disabled);
+  const uiToClient = (ux, uy) => {
+    const c = G().display.canvas, r = c.getBoundingClientRect(), k = r.width / c.width;
+    return { x: r.left + (ux + UI_OX) * UI_DEV * k, y: r.top + (uy + UI_OY) * UI_DEV * k };
+  };
+  const tapCanvas = (x, y) => { const c = G().display.canvas; ptr(c, 'pointerdown', x, y); ptr(window, 'pointerup', x, y); };
   const T = {
+    touch: false,
+    touchMisses: [],
+    touchTaps: 0,
+    useTouch(on = true) { T.touch = !!on; T.touchMisses = []; T.touchTaps = 0; G().render(); return T.touch; },
+    uiToClient,
+    // one key press, through the keyboard path or (touch mode) the visible touch control
+    key(code) {
+      const g = G();
+      if (!T.touch) { g.input.pressedCodes.add(code); g.input.anyPressed = true; return true; }
+      g.render(); // the touch layer shows the controls for what is on screen now
+      const m = /^Digit([1-5])$/.exec(code);
+      if (m && g.dialogue.active && g.dialogue.choices) {
+        const r = (g.dialogueView.choiceRects || [])[Number(m[1]) - 1];
+        if (r) { const p = uiToClient(r.x + r.w / 2, r.y + r.h / 2); tapCanvas(p.x, p.y); T.touchTaps++; return true; }
+      }
+      const tc = TOUCH_CODE[code] || code;
+      // the notebook has no ◀ ▶ buttons: a finger taps the neighbouring tab on the page
+      const ov = g.overlay;
+      if ((tc === 'ArrowLeft' || tc === 'ArrowRight') && ov && ov.panelKind === 'notebook' && g.notebook.tabRects) {
+        const n = g.notebook.tabRects.length, t = (g.notebook.tab + (tc === 'ArrowRight' ? 1 : -1) + n) % n;
+        const r = g.notebook.tabRects[t], p = uiToClient(r.x + r.w / 2, r.y + r.h / 2);
+        tapCanvas(p.x, p.y); T.touchTaps++; return true;
+      }
+      // in the notebook, "E" is a second tap on the selected line (or mind-map node)
+      if (tc === 'KeyE' && ov && ov.panelKind === 'notebook') {
+        const r = (g.notebook.rowRects || []).find((x) => x.i === g.notebook.sel);
+        if (r) { const p = uiToClient(r.x + r.w / 2, r.y + r.h / 2); tapCanvas(p.x, p.y); T.touchTaps++; return true; }
+      }
+      const b = visibleButton(tc);
+      if (b) { const r = b.getBoundingClientRect(); ptr(b, 'pointerdown', r.x + r.width / 2, r.y + r.height / 2); ptr(b, 'pointerup', r.x + r.width / 2, r.y + r.height / 2); T.touchTaps++; return true; }
+      // dialogue text and the title's "tap to begin": a tap on the canvas (on the dialogue box, top centre)
+      if ((tc === 'KeyE' && g.dialogue.active && !g.dialogue.choices) || (g.mode === 'title' && document.documentElement.dataset.tc === 'none')) {
+        const p = uiToClient(160, 30); tapCanvas(p.x, p.y); T.touchTaps++; return true;
+      }
+      T.touchMisses.push(code + ' @' + (document.documentElement.dataset.tc || '?'));
+      return false;
+    },
+    // hold a key down (walk) / let it go
+    down(code) {
+      const g = G();
+      if (!T.touch) { g.input.down.add(code); return; }
+      if (T.held === code) return;
+      T.up();
+      g.render();
+      const b = visibleButton(TOUCH_CODE[code] || code);
+      if (!b) { T.touchMisses.push('hold ' + code + ' @' + document.documentElement.dataset.tc); return; }
+      const r = b.getBoundingClientRect();
+      ptr(b, 'pointerdown', r.x + r.width / 2, r.y + r.height / 2);
+      T.held = code; T.heldBtn = b;
+    },
+    up(code) {
+      const g = G();
+      if (!T.touch) { if (code) g.input.down.delete(code); return; }
+      if (!T.heldBtn) return;
+      const r = T.heldBtn.getBoundingClientRect();
+      ptr(T.heldBtn, 'pointerup', r.x + r.width / 2, r.y + r.height / 2);
+      // a release is immediate for the harness's frame counting
+      const c = TOUCH_CODE[T.held] || T.held;
+      g.input.pendingUp.delete(c); g.input.down.delete(c);
+      T.held = null; T.heldBtn = null;
+    },
     step(n = 1) { for (let i = 0; i < n; i++) G().update(1 / 60); G().render(); return T.info(); },
-    press(code, after = 3) { G().input.pressedCodes.add(code); G().input.anyPressed = true; return T.step(after); },
-    hold(code, frames) { G().input.down.add(code); for (let i = 0; i < frames; i++) G().update(1 / 60); G().input.down.delete(code); G().render(); return T.info(); },
+    press(code, after = 3) { T.key(code); return T.step(after); },
+    hold(code, frames) { T.down(code); for (let i = 0; i < frames; i++) G().update(1 / 60); T.up(code); G().render(); return T.info(); },
     // walk toward a world x using real input (respects bounds, triggers events/exits)
     walkTo(x, maxFrames = 1200) {
       const g = G();
@@ -14,8 +92,10 @@ export function install() {
         const d = x - g.player.x;
         if (Math.abs(d) < 1.5 || !g.canMove()) break;
         const code = d > 0 ? 'KeyD' : 'KeyA';
+        if (T.touch) { T.down(code); g.update(1 / 60); continue; }
         g.input.down.add(code); g.update(1 / 60); g.input.down.delete(code);
       }
+      if (T.touch) T.up();
       g.render();
       return T.info();
     },
@@ -24,12 +104,12 @@ export function install() {
       const g = G();
       const queue = Array.isArray(picks) ? picks.slice() : [picks];
       for (let i = 0; i < maxFrames; i++) {
-        if (g.overlay && g.overlay.constructor.name === 'DocumentView') { g.input.pressedCodes.add('KeyE'); }
+        if (g.overlay && g.overlay.constructor.name === 'DocumentView') { if (i % 4 === 0) T.key('KeyE'); }
         else if (g.dialogue.active) {
           if (g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
             const p = queue.length ? queue.shift() : g.dialogue.choices.length - 1;
-            g.input.pressedCodes.add(['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'][p]);
-          } else if (i % 4 === 0) g.input.pressedCodes.add('KeyE');
+            T.key(['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'][p]);
+          } else if (i % 4 === 0) T.key('KeyE');
         } else if (i > 8 && !g.cutsceneBlocking() && !g.transition && !g.overlay) break;
         g.update(1 / 60);
       }
@@ -63,7 +143,7 @@ export function install() {
       goRow((r) => r.kind === 'c' && r.id === cid);
       T.press('KeyE', 2);
       if (g.overlay && g.overlay.constructor.name === 'Confirm') { T.press('ArrowUp', 1); T.press('KeyE', 2); }
-      return !!(g.state.cases.HALE && g.state.cases.HALE.conclusion === cid);
+      return Object.values(g.state.cases || {}).some((k) => k.conclusion === cid);
     },
     leaveOpen() {
       const g = G();
@@ -80,8 +160,8 @@ export function install() {
         for (let i = 0; i < 4000 && (g.dialogue.active || g.cutsceneBlocking()); i++) {
           if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
             const idx = Math.max(0, fn(g.dialogue.choices.map((c) => c.text)));
-            g.input.pressedCodes.add('Digit' + (idx + 1));
-          } else if (g.dialogue.active && i % 5 === 0) g.input.pressedCodes.add('KeyE');
+            T.key('Digit' + (idx + 1));
+          } else if (g.dialogue.active && i % 5 === 0) T.key('KeyE');
           g.update(1 / 60);
         }
         for (let i = 0; i < 16; i++) g.update(1 / 60);
@@ -128,7 +208,7 @@ export function install() {
       check('Gable questioned about Room 4 and the register', g.state.flags.askedGableAboutRoom4 && g.state.flags.confrontedGableRegister);
       T.walkTo(352); T.press('KeyE'); T.step(80);
       T.walkTo(244); T.press('KeyE'); pickBy(() => 0);
-      for (let i = 0; i < 1200 && g.cutscene; i++) { if (g.dialogue.active && i % 6 === 0) g.input.pressedCodes.add('KeyE'); g.update(1 / 60); }
+      for (let i = 0; i < 1200 && g.cutscene; i++) { if (g.dialogue.active && i % 6 === 0) T.key('KeyE'); g.update(1 / 60); }
       T.talkThrough();
       check('02:15 — night phase after the scream', g.state.phase === 'NIGHT' && g.state.flags.heardScream);
       const evBefore = Object.keys(g.state.evidence).length;
@@ -144,7 +224,7 @@ export function install() {
       T.walkTo(310); T.talkThrough();
       check('found Sheriff Hale', g.state.flags.foundSheriffBody);
       for (const x of examineAll ? [292, 256, 350, 371] : [292, 256, 350, 371]) look(x, 2);
-      for (let i = 0; i < 600 && !g.state.flags.ridgeLightSeen; i++) { if (g.dialogue.active && i % 6 === 0) g.input.pressedCodes.add('KeyE'); g.update(1 / 60); }
+      for (let i = 0; i < 600 && !g.state.flags.ridgeLightSeen; i++) { if (g.dialogue.active && i % 6 === 0) T.key('KeyE'); g.update(1 / 60); }
       T.talkThrough();
       check('ridge light beat played once', g.state.flags.ridgeLightSeen && g.state.eventsDone.filter((e) => e === 'RIDGE_LIGHT').length === 1);
       if (examineAll) for (const x of [392, 464, 494]) look(x, 2);
@@ -205,6 +285,124 @@ export function install() {
       rep.evidence = Object.keys(g.state.evidence).length;
       rep.passed = rep.errors.length === 0;
       void evBefore;
+      return rep;
+    },
+    // Chapter 2, played on from the first night's end card with real inputs (or touch, after T.useTouch(true)). Opts:
+    //   conclusion: 'C2_BLAST' | 'C2_WAR' | 'C2_RITE' | null (keep it to myself)   thorough: also the optional finds/talks
+    fullRun2({ conclusion = 'C2_BLAST', thorough = true } = {}) {
+      const g = G();
+      const rep = { steps: [], errors: [] };
+      T.lastRep = rep;
+      const check = (name, cond) => { rep.steps.push((cond ? 'PASS ' : 'FAIL ') + name); if (!cond) rep.errors.push(name); };
+      const look = (x, times = 2) => { T.walkTo(x); for (let k = 0; k < times; k++) { if (!g.prompt) break; T.press('KeyE'); T.talkThrough(); } };
+      const talk = (x, order) => { // walk up, speak, then choose by the start of each choice text, in order; the last choice ends it
+        T.walkTo(x); if (!g.prompt) return false;
+        T.press('KeyE');
+        for (let i = 0; i < 4000 && (g.dialogue.active || g.cutsceneBlocking()); i++) {
+          if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
+            const c = g.dialogue.choices.map((x) => x.text);
+            let idx = -1;
+            for (const o of order) { idx = c.findIndex((t) => t.startsWith(o)); if (idx >= 0) break; }
+            T.key('Digit' + ((idx >= 0 ? idx : c.length - 1) + 1));
+          } else if (g.dialogue.active && i % 5 === 0) T.key('KeyE');
+          g.update(1 / 60);
+        }
+        for (let i = 0; i < 16; i++) g.update(1 / 60);
+        return true;
+      };
+      const leave = (dir, frames = 20) => { T.hold(dir === 'right' ? 'KeyD' : 'KeyA', frames); T.step(80); T.talkThrough(); };
+      const door = (x) => { T.walkTo(x); T.press('KeyE'); T.step(80); T.talkThrough(); };
+      const s = g.state;
+      const before = { items: s.items.slice(), evidence: Object.keys(s.evidence).length, hale: s.cases.HALE ? s.cases.HALE.conclusion : null, trust: s.chars.finch.trust };
+      // ---- from the first night's end card straight on into the second day ----
+      check('first night\'s end card offers the second day', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 1 && g.overlay.items[0].act === 'nextChapter');
+      for (let i = 0; i < 150; i++) g.update(1 / 60); // the card's menu appears after 2 s
+      T.press('KeyE', 3);
+      for (let i = 0; i < 900 && !g.dialogue.active; i++) g.update(1 / 60);
+      T.talkThrough([], 3000);
+      check('day two opens on the hotel forecourt, in daylight', g.scene.id === 'BLACK_RAM_EXTERIOR' && s.phase === 'DAY' && s.time.day === 2 && g.canMove());
+      check('nothing carried or recorded was lost', before.items.every((i) => s.items.includes(i)) && Object.keys(s.evidence).length >= before.evidence);
+      check('the first night\'s decision stands', (s.cases.HALE ? s.cases.HALE.conclusion : null) === before.hale && s.flags.sliceComplete && s.flags.aftermath_HALE);
+      check('the first night\'s scripted beats do not replay', s.eventsDone.filter((e) => e === 'RIDGE_LIGHT').length <= 1 && !g.npcs.some((n) => n.id === 'finch' && n.dialogue === 'FINCH_MEET'));
+      // ---- Main Street: Finch by day ----
+      T.walkTo(6); leave('left');
+      check('west to Main Street', g.scene.id === 'VILLAGE');
+      if (before.trust !== 'COLD') {
+        talk(100, ['What did Hale have', 'Who in this town wears', 'Who keeps the telegraph', 'Where does the lane', 'That\'ll do']);
+        check('Finch says where Ada Bell is, and where the lane goes', s.flags.knowsAda && s.flags.knowsLane);
+      } else { talk(100, []); check('Finch, cold, gives nothing', !s.flags.knowsAda); }
+      // ---- Rusk's store ----
+      door(197);
+      check('into Rusk\'s store', g.scene.id === 'RUSK_STORE');
+      look(159, 2);
+      check('the account book: the scraped entry', s.evidence.STORE_LEDGER && s.evidence.STORE_LEDGER.examined);
+      look(60, 1); look(293, 2);
+      check('the empty powder crate, stencilled', s.evidence.STORE_CRATE && s.evidence.STORE_CRATE.examined);
+      if (thorough) look(123, 1);
+      talk(229, ['Then you want this settled', 'Your last freight', 'The book says lamp oil', 'Did Sheriff Hale', 'Do you sell riding', 'What was in the long', 'That\'s all']);
+      check('Rusk on the freight', !!s.evidence.T_RUSK_FREIGHT);
+      door(21);
+      check('back on Main Street', g.scene.id === 'VILLAGE');
+      // ---- the chapel and the graves ----
+      door(373);
+      check('up the chapel lane to the graves', g.scene.id === 'GRAVEYARD');
+      talk(139, ['Tell me about the Pale', 'Good day']);
+      check('Vale on the Pale Figure', !!s.evidence.T_VALE_FIGURE);
+      look(325, 1); look(360, 2);
+      check('the disturbed grave opened: powder, fuse, caps', s.evidence.GRAVE_DISTURBED && s.evidence.GRAVE_DISTURBED.examined && s.flags.graveOpened);
+      check('the opened grave is drawn', g.props.some((p) => p.id === 'graveOpen'));
+      look(360, 2);
+      check('what was buried: new paper, old jacket', s.evidence.GRAVE_CACHE && s.evidence.GRAVE_CACHE.examined);
+      look(403, 1);
+      check('riding-boot prints by the fence', !!s.evidence.GRAVE_PRINTS);
+      if (thorough) talk(139, ['Who was Amos Pell', 'One of your graves', 'Good day']);
+      T.walkTo(506); leave('right');
+      check('up the path to the telegraph tower', g.scene.id === 'TELEGRAPH');
+      // ---- the telegraph tower ----
+      talk(235, ['When did the line', 'Can you mend', 'You sent my telegram', 'That\'s all']);
+      check('Ada Bell on the dead line', !!s.evidence.T_ADA_LINE);
+      look(279, 1); look(316, 2);
+      check('the wire was cut, not snapped', s.evidence.TOWER_WIRE && s.evidence.TOWER_WIRE.examined && !!s.evidence.TOWER_SOOT);
+      if (thorough) look(360, 1);
+      for (let i = 0; i < 400 && !s.flags.ch2DuskReady; i++) g.update(1 / 60);
+      T.talkThrough();
+      check('the light starts to go once the day\'s finds are made', s.flags.ch2DuskReady && s.time.h >= 16);
+      T.walkTo(440); T.hold('KeyD', 20); T.step(20); T.talkThrough();
+      check('the ridge path onward is closed for now', g.scene.id === 'TELEGRAPH');
+      // ---- the notebook: the second question ----
+      T.press('Tab');
+      const nb = g.notebook; for (let k = 0; k < 10 && nb.tab !== 4; k++) T.press('ArrowRight', 1);
+      for (let k = 0; k < 4 && nb.q !== 'Q_ORDER'; k++) T.press('KeyQ', 1);
+      check('the second question is on the Deductions page', nb.q === 'Q_ORDER');
+      const pairs = [['S2_FREIGHT', 'S2_COIN'], ['S2_CACHE', 'S2_CRATE'], ['S2_WIRE', 'S2_LINE_DEAD'], ['S2_SOOT', s.flags.ridgeLightSeen ? 'S2_WATCHER' : 'S2_FIGURE'], ['S2_HEELS', 'S2_MILL_HEELS'], ['S2_HALE_ASKED', 'S2_FREIGHT']];
+      for (const [a, b] of pairs) T.deduce(a, b);
+      check('the three deductions with readings formed', ['D2_GRAVE_POWDER', 'D2_CUT_OFF', 'D2_TOWER_LIGHT'].every((d) => s.deductions.includes(d)));
+      T.press('Escape');
+      // ---- back down to the Black Ram at dusk ----
+      T.walkTo(6); leave('left');
+      check('back down to the graves', g.scene.id === 'GRAVEYARD');
+      T.walkTo(6); leave('left');
+      check('back down to Main Street', g.scene.id === 'VILLAGE');
+      T.walkTo(474); leave('right');
+      check('back to the hotel forecourt', g.scene.id === 'BLACK_RAM_EXTERIOR');
+      T.walkTo(320); T.press('KeyE'); T.step(20);
+      check('at the door: asked what today adds up to', g.dialogue.active && g.dialogue.id === 'CASE_PROMPT_ORDER');
+      if (conclusion) {
+        T.talkThrough([0]);
+        check('the case review opens', g.overlay && g.overlay.constructor.name === 'CaseReview');
+        T.decide(conclusion);
+      } else T.talkThrough([2]);
+      check(conclusion ? `committed to ${conclusion}` : 'kept it to myself', conclusion ? s.cases.ORDER && s.cases.ORDER.conclusion === conclusion : !s.cases.ORDER);
+      if (g.overlay && g.overlay.constructor.name === 'CaseReview') T.press('Escape', 2);
+      for (let i = 0; i < 600 && !g.dialogue.active; i++) g.update(1 / 60);
+      rep.aftermath = g.dialogue.id;
+      T.talkThrough([], 4000); T.step(60);
+      check('supper with Finch played once', !!s.flags.aftermath_ORDER);
+      check('the second day\'s end card', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 2 && s.flags.chapter2Complete);
+      check('the first case is untouched', (s.cases.HALE ? s.cases.HALE.conclusion : null) === before.hale);
+      check('no shots, no deaths', s.consequences.shotsFired === 0 && s.consequences.peopleKilled.length === 0);
+      check('no runtime errors', g.errorsSeen.size === 0);
+      rep.passed = rep.errors.length === 0;
       return rep;
     },
     info() {

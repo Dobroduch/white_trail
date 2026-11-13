@@ -76,7 +76,9 @@ export class DialogueView {
     const lines = r.lastText ? wrap(ctx, r.lastText, W0 - 16) : [];
     const lineH = 7.6;
     const choices = r.choices && this.shown >= (r.lastText ? r.lastText.length : 0) ? r.choices : null;
-    let h = 8 + lines.length * lineH + (choices ? choices.length * 8 + 3 : 0) + 4;
+    // touch: taller choice rows, so each is a comfortable finger target
+    const rowH = this.game.touchUI() ? 11.5 : 8;
+    let h = 8 + lines.length * lineH + (choices ? choices.length * rowH + 3 : 0) + 4;
     h = Math.max(h, 26);
     // Anchored at the top: the ground plane (characters, clues) stays visible beneath it.
     const y0 = 12;
@@ -106,10 +108,12 @@ export class DialogueView {
       font(ctx, 5.7);
       const cy = y0 + 10 + lines.length * lineH + 2;
       choices.forEach((c, i) => {
-        const y = cy + i * 8 + 4;
-        this.choiceRects.push({ x: X0 + 5, y: y - 6, w: W0 - 10, h: 8 });
+        const y = cy + i * rowH + 4 + (rowH - 8) / 2;
+        const top = y - 6 - (rowH - 8) / 2;
+        this.choiceRects.push({ x: X0 + 5, y: top, w: W0 - 10, h: rowH });
         const sel = i === this.sel;
-        if (sel) { ctx.fillStyle = 'rgba(245,158,11,0.12)'; ctx.fillRect(X0 + 5, y - 6, W0 - 10, 8); }
+        if (sel) { ctx.fillStyle = 'rgba(245,158,11,0.12)'; ctx.fillRect(X0 + 5, top, W0 - 10, rowH); }
+        else if (rowH > 8) { ctx.fillStyle = 'rgba(71,85,105,0.12)'; ctx.fillRect(X0 + 5, top + 0.5, W0 - 10, rowH - 1); }
         text(ctx, `${i + 1}.`, X0 + 9, y, sel ? UI.amber : UI.faint);
         text(ctx, c.text, X0 + 18, y, sel ? UI.bone : UI.dim);
       });

@@ -1,0 +1,11 @@
+{
+  "name": "THE WHITE TRAIL",
+  "short_name": "White Trail",
+  "description": "A 2D pixel-art detective mystery. Crow's Hollow, Rocky Mountains, winter 1892.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
