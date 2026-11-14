@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 6,
- "nextobjectid": 24,
+ "nextobjectid": 26,
  "properties": [
   {
    "name": "name",
@@ -2114,6 +2114,84 @@
        "name": "phase",
        "type": "string",
        "value": "DAY"
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "name": "finch",
+     "type": "npc",
+     "x": 183,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Constable Finch"
+      },
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "finch_idle"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "FINCH_DAY"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"ch2Supper\"}"
+      }
+     ]
+    },
+    {
+     "id": 25,
+     "name": "fire",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "fire"
+      },
+      {
+       "name": "args",
+       "type": "string",
+       "value": "[84,148]"
+      },
+      {
+       "name": "id",
+       "type": "string",
+       "value": "fireSupper"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"phase\":\"DAY\"},{\"flag\":\"ch2Supper\"}]}"
       }
      ]
     }

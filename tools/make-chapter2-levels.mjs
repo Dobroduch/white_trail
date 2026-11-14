@@ -243,6 +243,9 @@ patch('black_ram_exterior.tmj', 'CH2_DAY_EXIT', ({ add, prop, setProp, addDaySky
 patch('black_ram_parlor.tmj', 'gableDay', ({ add, setMapProp }) => {
   setMapProp('day', { darkness: 0.24, ambience: 'parlor' });
   add('npc', 'gable', 414, 225, [S('label', 'Mrs. Gable'), S('sprite', 'gable_idle'), S('dialogue', 'GABLE_DAY'), P('facing', 'float', -1), P('z', 'float', 2), S('phase', 'DAY')]);
+  // the second day's supper with Finch (CH2_END): Finch at the fire, the fire lit, only while `ch2Supper` holds
+  add('npc', 'finch', 183, 225, [S('label', 'Constable Finch'), S('sprite', 'finch_idle'), S('dialogue', 'FINCH_DAY'), P('facing', 'float', 1), S('phase', 'DAY'), S('if', { flag: 'ch2Supper' })]);
+  add('prop', 'fire', 0, 0, [S('propType', 'fire'), S('args', [84, 148]), S('id', 'fireSupper'), S('if', { all: [{ phase: 'DAY' }, { flag: 'ch2Supper' }] })]);
 });
 
 patch('room_4.tmj', 'r4_day', ({ setMapProp }) => {

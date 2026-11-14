@@ -137,7 +137,11 @@ export class Cutscene {
       const out = outcomeOf(g.state, s.aftermath);
       g.card = { lines: s.cardText || ['First light.'], t: 0 };
       st.poll = () => {
-        if (!st.talking && st.t >= 2.2) { st.talking = true; g.card = null; g.startDialogue(out.aftermath); }
+        if (!st.talking && st.t >= 2.2) {
+          st.talking = true; g.card = null;
+          if (s.reveal) g.fadeTo(0, 1.4); // the scene behind the card fades in under the conversation
+          g.startDialogue(out.aftermath);
+        }
         if (st.talking && !g.dialogue.active) {
           apply(out.do, g.state);
           g.state.flags[flag] = true;

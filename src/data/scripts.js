@@ -253,7 +253,11 @@ export const SCRIPTS = {
     { casePrompt: 'ORDER', prompt: 'CASE_PROMPT_ORDER' },
     { fade: { to: 1, dur: 1.6 } },
     { clock: [17, 40] },
-    { aftermath: 'ORDER', cardText: ['Dusk.'] },
+    { set: { ch2Supper: true } }, // Finch at the fire, the fire lit (black_ram_parlor.tmj)
+    { scene: { id: 'PARLOR', spawn: 'fromStreet' } },
+    { player: { x: 152, face: -1 } },
+    // the "Dusk." card, then the parlor fades in under the conversation: supper is seen, not told over black
+    { aftermath: 'ORDER', cardText: ['Dusk.'], reveal: true },
     { set: { chapter2Complete: true } },
     { log: 'The second day ended at the Black Ram, with Finch.' },
     { checkpoint: true },

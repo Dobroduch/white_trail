@@ -396,6 +396,8 @@ export function install() {
       if (g.overlay && g.overlay.constructor.name === 'CaseReview') T.press('Escape', 2);
       for (let i = 0; i < 600 && !g.dialogue.active; i++) g.update(1 / 60);
       rep.aftermath = g.dialogue.id;
+      T.step(100); // the card has gone and the parlor fades in under the conversation
+      check('supper with Finch is seen, in the parlor, not over a black screen', g.scene.id === 'PARLOR' && !g.card && g.fade.v < 0.05 && g.npcs.some((n) => n.id === 'finch' && !n.hidden) && g.props.some((p) => p.id === 'fireSupper'));
       T.talkThrough([], 4000); T.step(60);
       check('supper with Finch played once', !!s.flags.aftermath_ORDER);
       check('the second day\'s end card', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 2 && s.flags.chapter2Complete);

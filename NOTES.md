@@ -534,7 +534,7 @@ Tilesets `store_interior` (120 tiles) and `hillside_exterior` (184 tiles) are pa
 **Ending.** Once the ledger, the grave's closer look and the wire's closer look are recorded, the light starts to go (global event `CH2_DUSK`, clock to 16:40). Going in at the Black Ram's door then runs `CH2_END`:
 1. settle the case now, go to the notebook first, or keep it to yourself;
 2. the **"Dusk."** card;
-3. supper with Finch: one of four aftermaths;
+3. supper with Finch in the parlor: Silas is moved inside behind the fade, the fire is lit, Finch sits by it (`ch2Supper`), and the room fades in under the conversation (`aftermath` with `reveal`). One of four aftermaths. *Fixed 2026-11-14: it first played over a black screen, as the first night's "First light." scene does, which read as a bug;*
 4. the **second day's end card**, with the outcome's epilogue, the day's open questions, "The story continues in the next chapter", and **Walk the town a while longer** or the title.
 
 Outcome flags for later chapters: `watchGrave`, `powderMoved`, `valeEmboldened`. Plus `adaKnowsSender`, `adaWarned` and `ruskWarmed`.

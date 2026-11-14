@@ -390,7 +390,7 @@ Object.assign(DIALOGUE, {
   } },
 
   AFTER2_BLAST: { start: 'a', nodes: {
-    a: { who: 'note', text: 'The parlor, the lamps lit. Finch at the corner table with his coat still on and his supper going cold.', next: 'b' },
+    a: { who: 'note', text: 'The parlor at dusk, the fire built up. Finch by it with his coat still on and his supper going cold.', next: 'b' },
     b: { who: 'finch', text: 'Well?', next: 'c' },
     c: { who: 'silas', text: 'Somebody bought dynamite on Rusk\'s freight and buried it in Amos Pell\'s grave. The wire was cut to keep us shut in until they\'ve used it.', next: 'd' },
     d: { who: 'finch', text: 'Used it on what?', next: 'e' },
@@ -404,7 +404,7 @@ Object.assign(DIALOGUE, {
     i: { who: 'silas', text: 'Then we\'ll know who they are.', next: 'END' },
   } },
   AFTER2_WAR: { start: 'a', nodes: {
-    a: { who: 'note', text: 'The parlor, the lamps lit. Finch at the corner table with his coat still on and his supper going cold.', next: 'b' },
+    a: { who: 'note', text: 'The parlor at dusk, the fire built up. Finch by it with his coat still on and his supper going cold.', next: 'b' },
     b: { who: 'finch', text: 'Well?', next: 'c' },
     c: { who: 'silas', text: 'There\'s a war cache in Amos Pell\'s grave. Old powder in an old trooper\'s jacket. Somebody guards it, and cut the wire so nobody hears about Hale.', next: 'd' },
     d: { who: 'finch', text: 'War stores. Up here.', next: 'e' },
@@ -412,14 +412,14 @@ Object.assign(DIALOGUE, {
     f: { who: 'note', text: 'By the time the pie came, he had four men and a wagon.', next: 'END' },
   } },
   AFTER2_RITE: { start: 'a', nodes: {
-    a: { who: 'note', text: 'The parlor, the lamps lit. Finch at the corner table with his coat still on and his supper going cold.', next: 'b' },
+    a: { who: 'note', text: 'The parlor at dusk, the fire built up. Finch by it with his coat still on and his supper going cold.', next: 'b' },
     b: { who: 'finch', text: 'Well?', next: 'c' },
     c: { who: 'silas', text: 'The Order is buying powder for whatever it means to do on that ridge, and its lamp keeps watch over the valley.', next: 'd' },
     d: { who: 'finch', text: 'You\'d best not say that where the Reverend can hear it.', next: 'e' },
     e: { who: 'note', text: 'At a quarter past six the chapel bell began to ring. The Reverend had heard it anyway.', next: 'END' },
   } },
   AFTER2_OPEN: { start: 'a', nodes: {
-    a: { who: 'note', text: 'The parlor, the lamps lit. Finch at the corner table with his coat still on and his supper going cold.', next: 'b' },
+    a: { who: 'note', text: 'The parlor at dusk, the fire built up. Finch by it with his coat still on and his supper going cold.', next: 'b' },
     b: { who: 'finch', text: 'Well?', next: 'c' },
     c: { who: 'silas', text: 'Snow. A dead wire. A storekeeper who doesn\'t ask questions.', next: 'd' },
     d: { who: 'finch', text: 'That\'s not much.', next: 'e' },
