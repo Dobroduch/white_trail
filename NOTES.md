@@ -683,3 +683,168 @@ The aftermath at the end of the first night no longer plays over a black screen.
 - `CH2_OPEN` clears the flag ("Finch went off up the street"), so the second day opens with him gone.
 - A save made on the first night's end card resumes there, with the dawn forecourt behind the card. Saves from earlier builds, which were in the NIGHT phase on the end card, go on into the second day as before.
 - The harness `fullRun` checks that the forecourt is visible under the conversation, with Finch in it. `fullRun2` checks that he has gone by morning.
+
+## 24. Chapter 3, "What the Snow Keeps": the third day and night (2026-11-23)
+
+The chapter closes GDD Act III ("Day 2 through Night 3"). It carries the guide's one hallucination event, the poisoned
+coffee (§14). Act IV (the summit, the mine, the payroll, Clara) is left for the next chapter.
+
+**Mystery Bible.** The story's underlying truth is in `docs/private/MYSTERY_BIBLE.md`:
+- the 1864 payroll and the 1872 collapse;
+- who killed Hale, where, and how;
+- the telegram;
+- the poisoner;
+- clue classification, character knowledge, true and discovery timelines, and payoffs.
+
+It is development-only. `tools/serve.mjs` refuses to serve `docs/private/`, and nothing in `src/` reads it. Several
+GDD Part IX questions are answered there as **proposals** (listed in its §6 for review):
+- Finch: careless with a pre-signed pad, not complicit;
+- the poisoner: Rusk, coerced by Mercer;
+- Room 4: Hale was killed there; Gable cleaned it under a written threat; the guest was Clara;
+- Vale: partial knowledge;
+- the method: a knife, in Room 4;
+- the tally: payroll shares.
+
+**Continuation.**
+- The second day's end card now offers **"Go on: the third day"** first, which runs `CH3_OPEN`. "Walk the town a
+  while longer" and the title remain.
+- A player who walked the town instead starts the third day by going in at the Black Ram's door (a second
+  `scriptIf` on that door).
+- `CH3_OPEN`:
+  - the title card **III · WHAT THE SNOW KEEPS**;
+  - day 3, 07:30;
+  - morning in Room 4, with the rug still down;
+  - one line: Hale is buried at noon and lies at Finch's office until then.
+- Nothing is reset. `ch2Supper` and `firstLightFinch` are cleared so nobody stays at a table they have left.
+
+**The day.**
+1. **The constable's office** (`FINCH_OFFICE`, new map `constable_office.tmj`) is the west cabin on Main Street.
+   - That cabin was the first night's "face at the window": it was Finch, watching for the train's man, and he says
+     so if asked.
+   - Finch keeps to his office today.
+   - Hale lies on a bench under canvas.
+     - First look: a brass button torn from his coat.
+     - Closer look: his cuff is bleached and rotted by **lye**. There was no lye at the mill.
+   - Optional:
+     - the desk's **telegraph pad**, every form pre-signed "E. Finch", with form **41 torn out**;
+     - Finch on why the forms are signed;
+     - the shelf: Hale's square-heeled miner's boots, so the cavalry heel was not his;
+     - the cell, which holds the powder crates if the second day ended with them dug out (`powderMoved`).
+2. **The burial** at the chapel (once Silas has seen Hale).
+   - Vale loses his place in the words.
+   - **Gideon Mercer** appears for the first time: courteous, generous, watchful. On Clara: "a temper and a good
+     horse". On the Order: "a mining company I lost money in". "Find anything else, and you'll find this a small
+     town."
+   - Optional: his prints by the grave, a narrow heel and a long straight sole.
+3. **Room 4, again.** What becomes possible only once Silas knows to look for it:
+   - **Under the bed**, offered only after he has seen the coat: a sheriff's button, threads torn, blood on the rim.
+     Its closer look ends "nobody carried a sheriff down past Mrs. Gable's desk unseen".
+   - **The wardrobe**, offered as a new look only once he has the button: its back is hinged onto a hidden **service
+     stair**, the rail rope-scored and the treads heel-dragged.
+   - Optional, on the stair: a woman's **grey kid glove** with a "C" on the back.
+4. **Mrs. Gable** gives way only to the right evidence.
+   - The button alone: "Buttons come off. Coats come through my rooms."
+   - Once Silas has found the stair, "Your wardrobe has a back to it" opens her up. Hale came up the back stair to
+     *her* (the guest), a heavier tread followed, she stayed behind her door.
+   - She hands over the **note** pushed under her door: "CLEAN IT. A GUEST TOOK ILL. OR THE RAM BURNS." It is signed
+     with five strokes, the last struck through: the mill post's count.
+   - She will not name the woman ("she paid in more than money"). Shown the glove: "Put that away. Please."
+5. With the coat looked at, Hale buried and the note in hand, the light goes (`CH3_DUSK`).
+
+**The case.** Room 4 (`Q_ROOM4`) becomes a case on the third day (`caseIf`).
+- New clues:
+  - a button gone from his coat;
+  - lye on his sleeve;
+  - a button under the bed;
+  - a stair behind the wardrobe;
+  - what Mrs. Gable heard;
+  - a note under her door;
+  - the post's marks, now shared with Room 4.
+- Threads:
+  - *Whose button was under the bed?* → **Hale was in Room 4** (torn off fighting / dropped afterwards);
+  - *Where did the lye come from?* → **The same lye** (settled);
+  - *Where does the back of the wardrobe lead?* → **The back way** (carried down / the guest fled);
+  - *Who wrote the note?* → **The same counting, again** (settled);
+  - the first night's *Who stayed in Room 4?* now has readings: a guest off the book / no guest at all.
+- Readings that come only with their evidence:
+  - "torn off fighting": the button's closer look;
+  - "carried down": the stair's closer look;
+  - "a guest off the book": Gable's register line, her account, or the glove.
+- Three accounts, each excluding the others:
+  - **Hale died in Room 4** (true) → `gableConfides`, Gable's cooperation OPEN;
+  - **The guest's trouble** → `huntForGuest` (Finch goes looking for the woman, which matters for Clara later);
+  - **Mrs. Gable's own work** → `gableAccused` (Finch takes her keys).
+- Keeping it to yourself is the fourth outcome.
+
+**The evening and the third night.** Going in at the Black Ram at dusk runs `CH3_EVENING`:
+1. settle Room 4, or not;
+2. the "Evening." card;
+3. supper with Finch in the parlor, seen under the conversation (four aftermaths; Mrs. Gable by the kitchen door);
+4. then NIGHT, 22:40.
+
+At night:
+- Mrs. Gable has gone up and the front door is bolted.
+- The bed in Room 4 refuses ("I'll sit up downstairs, by the fire and the stair").
+- A coffee pot keeps warm on the hob.
+
+**Pouring a cup** is the player's own action. It runs the one authored hallucination:
+- the room stretches slightly;
+- a faint second copy of it drifts beside it;
+- one shadow moves against the light;
+- Mrs. Gable's voice comes from the stair behind him, though the stair is in front of him;
+- "the fire ticks" repeats.
+
+It lasts about ten seconds (`distort`; held still under Reduced motion). Silas then wakes on the floor at 03:10:
+- the note is gone from his coat, and nothing else (`removeItem`);
+- the kitchen passage door stands open;
+- the coffee tin is new, with Rusk's label (`EV3_TIN`);
+- the cup holds laudanum (`EV3_CUP`), and its closer look ends the chapter.
+
+A new open question, **Who put me to sleep, and why?** (`Q_COFFEE`), has its own thread, *Put to sleep for a note*.
+
+**Ending.** Through the window, a lantern on the ridge, *climbing* toward the old workings. Then the **third night's
+end card**:
+- Room 4's outcome and epilogue;
+- the open questions: who came up the stair after Hale, whose glove, who tore form 41, who drugged the coffee, what
+  the lantern is climbing to;
+- "The story continues in the next chapter";
+- **Sit by the dead fire a while**, or the title.
+
+**Optional discoveries and what they change.**
+- The pad and Finch on it: People notes; the open question about form 41; a seed for the telegram reveal.
+- The glove: the "guest" reading; Gable's reaction; a People note under Clara.
+- Mercer's heel and the shelf boots: People notes; the cavalry heel narrowed.
+- The cell under `powderMoved`.
+- The window: Finch was the watcher.
+
+**Engine and tools.**
+- Doors and exits accept a list of `scriptIf`.
+- Cutscene steps `do` (any effects) and `distort`.
+- The night clock runs past midnight (it was capped at 03:30 from any start).
+- `Game.drawDistortion`.
+- Questions can carry `caseIf`.
+- `EndCard(3)`.
+- New props: `jailCell`, `shroud`, `newGrave`, `coffeePot`.
+- `tools/make-chapter3-art.mjs`, palette-exact, with `.pxo` sources:
+  - Mercer, re-dressed from Finch's build in a charcoal greatcoat and an oxblood waistcoat;
+  - inventory art for the button, the note and the glove;
+  - the office on Silas's map.
+- `tools/make-chapter3-levels.mjs`: the office map and the patches.
+- Harness `T.fullRun3({ conclusion, thorough })`.
+
+**Tests.**
+- `tests/e2e/chapter3.spec.mjs` (6):
+  - four full runs, from the first night through the third, covering every Room 4 outcome with optional finds
+    included or skipped;
+  - saves on the second day's end card, in the office, at night, and on the third night's end card;
+  - Gable refusing on the button alone;
+  - readings unlocking.
+- `tests/e2e/mobile.spec.mjs` adds a touch-only playthrough of the whole chapter on each phone project.
+
+**Not done / limits.**
+- No new audio. The office uses the store's ambience, and the hallucination has no sound design beyond the repeating
+  line.
+- The office is built from store and hotel tiles (the counter serves as Finch's desk). There is no new tileset.
+- Mercer is a recolour of Finch's build. He reads as a different man but shares the silhouette.
+- Not played on a physical phone (as §21).
+- The Bible's Part IX answers are proposals for the design owner to confirm.

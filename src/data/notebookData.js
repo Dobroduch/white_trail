@@ -32,7 +32,18 @@ export const LEADS = [
   { id: 'L_GRAVE', chapter: 2, variants: [{ if: { examined: 'GRAVE_DISTURBED' }, text: 'Who comes back to Amos Pell\'s grave, and when?' }] },
   { id: 'L_WIRE', chapter: 2, variants: [{ if: { examined: 'TOWER_WIRE' }, text: 'Who walked the telegraph line with cutters?' }] },
   { id: 'L_SENDER', chapter: 2, variants: [{ if: { flag: 'adaKnowsSender' }, text: 'Ada Bell knows who handed in my telegram. She would not say it up there.' }] },
-  { id: 'L_WORKINGS', chapter: 2, variants: [{ if: { evidence: 'T_VALE_FIGURE' }, text: 'What is up at the old Pale workings, that a lamp keeps watch over?' }] },
+  { id: 'L_WORKINGS', chapter: 2, variants: [
+    { if: { flag: 'chapter3Complete' }, text: 'What is the lantern climbing to, up at the old workings?' },
+    { if: { evidence: 'T_VALE_FIGURE' }, text: 'What is up at the old Pale workings, that a lamp keeps watch over?' },
+  ] },
+  // Chapter 3 (the third day and night)
+  { id: 'L3_KILLER', chapter: 3, variants: [{ if: { evidence: 'T3_GABLE_STAIR' }, text: 'Who came up the back stair after Hale?' }] },
+  { id: 'L3_GUEST', chapter: 3, variants: [
+    { if: { evidence: 'EV3_GLOVE' }, text: 'Whose glove was on the service stair? A "C" on the back.' },
+    { if: { evidence: 'T3_GABLE_STAIR' }, text: 'Who was the woman in Room 4, off the book?' },
+  ] },
+  { id: 'L3_FORM', chapter: 3, variants: [{ if: { examined: 'EV3_PAD' }, text: 'Who tore form 41 from Finch\'s signed pad?' }] },
+  { id: 'L3_COFFEE', chapter: 3, variants: [{ if: { flag: 'woke3' }, text: 'Who put me to sleep, and who came for the note?' }] },
 ];
 
 // The People page. An entry appears once its `if` holds; `variants` give Silas's current summary, and each of
@@ -57,6 +68,8 @@ export const PEOPLE = [
     variants: [{ if: {}, text: 'Missing, per the telegram. Of a family people here are careful about.' }],
     notes: [
       { if: { evidence: 'T_FINCH_CLARA' }, text: 'Her father, Mr. Mercer, wants it kept out of the street.' },
+      { if: { evidence: 'T3_MERCER' }, text: 'Her father: "She has a temper and a good horse. She will come home."' },
+      { if: { evidence: 'EV3_GLOVE' }, text: 'A grey kid glove on the service stair behind Room 4, a "C" on the back. Not proof of anything. Not nothing.' },
       { if: { evidence: 'T_GABLE_CLARA' }, text: '"Miss Mercer is a Mercer." Mrs. Gable will not discuss the family.' },
     ] },
   { id: 'FINCH', name: 'Constable Edgar Finch', role: 'Constable',
@@ -68,6 +81,9 @@ export const PEOPLE = [
     notes: [
       { if: { evidence: 'T_FINCH_TELEGRAM' }, text: 'Read the telegram for a long while, and did not say he sent it.' },
       { if: { flag: 'adaKnowsSender' }, text: 'Ada Bell writes down who hands in every telegram. She would not tell me it was him.' },
+      { if: { seen: 'FINCH_OFFICE.watch' }, text: 'It was him at the cabin window, the night I came. His office.' },
+      { if: { evidence: 'T3_FINCH_FORMS' }, text: 'Signed a whole pad of telegraph forms in advance, for Hale.' },
+      { if: { flag: 'finchForm41' }, text: 'Form 41 is gone from the pad. He knew, and did not let himself wonder who.' },
       { if: { evidence: 'T_FINCH_RIDGE' }, text: 'Laughed off the talk of lights on the ridge. The laugh didn\'t take.' },
       { if: { trust: { finch: 'STEADY' } }, text: 'He has begun to trust me, a little.' },
       { if: { any: [{ trust: { finch: 'GUARDED' } }, { trust: { finch: 'COLD' } }] }, text: 'He has stopped telling me things.' },
@@ -84,6 +100,9 @@ export const PEOPLE = [
       { if: { evidence: 'T_GABLE_REGISTER' }, text: 'Some guests, she says, pay to be kept out of her book.' },
       { if: { evidence: 'T_GABLE_NIGHT' }, text: 'Knew at once that the scream came from the mill.' },
       { if: { evidence: 'T_GABLE_PIT' }, text: 'Knows the old mill: the race, the wheel pit.' },
+      { if: { evidence: 'T3_GABLE_STAIR' }, text: 'Kept a woman in Room 4, off the book. "She paid in more than money."' },
+      { if: { evidence: 'EV3_NOTE' }, text: 'Was told by a note under her door to clean the room and say a guest took ill.' },
+      { if: { flag: 'gableGlove' }, text: '"Put that away. Please." Frightened, and not for herself.' },
       { if: { evidence: 'ROOM4_RUG' }, text: 'While I was out, somebody laid a rug over the scrubbed boards in my room.' },
       { if: { flag: 'askedGableRug' }, text: '"The floors are cold in the mornings." She did not look up from her book.' },
     ] },
@@ -105,6 +124,7 @@ export const PEOPLE = [
       { if: { evidence: 'T_RUSK_FREIGHT' }, text: 'His last freight was paid in coin and fetched after dark. He does not ask men their business.' },
       { if: { evidence: 'T_RUSK_HALE' }, text: 'Hale read his freight book a fortnight before he died.' },
       { if: { flag: 'townFrightened' }, text: 'Blames me for the town bolting its doors.' },
+      { if: { evidence: 'EV3_TIN' }, text: 'Sold the Black Ram a new tin of coffee the afternoon I was put to sleep.' },
     ] },
   { id: 'VALE', name: 'Reverend Elias Vale', role: 'Keeps the chapel', if: { flag: 'graveyardEntered' },
     portrait: { sprite: 'vale_idle', crop: [3, 0, 18, 18] },
@@ -117,6 +137,7 @@ export const PEOPLE = [
       { if: { evidence: 'T_VALE_FIGURE' }, text: 'The Figure carries a lamp on the ridge; those who follow it to the old workings do not come down.' },
       { if: { evidence: 'T_VALE_ORDER' }, text: 'Says the Order paid for Amos Pell\'s stone, "and for a great many things, then".' },
       { if: { evidence: 'T_VALE_PELL' }, text: 'Blamed the opened grave on dogs. Never once looked at it.' },
+      { if: { flag: 'burialDone' }, text: 'Lost his place at Hale\'s graveside, and found it again, lower.' },
     ] },
   { id: 'ADA', name: 'Ada Bell', role: 'Telegraph operator, Blackwood Station', if: { any: [{ flag: 'towerEntered' }, { flag: 'knowsAda' }] },
     portrait: { sprite: 'ada_idle', crop: [3, 0, 18, 18], if: { flag: 'towerEntered' } },
@@ -129,10 +150,27 @@ export const PEOPLE = [
       { if: { evidence: 'T_ADA_TELEGRAM' }, text: '"I write down who hands it in." She would not say who handed in mine.' },
       { if: { flag: 'adaWarned' }, text: 'I told her to go home. "Neither is the station" safe, she said.' },
     ] },
+  // Chapter 3
+  { id: 'MERCER', name: 'Gideon Mercer', role: 'Clara\'s father; the town\'s money', if: { flag: 'burialDone' },
+    portrait: { sprite: 'mercer_idle', crop: [3, 0, 18, 18] },
+    variants: [
+      { if: { evidence: 'T3_MERCER' }, text: 'Pays for the sheriff\'s stone and most other things. Courteous, and watching.' },
+      { if: {}, text: 'Clara\'s father. Stood apart at Hale\'s grave and watched me, not the coffin.' },
+    ],
+    notes: [
+      { if: { evidence: 'T3_MERCER' }, text: 'Speaks of Clara as if she were late for supper.' },
+      { if: { seen: 'MERCER.hale' }, text: 'Hale "didn\'t know when to leave old things alone."' },
+      { if: { seen: 'MERCER.order' }, text: 'The Order was "a mining company. I lost money in it like everyone else."' },
+      { if: { seen: 'MERCER.bye' }, text: '"Find anything else, and you\'ll find this a small town."' },
+      { if: { evidence: 'EV3_HEEL' }, text: 'Wears riding boots: a narrow heel, a long straight sole.' },
+    ] },
 ];
 
 // The Case page's opening lines: what the mystery is, as Silas would put it now. First matching variant is shown.
 export const CASE_SUMMARY = [
+  { if: { flag: 'chapter3Complete' }, text: 'Three nights in. I think I know where Hale died. Somebody put me to sleep to take a note back, and a lantern is climbing to the old workings.' },
+  { if: { flag: 'ch3Night' }, text: 'The third night. The note is in my coat, the fire is down, and I am sitting up with the stair behind Room 4.' },
+  { if: { flag: 'ch3Started' }, text: 'The third day. Hale is buried at noon. Whatever happened in Room 4 happened under this roof, and somebody here knows exactly what.' },
   { if: { flag: 'chapter2Complete' }, text: 'Two days in. Hale is dead, Clara Mercer is still missing, and the valley is shut in with whoever is behind it.' },
   { if: { flag: 'ch2Started' }, text: 'The second day. The pass is shut and the telegraph is dead. Somebody in Crow\'s Hollow is still busy with the Pale Order\'s old business.' },
   { if: { flag: 'sliceComplete' }, text: 'The first night is over. Sheriff Hale is dead. Clara Mercer is still missing, and nobody will say her name.' },
@@ -157,5 +195,8 @@ export const ITEMS = {
   REVOLVER: { name: 'Revolver', text: 'Single-action. Six chambers; three cartridges loaded, and no more to be had up here. I would as soon bring all three home.', revolver: true, icon: 'assets/export/items/inventory/revolver_inventory.png' },
   ROOM4_KEY: { name: 'Key to Room 4', text: 'Iron key on a brass tag stamped 4.', icon: 'assets/export/items/inventory/room4_key_inventory.png' },
   WATCH: { name: "Hale's pocket watch", text: 'Crystal smashed, hands bent. Engraved N. HALE. The works may not be ruined.', icon: 'assets/export/items/inventory/pocket_watch_inventory.png' },
+  BUTTON: { name: 'Brass button', text: 'A sheriff\'s-pattern coat button, a star struck in the brass. Threads torn, not cut, still in the shank. It was under the bed in Room 4.', icon: 'assets/export/items/inventory/brass_button_inventory.png' },
+  GABLE_NOTE: { name: 'Note in block capitals', text: '"CLEAN IT. A GUEST TOOK ILL. OR THE RAM BURNS." Under it, five strokes struck through. Pushed under Mrs. Gable\'s door the morning after.', icon: 'assets/export/items/inventory/gable_note_inventory.png' },
+  GLOVE: { name: 'Grey kid glove', text: 'A woman\'s glove, soft grey kid, a small hand. A "C" worked on the back in grey silk. It was on the service stair behind Room 4.', icon: 'assets/export/items/inventory/grey_glove_inventory.png' },
   LEDGER: { name: 'Half-burned ledger', text: '"THE PALE ORDER — ACCTS." Old figures, initials, tally strokes in fives.', icon: 'assets/export/items/inventory/ledger_inventory.png' },
 };

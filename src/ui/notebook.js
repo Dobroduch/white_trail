@@ -31,6 +31,8 @@ const CAT = { PHYSICAL: 'Physical trace', DOCUMENT: 'Document', PERSONAL: 'Perso
 // Deductions board (UI units) and node sizes.
 const MM = { x: 14, y: 42, w: 190, h: 120, dw: 52, sw: 40 };
 export const NOT_AN_ANSWER = 'That does not answer it.';
+// A question that can be settled now (Room 4 becomes one only on the third day: `caseIf`).
+const isCase = (s, q) => !!(q && q.case && test(q.caseIf, s));
 
 export class Notebook {
   constructor(game) {
@@ -127,7 +129,7 @@ export class Notebook {
     const shown = threadClues(s, this.pick).slice(0, 1);
     return knownStatements(s, this.q).filter((x) => !shown.includes(x)).map((x) => 'P:' + x);
   }
-  caseRows() { return ['overview', 'telegram', ...questions(this.s).filter((q) => q.case).map((q) => 'Q:' + q.id), 'timeline']; }
+  caseRows() { return ['overview', 'telegram', ...questions(this.s).filter((q) => isCase(this.s, q)).map((q) => 'Q:' + q.id), 'timeline']; }
 
   listFor(tab) {
     switch (TABS[tab]) {
@@ -265,7 +267,7 @@ export class Notebook {
   openReview(qid) {
     const q = question(qid);
     if (!q) return;
-    if (!q.case) { this.result = { ok: false, text: 'There is nothing here to decide yet. This question stays open.' }; this.game.audio.sfx('refuse'); return; }
+    if (!isCase(this.s, q)) { this.result = { ok: false, text: 'There is nothing here to decide yet. This question stays open.' }; this.game.audio.sfx('refuse'); return; }
     this.game.pushOverlay(new CaseReview(this.game, qid));
     this.game.audio.sfx('page');
   }

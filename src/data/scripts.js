@@ -272,6 +272,118 @@ export const SCRIPTS = {
   DEDUCTION_HINT: [
     { ambient: true },
     { set: { deductionHintShown: true } },
-    { hint: 'Some of what you have seen may connect. Notebook (N) → Deductions: mark two statements that bear on each other.', dur: 9 },
+    { hint: 'Something you found raises a question. Notebook (N) → Deductions: pick the question, then the clue that answers it.', dur: 9 },
+  ],
+
+  // ======================= Chapter 3: the third day and night =======================
+  // Straight on from the second day's end card (or from the hotel door, if Silas stayed out walking): the chapter title
+  // over black, then morning in Room 4.
+  CH3_OPEN: [
+    { control: false },
+    { fade: { to: 1, dur: 0 } },
+    { card: { lines: ['III', 'WHAT THE SNOW KEEPS'], dur: 3.6 } },
+    { phase: 'DAY', time: [7, 30], day: 3 },
+    { set: { ch3Started: true, ch2Supper: false, firstLightFinch: false } },
+    { scene: { id: 'ROOM4', spawn: 'fromStairs' } },
+    { fade: { to: 0, dur: 2.0 } },
+    { label: true },
+    { say: 'CH3_OPEN' },
+    { log: 'The third day. Hale is to be buried at noon.' },
+    { checkpoint: true },
+    { control: true },
+  ],
+
+  OFFICE_ENTER: [
+    { ambient: true },
+    { set: { officeEntered: true } },
+    { wait: 0.6 },
+    { bark: 'A stove, a desk, a cell, and the sheriff on a bench under canvas.' },
+  ],
+
+  // at the chapel, once Silas has seen Hale: the burial (noon), and Gideon Mercer
+  BURIAL: [
+    { control: false },
+    { set: { burialOn: true } },
+    { clock: [12, 0] },
+    { reload: true },
+    { wait: 0.8 },
+    { line: { who: 'vale', text: 'We commit Nathaniel Hale to the ground he kept, in the sure and certain hope...' } },
+    { line: { who: 'note', text: 'The Reverend\'s voice goes on, and then stops, as though he has lost his place. He finds it again, lower.' } },
+    { line: { who: 'vale', text: '...The Lord gives. The mountain takes. Amen.' } },
+    { line: { who: 'note', text: 'A man in a grey greatcoat stands a little apart, hat in his hands, white whiskers. He watches me, not the grave.' } },
+    { set: { burialDone: true } },
+    { log: 'Hale was buried at noon, by the chapel. Gideon Mercer was there.' },
+    { checkpoint: true },
+    { control: true },
+  ],
+
+  // the day's work done (the coat looked at, the burial, Mrs. Gable's note): the light goes (global event)
+  CH3_DUSK: [
+    { ambient: true },
+    { set: { ch3DuskReady: true } },
+    { clock: [16, 40] },
+    { wait: 1.2 },
+    { bark: 'The light goes early under the ridge. Supper at the Black Ram, and then a long night by the stair.' },
+    { hint: 'Go back to the Black Ram. Going in ends the day.', dur: 8 },
+  ],
+
+  // at the hotel door at dusk: settle (or not) Room 4, supper with Finch, then the third night in the parlor
+  CH3_EVENING: [
+    { control: false },
+    { casePrompt: 'ROOM4', prompt: 'CASE_PROMPT_ROOM4' },
+    { fade: { to: 1, dur: 1.6 } },
+    { clock: [18, 0] },
+    { set: { ch3Supper: true } },
+    { scene: { id: 'PARLOR', spawn: 'fromStreet' } },
+    { player: { x: 152, face: -1 } },
+    { aftermath: 'ROOM4', cardText: ['Evening.'], reveal: true },
+    { fade: { to: 1, dur: 1.2 } },
+    { set: { ch3Supper: false, ch3Night: true } },
+    { phase: 'NIGHT', time: [22, 40] },
+    { player: { x: 200, face: -1 } },
+    { fade: { to: 0, dur: 1.6 } },
+    { say: 'CH3_NIGHT' },
+    { checkpoint: true },
+    { control: true },
+  ],
+
+  // the poisoned coffee (GDD §14): the only perceptual distortion in the game, short and authored
+  CH3_DRUGGED: [
+    { control: false },
+    { set: { drankCoffee: true } },
+    { line: { who: 'note', text: 'Bitter, and strong enough to stand a spoon in. I drink it anyway.' } },
+    { wait: 1.4 },
+    { distort: true },
+    { wait: 1.6 },
+    { line: { who: 'gable', text: 'Mister Vance.' } },
+    { line: { who: 'note', text: 'Her voice, from the stair behind me. The stair is in front of me.' } },
+    { wait: 1.0 },
+    { bark: 'The fire ticks. The fire ticks. The fire ticks.' },
+    { wait: 2.6 },
+    { line: { who: 'note', text: 'The room is longer than it was, and the lamp is on the wrong side of the shadows.' } },
+    { fade: { to: 1, dur: 2.0 } },
+    { distort: false },
+    { do: [{ removeItem: 'GABLE_NOTE' }, { set: { woke3: true } }] },
+    { phase: 'NIGHT', time: [3, 10] },
+    { player: { x: 160, face: 1 } },
+    { wait: 1.2 },
+    { fade: { to: 0, dur: 2.4 } },
+    { line: { who: 'note', text: 'The floor. The fire is out. My coat is open, and every pocket has been turned out.' } },
+    { line: { who: 'note', text: 'The note Mrs. Gable gave me is gone. Nothing else is.' } },
+    { log: 'Drank the coffee by the hob and woke on the floor at 03:10. Mrs. Gable\'s note was gone from my coat.' },
+    { checkpoint: true },
+    { control: true },
+  ],
+
+  // the closer look at the cup: the third night closes on the ridge
+  CH3_CLOSE: [
+    { afterDialogue: true },
+    { control: false },
+    { wait: 0.6 },
+    { line: { who: 'note', text: 'Through the window, high on the ridge: a lantern. Not watching this time. Climbing, toward the old workings.' } },
+    { set: { chapter3Complete: true } },
+    { log: 'A lantern on the ridge at a quarter past three, climbing toward the old workings.' },
+    { checkpoint: true },
+    { endCard: 3 },
   ],
 };

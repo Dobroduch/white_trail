@@ -29,6 +29,8 @@ export const LOCATIONS = [
   // Chapter 2
   { id: 'chapel', name: 'chapel', scenes: ['GRAVEYARD'], art: 'chapel', label: [104, 70] },
   { id: 'tower', name: 'the wire', scenes: ['TELEGRAPH'], art: 'tower', label: [64, 74], minor: true },
+  // Chapter 3: the constable's office, the west cabin on Main Street (noted once Silas has been inside)
+  { id: 'office', name: 'Finch\'s office', scenes: ['FINCH_OFFICE'], art: 'office', label: [128, 72], minor: true },
 ];
 
 export const PATHS = [
@@ -55,4 +57,5 @@ export const POSITION = {
   RUSK_STORE: { at: [160, 82] },
   GRAVEYARD: { from: [98, 60], to: [128, 62] },
   TELEGRAPH: { from: [52, 66], to: [70, 64] },
+  FINCH_OFFICE: { at: [146, 80] },
 };

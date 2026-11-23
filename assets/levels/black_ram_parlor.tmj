@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 6,
- "nextobjectid": 26,
+ "nextobjectid": 31,
  "properties": [
   {
    "name": "name",
@@ -46,7 +46,7 @@
   {
    "name": "night",
    "type": "string",
-   "value": "{\"npcs\":[{\"id\":\"gable\",\"sprite\":\"gable_idle\",\"x\":300,\"facing\":-1,\"if\":{},\"dialogue\":\"GABLE_NIGHT_AGAIN\",\"name\":\"Mrs. Gable\",\"candle\":true}],\"lights\":[],\"darkness\":0.8,\"ambience\":\"parlor_night\"}"
+   "value": "{\"npcs\":[{\"id\":\"gable\",\"sprite\":\"gable_idle\",\"x\":300,\"facing\":-1,\"if\":{\"notFlag\":\"ch3Night\"},\"dialogue\":\"GABLE_NIGHT_AGAIN\",\"name\":\"Mrs. Gable\",\"candle\":true}],\"lights\":[],\"darkness\":0.8,\"ambience\":\"parlor_night\"}"
   },
   {
    "name": "day",
@@ -60,6 +60,11 @@
   },
   {
    "name": "atmosphere",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "chapter3",
    "type": "bool",
    "value": true
   }
@@ -1557,12 +1562,12 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"any\":[{\"phase\":\"EVENING\"},{\"flag\":\"gableUnbolted\"}]}"
+       "value": "{\"all\":[{\"any\":[{\"phase\":\"EVENING\"},{\"flag\":\"gableUnbolted\"}]},{\"notFlag\":\"ch3Night\"}]}"
       },
       {
        "name": "blockedLines",
        "type": "string",
-       "value": "Bolted. Mrs. Gable keeps the key."
+       "value": "Bolted, and Mrs. Gable has the key upstairs. I'm sitting up with the stair tonight in any case."
       }
      ]
     },
@@ -2167,7 +2172,167 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"flag\":\"ch2Supper\"}"
+       "value": "{\"any\":[{\"flag\":\"ch2Supper\"},{\"flag\":\"ch3Supper\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 26,
+     "name": "coffeePot",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "coffeePot"
+      },
+      {
+       "name": "args",
+       "type": "string",
+       "value": "[102,149]"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"ch3Night\"}"
+      }
+     ]
+    },
+    {
+     "id": 27,
+     "name": "pl_pot",
+     "type": "interactable",
+     "x": 152,
+     "y": 206,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Coffee pot"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "COFFEE"
+      },
+      {
+       "name": "verb",
+       "type": "string",
+       "value": "Look at"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch3Night\"},{\"notFlag\":\"drankCoffee\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 28,
+     "name": "pl_cup",
+     "type": "interactable",
+     "x": 168,
+     "y": 214,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "My cup"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "EV3_CUP"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"woke3\"}"
+      }
+     ]
+    },
+    {
+     "id": 29,
+     "name": "pl_tin",
+     "type": "interactable",
+     "x": 128,
+     "y": 160,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Coffee tin"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "EV3_TIN"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"woke3\"}"
+      }
+     ]
+    },
+    {
+     "id": 30,
+     "name": "pl_kitchen",
+     "type": "interactable",
+     "x": 500,
+     "y": 200,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Kitchen passage"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "The door to the kitchen passage stands an inch open. Mrs. Gable bolts it every night; I watched her do it. Beyond it, the back stair goes up into the dark."
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"woke3\"}"
       }
      ]
     }

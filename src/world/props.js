@@ -750,3 +750,105 @@ export const PROP_FACTORIES = {
   lamp: lampLight, body: bodyProp, watch: watchProp, ledger: ledgerProp, ridgeLight: ridgeLightProp,
 };
 void signText;
+
+// ======================= Chapter 3 =======================
+// Painted at native density (1 px = 1 native px = 2/3 world unit), like the Pixelorama scene art, then drawn scaled.
+function nativePiece(w, h, paint) { const [c, g] = canvas(w, h); paint(g); return c; }
+function drawNative(ctx, img, wx, wy, camX) { ctx.drawImage(img, Math.round((wx - camX) * 1.5) / 1.5, Math.round(wy * 1.5) / 1.5, img.width / 1.5, img.height / 1.5); }
+
+// The constable's office: the cell along the back wall (bars, a cot, a folded blanket). (x, y): world top-left.
+export function jailCellProp(x, y, w = 64, h = 86) {
+  let img = null;
+  return {
+    z: 0.6,
+    draw(ctx, camX) {
+      if (!img) {
+        const W = Math.round(w * 1.5), H = Math.round(h * 1.5);
+        img = nativePiece(W, H, (g) => {
+          rect(g, 0, H - 26, W, 2, PAL.iron); // the cot's frame inside
+          rect(g, 10, H - 34, W - 26, 6, '#565049'); rect(g, 10, H - 34, W - 26, 1, '#635c55');
+          rect(g, 14, H - 37, 14, 3, '#8d8574'); // the folded blanket
+          for (let bx = 0; bx < W; bx += 7) { rect(g, bx, 0, 2, H, PAL.iron); px(g, bx, 0, PAL.iron2); vline(g, bx + 1, 2, H - 1, PAL.iron2); }
+          for (const by of [0, 4, Math.round(H * 0.45), H - 4]) { rect(g, 0, by, W, 3, PAL.iron); hline(g, 0, W - 1, by, PAL.iron2); }
+          rect(g, W - 16, Math.round(H * 0.45) + 6, 7, 9, PAL.iron2); px(g, W - 13, Math.round(H * 0.45) + 9, PAL.ink); // the lock
+        });
+      }
+      drawNative(ctx, img, x, y, camX);
+    },
+  };
+}
+
+// Sheriff Hale on a bench under canvas, waiting for the burial. (x, y): world centre of the bench top.
+export function shroudProp(x, y) {
+  let img = null;
+  return {
+    z: 0.7,
+    draw(ctx, camX) {
+      if (!img) {
+        img = nativePiece(72, 30, (g) => {
+          rect(g, 2, 18, 68, 3, '#634832'); hline(g, 2, 69, 18, '#7a5a3e'); // the bench top
+          for (const lx of [6, 62]) rect(g, lx, 21, 3, 9, '#3b2a1e');
+          // the canvas over him: a long low mound, the head end higher, folds in the cloth
+          for (let i = 0; i < 64; i++) {
+            const t = i / 63;
+            const top = Math.round(17 - (t < 0.18 ? 6 + Math.sin(t * 17) * 2 : t > 0.86 ? 7 - (t - 0.86) * 30 : 5 + Math.sin(t * 9) * 1));
+            for (let yy = top; yy < 18; yy++) px(g, 4 + i, yy, yy === top ? '#c8bfa8' : (i + yy) % 9 === 0 ? '#8d8574' : '#b5ab92');
+          }
+          for (const fx of [18, 30, 44]) vline(g, fx, 12, 17, '#8d8574');
+          // a boot heel shows at the foot end: square, a miner's
+          rect(g, 66, 13, 4, 5, '#1a120d'); px(g, 69, 17, '#3b2a1e');
+        });
+      }
+      drawNative(ctx, img, x - 24, y - 12, camX);
+    },
+  };
+}
+
+// A fresh grave by the chapel: dark earth thrown up on the snow, a spade left standing in it. (x, y): world base centre.
+export function newGraveProp(x, y) {
+  let img = null;
+  return {
+    z: 0.5,
+    draw(ctx, camX) {
+      if (!img) {
+        img = nativePiece(54, 26, (g) => {
+          for (let i = 0; i < 48; i++) {
+            const top = Math.round(19 - Math.sin((i / 47) * Math.PI) * 6);
+            for (let yy = top; yy < 24; yy++) px(g, 3 + i, yy, yy === top ? '#c8d1de' : (i * 7 + yy) % 5 === 0 ? '#3b2a1e' : yy > 21 ? '#1a120d' : '#2a1c14');
+          }
+          for (let i = 0; i < 9; i++) px(g, 6 + i * 5, 23 - (i % 2), '#e4e9f0'); // snow already settling on it
+          line(g, 44, 2, 40, 18, '#634832'); line(g, 45, 2, 41, 18, '#4e3826'); rect(g, 42, 0, 5, 2, '#3a3f4a'); // the spade
+          rect(g, 38, 17, 5, 4, '#3a3f4a');
+        });
+      }
+      drawNative(ctx, img, x - 18, y - 16, camX);
+    },
+  };
+}
+
+// The coffee pot on the parlor hob at night, steam rising thinly. (x, y): world base of the pot.
+export function coffeePotProp(x, y) {
+  let img = null, t = 0;
+  return {
+    z: 1.2,
+    update(dt) { t += dt; },
+    draw(ctx, camX, game) {
+      if (game && game.state.flags.drankCoffee) return;
+      if (!img) {
+        img = nativePiece(12, 14, (g) => {
+          rect(g, 2, 3, 7, 10, '#3a3f4a'); rect(g, 3, 4, 5, 8, '#565049'); vline(g, 3, 4, 11, '#635c55');
+          rect(g, 1, 12, 9, 2, '#24272e'); rect(g, 4, 1, 3, 2, '#24272e'); // base, lid knob
+          line(g, 9, 5, 11, 3, '#3a3f4a'); px(g, 11, 2, '#3a3f4a'); // spout
+          vline(g, 0, 5, 9, '#24272e'); px(g, 1, 5, '#24272e'); px(g, 1, 9, '#24272e'); // handle
+        });
+      }
+      drawNative(ctx, img, x - 4, y - 9, camX);
+      const k = Math.floor(t * 3);
+      ctx.globalAlpha = 0.45; ctx.fillStyle = '#a3afc2';
+      for (let i = 0; i < 3; i++) ctx.fillRect(x + 4 - camX + Math.sin(t * 2 + i) * 0.8, y - 11 - ((k + i * 2) % 6), 2 / 3, 2 / 3);
+      ctx.globalAlpha = 1;
+    },
+  };
+}
+
+Object.assign(PROP_FACTORIES, { jailCell: jailCellProp, shroud: shroudProp, newGrave: newGraveProp, coffeePot: coffeePotProp });

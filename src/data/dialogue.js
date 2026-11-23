@@ -170,7 +170,8 @@ export const DIALOGUE = {
   BED: {
     start: 'start',
     nodes: {
-      start: { branch: [{ if: { phase: 'NIGHT' }, next: 'night' }, { if: { phase: 'DAY' }, next: 'day' }, { next: 'a' }] },
+      start: { branch: [{ if: { flag: 'ch3Night' }, next: 'ch3' }, { if: { phase: 'NIGHT' }, next: 'night' }, { if: { phase: 'DAY' }, next: 'day' }, { next: 'a' }] },
+      ch3: { who: 'note', text: 'Not tonight. Whoever wrote that note knows I have it. I\'ll sit up downstairs, by the fire and the stair.', next: 'END' },
       day: { who: 'note', text: 'The bed is made, tight as a drum. No sleep now; there is daylight to use, and not much of it.', next: 'END' },
       a: { who: 'note', text: 'The storm leans on the window. Nothing more will happen tonight that I can do anything about.', choices: [
         { text: 'Turn in for the night.', next: 'sleep' },
@@ -285,10 +286,27 @@ Object.assign(DIALOGUE, {
       { text: 'What lies up past the chapel?', next: 'up', once: true },
       { text: 'Who buys at Rusk\'s after dark?', next: 'rusk', once: true, if: { evidence: 'T_RUSK_FREIGHT' } },
       { text: 'Somebody laid a rug in my room.', next: 'rug', once: true, if: { evidence: 'ROOM4_RUG' } },
+      { text: 'This was under the bed in Room 4. [Show the button]', next: 'btn', once: true, if: { all: [{ evidence: 'EV3_BUTTON' }, { noEvidence: 'T3_GABLE_STAIR' }] } },
+      { text: 'Your wardrobe has a back to it.', next: 'stair', once: true, if: { all: [{ examined: 'EV3_PANEL' }, { evidence: 'EV3_BUTTON' }] } },
+      { text: 'Who was she?', next: 'who', once: true, if: { evidence: 'T3_GABLE_STAIR' } },
+      { text: 'Whose glove is this? [Show it]', next: 'glove', once: true, if: { evidence: 'EV3_GLOVE' } },
       { text: 'Nothing. Good day.', next: 'bye' },
     ] },
     rug: { who: 'gable', text: 'The floors are cold in the mornings, Mister Vance.', next: 'rug2' },
     rug2: { who: 'note', text: 'She turns a page of the register she has already read.', do: [{ set: { askedGableRug: true } }], next: 'hub' },
+    btn: { who: 'gable', text: 'Buttons come off, Mister Vance. Coats come through my rooms.', next: 'btn2' },
+    btn2: { who: 'note', text: 'She doesn\'t ask whose.', next: 'hub' },
+    stair: { who: 'note', text: 'She sets the pen down. For a while she looks at the door to the kitchen passage, not at me.', next: 'stair2' },
+    stair2: { who: 'gable', text: 'He came up the back stair. The way he\'d been coming to see her.', next: 'stair3' },
+    stair3: { who: 'silas', text: 'Her.', next: 'stair4' },
+    stair4: { who: 'gable', text: 'Then another tread after his, heavier. I heard him say a name I didn\'t know, and then nothing for a long while. I didn\'t open my door, Mister Vance. I have a hotel to keep.', next: 'stair5' },
+    stair5: { who: 'gable', text: 'In the morning this was under it.', do: [{ evidence: 'T3_GABLE_STAIR' }, { evidence: 'EV3_NOTE' }, { item: 'GABLE_NOTE' }, { log: 'Mrs. Gable told me about the back stair, and gave me the note.' }], next: 'stair6' },
+    stair6: { who: 'note', text: 'Block capitals on a torn half-sheet. She has kept it folded small, the way you keep a thing you mean to burn.', next: 'hub' },
+    who: { who: 'gable', text: 'She paid me not to write her name. She paid in more than money.', next: 'who2' },
+    who2: { who: 'note', text: 'That is all I will get. She has said it before, to herself.', next: 'hub' },
+    glove: { who: 'gable', text: 'Put that away, Mister Vance.', next: 'glove2' },
+    glove2: { who: 'note', text: 'Not angry. Frightened, and not for herself.', next: 'glove3' },
+    glove3: { who: 'gable', text: 'Please.', do: [{ set: { gableGlove: true } }], next: 'hub' },
     vale: { who: 'gable', text: 'The Pale Figure. Every winter, when the snow shuts the pass. It fills his pews.', do: [{ evidence: 'T_GABLE_VALE' }], next: 'hub' },
     up: { who: 'gable', text: 'The graves, then the wire, then the ridge. Then the old workings, and nobody goes up there. Nobody sensible.', next: 'hub' },
     rusk: { who: 'gable', text: 'Anybody who\'d rather not be seen buying. Jonah keeps a back door, same as I keep a register.', next: 'rusk2' },
@@ -439,7 +457,120 @@ Object.assign(DIALOGUE, {
   } },
 });
 
+// ======================= Chapter 3: the third day and night =======================
+Object.assign(DIALOGUE, {
+  CH3_OPEN: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Morning. I slept, after a fashion, with the chair under the door handle.', next: 'b' },
+    b: { who: 'silas', text: 'Hale goes into the ground at noon. Until then he lies at Finch\'s office, at the end of the street.', next: 'END' },
+  } },
+
+  FINCH_OFFICE: { start: 'start', nodes: {
+    start: { branch: [{ if: { seen: 'FINCH_OFFICE.hub' }, next: 'again' }, { if: { trust: { finch: 'COLD' } }, next: 'cold' }, { next: 'a' }] },
+    cold: { who: 'finch', text: 'He goes in the ground at noon. Look at him if you must. You will anyway.', next: 'hub' },
+    a: { who: 'finch', text: 'You\'ll want to see him. Mind the canvas; I\'ve only the one.', next: 'hub' },
+    again: { who: 'finch', text: 'Vance.', next: 'hub' },
+    hub: { choices: [
+      { text: 'Who brought him here?', next: 'brought', once: true },
+      { text: 'Who\'s burying him?', next: 'burial', once: true },
+      { text: 'These forms are signed already.', next: 'forms', once: true, if: { evidence: 'EV3_PAD' } },
+      { text: 'Number forty-one is missing.', next: 'f41', once: true, if: { all: [{ examined: 'EV3_PAD' }, { seen: 'FINCH_OFFICE.forms' }] } },
+      { text: 'Who was at that window, the night I came?', next: 'watch', once: true, if: { flag: 'curtainDrawn' } },
+      { text: 'That\'ll do.', next: 'bye' },
+    ] },
+    brought: { who: 'finch', text: 'Me and Rusk\'s boy, on a door, at first light the day after you came. I\'ve not let anyone else touch him. Not the Reverend, not Mr. Mercer.', next: 'brought2' },
+    brought2: { who: 'note', text: 'He looks at the canvas the way a man looks at a debt.', next: 'hub' },
+    burial: { who: 'finch', text: 'The Reverend says the words, at noon, up by the chapel. Mr. Mercer\'s paying for the stone. He pays for most things.', next: 'hub' },
+    forms: { who: 'finch', text: 'Hale had me sign a pad of them, so the office could wire the county when I was out on the road. Don\'t look at me like that.', do: [{ evidence: 'T3_FINCH_FORMS' }], next: 'forms2' },
+    forms2: { who: 'note', text: 'He looks at the pad, and then not at it.', next: 'hub' },
+    f41: { who: 'finch', text: '...Then somebody tore it out.', next: 'f412' },
+    f412: { who: 'note', text: 'He has known that a while, I think. He has not let himself wonder who.', do: [{ set: { finchForm41: true } }], next: 'hub' },
+    watch: { who: 'finch', text: 'Me. Waiting for the train\'s man. I didn\'t know if you\'d be on it, or who else would.', next: 'hub' },
+    bye: { who: 'finch', text: 'Noon, Vance.', next: 'END' },
+  } },
+
+  MERCER: { start: 'start', nodes: {
+    start: { branch: [{ if: { seen: 'MERCER.hub' }, next: 'again' }, { next: 'a' }] },
+    again: { who: 'mercer', text: 'Mister Vance.', next: 'hub' },
+    a: { who: 'mercer', text: 'Mister Vance. Gideon Mercer.', next: 'a2' },
+    a2: { who: 'mercer', text: 'You\'ll be the man looking for my daughter.', next: 'a3' },
+    a3: { who: 'note', text: 'A grey greatcoat, white whiskers, a voice used to rooms going quiet for it.', next: 'hub' },
+    hub: { who: 'mercer', choices: [
+      { text: 'Where would she go?', next: 'clara', once: true },
+      { text: 'You knew the sheriff.', next: 'hale', once: true },
+      { text: 'The Pale Order.', next: 'order', once: true },
+      { text: 'Good day, Mr. Mercer.', next: 'bye' },
+    ] },
+    clara: { who: 'mercer', text: 'Clara has a temper and a good horse, Mister Vance. She has done this before. She will come home when she is ready, and I would pay a good deal to know where she is meanwhile.', do: [{ evidence: 'T3_MERCER' }], next: 'clara2' },
+    clara2: { who: 'note', text: 'He speaks of her as if she were late for supper.', next: 'hub' },
+    hale: { who: 'mercer', text: 'Since he was a deputy with no boots. A good man, who didn\'t know when to leave old things alone.', next: 'hub' },
+    order: { who: 'mercer', text: 'A mining company, Mister Vance. I lost money in it like everyone else. Ask the Reverend about ghosts. Ask me about debts.', next: 'order2' },
+    order2: { who: 'note', text: 'He smiles. It stops below the eyes.', next: 'hub' },
+    bye: { who: 'mercer', text: 'Find her, and you\'ll find me grateful. Find anything else, and you\'ll find this a small town.', next: 'END' },
+  } },
+
+  CASE_PROMPT_ROOM4: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: '_caseDecidable' }, next: 'ready' }, { next: 'unready' }] },
+    ready: { who: 'note', text: 'Finch will be at supper. Before I sit down with him, I should settle what happened in my room.', choices: [
+      { text: 'Settle it now. [Review the case]', next: 'review' },
+      { text: 'Not yet. I\'ll go through my notebook first.', next: 'notebook' },
+      { text: 'Go in and keep it to myself.', next: 'open' },
+    ] },
+    unready: { who: 'note', text: 'Finch will ask about Room 4, and I have not yet worked out what happened there.', choices: [
+      { text: 'Go through my notebook first.', next: 'notebook' },
+      { text: 'Go in and keep it to myself.', next: 'open' },
+    ] },
+    review: { do: [{ set: { _leaveChoice: 'review' } }], next: 'END' },
+    notebook: { do: [{ set: { _leaveChoice: 'notebook' } }], next: 'END' },
+    open: { do: [{ set: { _leaveChoice: 'open' } }], next: 'END' },
+  } },
+
+  AFTER3_HALE: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Supper in the parlor. Finch eats like a man who has forgotten how. Mrs. Gable stays by the kitchen door.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'He died upstairs. On the floor of my room. He came up the back stair to somebody, and somebody came up after him.', next: 'd' },
+    d: { who: 'finch', text: '...Under her roof.', next: 'e' },
+    e: { who: 'note', text: 'Mrs. Gable doesn\'t look away this time.', next: 'f' },
+    f: { who: 'gable', text: 'I\'ll bolt the kitchen passage myself tonight, Constable. And the gentleman can have the last of the coffee.', next: 'END' },
+  } },
+  AFTER3_GUEST: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Supper in the parlor. Finch eats like a man who has forgotten how. Mrs. Gable stays by the kitchen door.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'There was a guest. She was hurt in that room and went down the back stair, and Hale went after her.', next: 'd' },
+    d: { who: 'finch', text: 'A woman. Hurt, in this.', next: 'e' },
+    e: { who: 'finch', text: 'Then I\'ll find her.', next: 'f' },
+    f: { who: 'note', text: 'He is up from the table before his plate is empty. I should have liked to know whose doors he means to knock on.', next: 'END' },
+  } },
+  AFTER3_GABLE: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Supper in the parlor. Finch eats like a man who has forgotten how. Mrs. Gable stays by the kitchen door.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'There was no guest. Whatever happened in Room 4, Mrs. Gable cleaned it, and the story is hers.', next: 'd' },
+    d: { who: 'note', text: 'Mrs. Gable sets the coffee pot down on the hob very carefully.', next: 'e' },
+    e: { who: 'finch', text: 'Mrs. Gable. I\'ll want your keys.', next: 'f' },
+    f: { who: 'gable', text: 'Take them. You\'ll find nothing in my rooms but my rooms.', next: 'END' },
+  } },
+  AFTER3_OPEN: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Supper in the parlor. Finch eats like a man who has forgotten how. Mrs. Gable stays by the kitchen door.', next: 'b' },
+    b: { who: 'finch', text: 'Well?', next: 'c' },
+    c: { who: 'silas', text: 'Not yet.', next: 'd' },
+    d: { who: 'finch', text: 'You were up and down those stairs all day.', next: 'e' },
+    e: { who: 'silas', text: 'And I\'ll be up with them tonight.', next: 'END' },
+  } },
+
+  CH3_NIGHT: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The house is abed. Mrs. Gable bolted the front door and went up with the key. The fire is down to embers.', next: 'b' },
+    b: { who: 'silas', text: 'Whoever wrote that note knows I have it. Let them come for it. I\'ll be down here, between the fire and the stair.', next: 'END' },
+  } },
+
+  COFFEE: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The pot on the hob, still warm. It will be a long night by a dead fire.', choices: [
+      { text: 'Pour a cup.', next: 'pour' },
+      { text: 'Not yet.', next: 'END' },
+    ] },
+    pour: { do: [{ script: 'CH3_DRUGGED' }], next: 'END' },
+  } },
+});
+
 export const SPEAKERS = {
   silas: 'SILAS VANCE', finch: 'CONSTABLE FINCH', gable: 'MRS. GABLE', conductor: 'CONDUCTOR', note: null,
-  rusk: 'JONAH RUSK', vale: 'REVEREND VALE', ada: 'ADA BELL',
+  rusk: 'JONAH RUSK', vale: 'REVEREND VALE', ada: 'ADA BELL', mercer: 'GIDEON MERCER',
 };

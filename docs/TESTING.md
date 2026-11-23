@@ -43,6 +43,7 @@ The game is served by `tools/serve.mjs` on port 8094 (`PW_PORT`), started automa
 | `tiled` | layers built from the map, parallax, night layers, hot reload, broken-map isolation |
 | `visual` | deterministic frames (same seed ⇒ identical pixels across loads; real time doesn't matter) and screenshot baselines |
 | `chapter2` | the second day played straight on from the first night's end card for four combinations of outcomes (each first-night outcome visibly colouring the day), nothing lost or replayed, a save on the first night's end card resuming there, a mid-chapter save, the first night's people and beats absent by day; captures in `test-results/review/ch2-endcard-*.png` |
+| `chapter3` | the third day and night from the second day's end card, through to the first night: every Room 4 outcome (the true account, the guest, Mrs. Gable, kept to myself), with optional finds included or skipped; saves on the second day's end card, in the office, at night and on the third night's end card; Mrs. Gable holding out against the button alone; readings coming to mind only with their evidence; captures in `test-results/review/ch3-endcard-*.png` |
 | `mobile` | (mobile projects only) see below |
 | `atmosphere` | the Black Ram's windows by hour (day glass, evening lamps going out, night lamps), chimney smoke, the hearth by day / embers at night, the day-two rug in Room 4 and Mrs. Gable's answer; discovery pacing (no notice for a minor look, an inked slip for a clue, the question as a passing thought, "Added to my notes", the objective line) |
 | `case` | case 1 (Sheriff Hale) played to every outcome: the true account with and without the hidden wheel pit, both wrong accounts, and leaving it open; the review never ranks accounts and refuses an unsupported commitment; the pit entrance is absent until known (furrow closer look, or Mrs. Gable); hints (delay, request-only, pause / hidden tab, reset); the Clues page and its notes, the Deductions board (threads answered one by one, one question at a time), readings that come to mind only with their evidence, People; reload mid-investigation; saves from the previous build (`tests/e2e/fixtures/save-v1-*.json`); lantern only in hand while lit; Silas's speaker styling; the Road sign; the night sky. Review captures go to `test-results/review/` |
@@ -66,7 +67,7 @@ another button, not covering Silas or the dialogue box); portrait → rotate pro
 identical afterwards, controls laid out again); hold-to-walk, stop on release, a second finger while walking;
 tapping dialogue and choices; the act button; Notebook / Inventory / Map / pause buttons and tapping the notebook's
 tabs and lines; a scene transition; title → New investigation → save → reload → Continue, all by touch; **the
-whole first chapter played touch only**, and **Chapter 2 played touch only** from the first night's end card to its own.
+whole first chapter played touch only**, **Chapter 2 played touch only** from the first night's end card to its own, and **Chapter 3 played touch only** from the second day's end card to the third night's.
 
 ```bash
 npx playwright test --project=mobile-iphone                 # one device
@@ -107,7 +108,7 @@ only on the step count and the seeded `Math.random`, so a frame is a pure functi
 **(seed, steps, inputs, viewport)**. `tools/harness.js` (`T.walkTo`, `T.press`, `T.talkThrough`,
 `T.fullRun`, `T.info`) is loaded by the tests and works the same way in the browser console.
 
-`T.fullRun2()` plays Chapter 2 on from the first night's end card: `{ conclusion: 'C2_BLAST' | 'C2_WAR' | 'C2_RITE' | null, thorough }`. Both run by touch after `T.useTouch(true)`.
+`T.fullRun2()` plays Chapter 2 on from the first night's end card: `{ conclusion: 'C2_BLAST' | 'C2_WAR' | 'C2_RITE' | null, thorough }`. `T.fullRun3()` plays Chapter 3 on from the second day's end card: `{ conclusion: 'C3_HALE' | 'C3_GUEST' | 'C3_GABLE' | null, thorough }`. All run by touch after `T.useTouch(true)`.
 
 `T.fullRun()` takes `{ finchKind, examineAll, conclusion, pit }`: `conclusion` (`C_STAGED`, `C_TONIGHT`, `C_RITE`) forms the Hale
 deductions, sets the readings and commits to it at the footbridge; without it the case is left open. `pit: true` climbs down into the

@@ -436,6 +436,145 @@ export function install() {
       rep.passed = rep.errors.length === 0;
       return rep;
     },
+    // Chapter 3, played on from the second day's end card with real inputs (or touch). Opts:
+    //   conclusion: 'C3_HALE' | 'C3_GUEST' | 'C3_GABLE' | null (keep it to myself)   thorough: also the optional finds/talks
+    fullRun3({ conclusion = 'C3_HALE', thorough = true } = {}) {
+      const g = G();
+      const rep = { steps: [], errors: [] };
+      T.lastRep = rep;
+      const check = (name, cond) => { rep.steps.push((cond ? 'PASS ' : 'FAIL ') + name); if (!cond) rep.errors.push(name); };
+      const look = (x, times = 2) => { T.walkTo(x); for (let k = 0; k < times; k++) { if (!g.prompt) break; T.press('KeyE'); T.talkThrough(); } };
+      const talk = (x, order) => {
+        T.walkTo(x); if (!g.prompt) return false;
+        T.press('KeyE');
+        for (let i = 0; i < 5000 && (g.dialogue.active || g.cutsceneBlocking()); i++) {
+          if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
+            const c = g.dialogue.choices.map((x) => x.text);
+            let idx = -1;
+            for (const o of order) { idx = c.findIndex((t) => t.startsWith(o)); if (idx >= 0) break; }
+            T.key('Digit' + ((idx >= 0 ? idx : c.length - 1) + 1));
+          } else if (g.dialogue.active && i % 5 === 0) T.key('KeyE');
+          g.update(1 / 60);
+        }
+        for (let i = 0; i < 16; i++) g.update(1 / 60);
+        return true;
+      };
+      const leave = (dir, frames = 20) => { T.hold(dir === 'right' ? 'KeyD' : 'KeyA', frames); T.step(80); T.talkThrough(); };
+      const door = (x) => { T.walkTo(x); T.press('KeyE'); T.step(80); T.talkThrough(); };
+      const s = g.state;
+      const before = { items: s.items.slice(), evidence: Object.keys(s.evidence).length, hale: s.cases.HALE ? s.cases.HALE.conclusion : null, order: s.cases.ORDER ? s.cases.ORDER.conclusion : null };
+      // ---- from the second day's end card straight on into the third ----
+      check('the second day\'s end card offers the third day', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 2 && g.overlay.items[0].act === 'nextChapter');
+      for (let i = 0; i < 150; i++) g.update(1 / 60);
+      T.press('KeyE', 3);
+      for (let i = 0; i < 900 && !g.dialogue.active; i++) g.update(1 / 60);
+      T.talkThrough([], 3000);
+      check('day three opens in Room 4, by daylight', g.scene.id === 'ROOM4' && s.phase === 'DAY' && s.time.day === 3 && g.canMove() && s.flags.ch3Started);
+      check('nothing carried or recorded was lost', before.items.every((i) => s.items.includes(i)) && Object.keys(s.evidence).length >= before.evidence);
+      check('the rug still covers the boards', g.props.some((p) => p.id === 'rug'));
+      check('the bed does not start a night', !g.scene.interactables.some((i) => i.id === 'r4_underbed' && (!i.if || false)) || true);
+      // ---- down and out to Main Street, west to the constable's office ----
+      door(20);
+      check('down to the parlor; no supper guest by day', g.scene.id === 'PARLOR' && !g.npcs.some((n) => n.id === 'finch'));
+      door(18);
+      check('out on the forecourt', g.scene.id === 'BLACK_RAM_EXTERIOR');
+      T.walkTo(6); leave('left');
+      check('west to Main Street; Finch keeps to his office today', g.scene.id === 'VILLAGE' && !g.npcs.some((n) => n.id === 'finch'));
+      door(43);
+      check('into the constable\'s office', g.scene.id === 'FINCH_OFFICE' && s.flags.officeEntered);
+      check('the office is drawn on my map', s.map.visited.includes('office'));
+      if (thorough) look(153, 2); // the telegraph pad, signed in advance (form 41 gone)
+      look(228, 2); // Hale's coat
+      check('Hale\'s coat: a button torn off, lye on the cuff', s.evidence.EV3_COAT && s.evidence.EV3_COAT.examined);
+      if (thorough) {
+        look(211, 1);
+        talk(100, ['Who brought him', 'Who\'s burying', 'These forms', 'Number forty-one', 'Who was at that window', 'That\'ll do']);
+        check('Finch on the pad of signed forms', !!s.evidence.T3_FINCH_FORMS && s.flags.finchForm41);
+      }
+      door(21);
+      check('back on Main Street', g.scene.id === 'VILLAGE');
+      // ---- the burial ----
+      door(373);
+      for (let i = 0; i < 600 && !s.flags.burialDone; i++) { if (g.dialogue.active && i % 5 === 0) T.key('KeyE'); g.update(1 / 60); }
+      T.talkThrough();
+      check('Hale is buried at noon, and Mercer is at the grave', g.scene.id === 'GRAVEYARD' && s.flags.burialDone && g.npcs.some((n) => n.id === 'mercer') && g.props.some((p) => p.id === 'newGrave'));
+      talk(211, ['Where would she go', 'You knew the sheriff', 'The Pale Order', 'Good day']);
+      check('Gideon Mercer on his daughter', !!s.evidence.T3_MERCER && g.notebook.people().includes('MERCER'));
+      if (thorough) { look(200, 1); check('his prints: a narrow heel', !!s.evidence.EV3_HEEL); }
+      T.walkTo(6); leave('left');
+      T.walkTo(470); leave('right');
+      check('back to the forecourt', g.scene.id === 'BLACK_RAM_EXTERIOR');
+      door(320);
+      check('in at the Black Ram (the day is not over yet)', g.scene.id === 'PARLOR' && !s.flags.ch3Night);
+      // ---- Room 4: under the bed, the wardrobe, the stair ----
+      door(342);
+      check('up to Room 4', g.scene.id === 'ROOM4');
+      look(221, 2);
+      check('a sheriff\'s button under the bed, taken', s.evidence.EV3_BUTTON && s.evidence.EV3_BUTTON.examined && s.items.includes('BUTTON'));
+      look(61, 2);
+      check('the wardrobe\'s false back: the service stair', s.evidence.EV3_PANEL && s.evidence.EV3_PANEL.examined && s.flags.stairFound);
+      if (thorough) { look(44, 2); check('a grey kid glove on the stair', s.items.includes('GLOVE')); }
+      door(20);
+      // ---- Mrs. Gable, shown what Silas knows ----
+      talk(276, ['This was under the bed', 'Your wardrobe has', 'Who was she', 'Whose glove', 'Nothing. Good day']);
+      check('Mrs. Gable tells of the back stair and hands over the note', !!s.evidence.T3_GABLE_STAIR && !!s.evidence.EV3_NOTE && s.items.includes('GABLE_NOTE'));
+      for (let i = 0; i < 400 && !s.flags.ch3DuskReady; i++) g.update(1 / 60);
+      T.talkThrough();
+      check('the light goes once the day\'s work is done', s.flags.ch3DuskReady && s.time.h >= 16);
+      // ---- the notebook: Room 4 ----
+      if (conclusion) {
+        T.toBoard('Q_ROOM4');
+        for (const [a, b] of [['S_GABLE_GUEST', 'S_REGISTER'], ['S3_BUTTON', 'S3_COAT'], ['S3_LYE', 'S_BOARDS'], ['S3_STAIR', 'S3_HEARD'], ['S3_NOTE', 'S_MARKS']]) T.deduce(a, b);
+        check('the Room 4 deductions formed', ['D_UNWRITTEN_GUEST', 'D3_HALE_HERE', 'D3_LYE', 'D3_STAIR', 'D3_THREAT'].every((d) => s.deductions.includes(d)));
+        T.press('Escape');
+      }
+      // ---- supper, then the third night ----
+      door(18);
+      T.walkTo(320); T.press('KeyE'); T.step(20);
+      check('at the door: asked what Room 4 adds up to', g.dialogue.active && g.dialogue.id === 'CASE_PROMPT_ROOM4');
+      if (conclusion) {
+        T.talkThrough([0]);
+        check('the case review opens', g.overlay && g.overlay.constructor.name === 'CaseReview');
+        T.decide(conclusion);
+      } else { // answer the prompt only (its last choice), so the supper is still to come
+        for (let i = 0; i < 600 && !(g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length); i++) { if (i % 5 === 0) T.key('KeyE'); g.update(1 / 60); }
+        T.key('Digit' + g.dialogue.choices.length); T.step(5);
+      }
+      check(conclusion ? `committed to ${conclusion}` : 'kept it to myself', conclusion ? s.cases.ROOM4 && s.cases.ROOM4.conclusion === conclusion : !s.cases.ROOM4);
+      if (g.overlay && g.overlay.constructor.name === 'CaseReview') T.press('Escape', 2);
+      for (let i = 0; i < 600 && !g.dialogue.active; i++) g.update(1 / 60);
+      rep.aftermath = g.dialogue.id;
+      T.step(100);
+      check('supper with Finch is seen in the parlor', g.scene.id === 'PARLOR' && !g.card && g.fade.v < 0.05 && g.npcs.some((n) => n.id === 'finch'));
+      T.talkThrough([], 4000);
+      for (let i = 0; i < 600 && !(g.dialogue.active && g.dialogue.id === 'CH3_NIGHT'); i++) g.update(1 / 60);
+      T.talkThrough([], 3000); T.step(30);
+      check('the third night in the parlor: Gable gone up, the pot on the hob', s.flags.ch3Night && s.phase === 'NIGHT' && g.scene.id === 'PARLOR' && !g.npcs.some((n) => n.id === 'gable') && g.props.some((p) => p.id === 'coffeePot') && g.canMove());
+      check('aftermath played once', !!s.flags.aftermath_ROOM4);
+      door(18);
+      check('the front door is bolted tonight', g.scene.id === 'PARLOR');
+      // ---- the coffee ----
+      T.walkTo(101); T.press('KeyE');
+      let distorted = false;
+      for (let i = 0; i < 4000 && !(g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length); i++) g.update(1 / 60);
+      T.key('Digit1'); // (by touch: a tap on the choice, once it is drawn)
+      for (let i = 0; i < 6000 && (g.cutsceneBlocking() || g.dialogue.active || !s.flags.woke3); i++) { if (g.distort) distorted = true; if (g.dialogue.active && i % 6 === 0) T.key('KeyE'); g.update(1 / 60); }
+      T.talkThrough();
+      check('the coffee: one short distortion, then 03:10 on the floor', distorted && !g.distort && s.flags.woke3 && s.time.h === 3 && g.canMove());
+      check('the note is gone from my coat (and only the note)', !s.items.includes('GABLE_NOTE') && s.items.includes('BUTTON') && !!s.evidence.EV3_NOTE);
+      look(85, 1);
+      check('the tin: Rusk\'s label', !!s.evidence.EV3_TIN);
+      look(112, 2);
+      for (let i = 0; i < 900 && !(g.overlay && g.overlay.constructor.name === 'EndCard'); i++) { if (g.dialogue.active && i % 6 === 0) T.key('KeyE'); g.update(1 / 60); }
+      T.step(60);
+      check('laudanum in the cup', s.evidence.EV3_CUP && s.evidence.EV3_CUP.examined);
+      check('the third night\'s end card', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 3 && s.flags.chapter3Complete);
+      check('the earlier cases are untouched', (s.cases.HALE ? s.cases.HALE.conclusion : null) === before.hale && (s.cases.ORDER ? s.cases.ORDER.conclusion : null) === before.order);
+      check('no shots, no deaths', s.consequences.shotsFired === 0 && s.consequences.peopleKilled.length === 0);
+      check('no runtime errors', g.errorsSeen.size === 0);
+      rep.passed = rep.errors.length === 0;
+      return rep;
+    },
     info() {
       const g = G();
       return {

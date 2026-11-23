@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 9,
- "nextobjectid": 17,
+ "nextobjectid": 24,
  "properties": [
   {
    "name": "name",
@@ -57,6 +57,11 @@
    "name": "day",
    "type": "string",
    "value": "{\"darkness\":0.28}"
+  },
+  {
+   "name": "chapter3",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -3857,6 +3862,219 @@
        "name": "if",
        "type": "string",
        "value": "{\"notFlag\":\"graveyardEntered\"}"
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "newGrave",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "newGrave"
+      },
+      {
+       "name": "args",
+       "type": "string",
+       "value": "[176,152]"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"burialOn\"}"
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "name": "mercer",
+     "type": "npc",
+     "x": 316,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Gideon Mercer"
+      },
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "mercer_idle"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "MERCER"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"burialOn\"},{\"notFlag\":\"mercerGone\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "name": "finch",
+     "type": "npc",
+     "x": 356,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Constable Finch"
+      },
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "finch_idle"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "FINCH_OFFICE"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"burialOn\"},{\"notFlag\":\"mercerGone\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "name": "gy_heel",
+     "type": "interactable",
+     "x": 300,
+     "y": 222,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Prints by the grave"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "EV3_HEEL"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"burialDone\"}"
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "name": "gy_newgrave",
+     "type": "interactable",
+     "x": 264,
+     "y": 214,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Hale's grave"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "Frozen earth, broken with a pick and thrown back. A plank with his name burned in it, until there's a stone."
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"burialOn\"}"
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "name": "BURIAL",
+     "type": "event",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "script",
+       "type": "string",
+       "value": "BURIAL"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch3Started\"},{\"evidence\":\"EV3_COAT\"},{\"notFlag\":\"burialDone\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "name": "MERCER_GONE",
+     "type": "event",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "do",
+       "type": "string",
+       "value": "[{\"set\":{\"mercerGone\":true}}]"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"burialDone\"},{\"notFlag\":\"mercerGone\"}]}"
       }
      ]
     }

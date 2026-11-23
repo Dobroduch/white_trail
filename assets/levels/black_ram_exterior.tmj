@@ -78,6 +78,11 @@
    "name": "firstLight",
    "type": "bool",
    "value": true
+  },
+  {
+   "name": "chapter3",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -5589,7 +5594,7 @@
       {
        "name": "scriptIf",
        "type": "string",
-       "value": "{\"if\":{\"all\":[{\"phase\":\"DAY\"},{\"flag\":\"ch2DuskReady\"},{\"notFlag\":\"chapter2Complete\"}]},\"script\":\"CH2_END\"}"
+       "value": "[{\"if\":{\"all\":[{\"phase\":\"DAY\"},{\"flag\":\"ch2DuskReady\"},{\"notFlag\":\"chapter2Complete\"}]},\"script\":\"CH2_END\"},{\"if\":{\"all\":[{\"phase\":\"DAY\"},{\"flag\":\"ch3DuskReady\"},{\"notFlag\":\"ch3Night\"}]},\"script\":\"CH3_EVENING\"},{\"if\":{\"all\":[{\"flag\":\"chapter2Complete\"},{\"notFlag\":\"ch3Started\"}]},\"script\":\"CH3_OPEN\"}]"
       }
      ]
     },

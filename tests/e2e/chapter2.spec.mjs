@@ -44,7 +44,7 @@ test.describe('chapter 2 — the second day', () => {
       await page.evaluate(() => TWT_TEST.render());
       await page.screenshot({ path: `test-results/review/ch2-endcard-${r.aftermath}.png` });
       // "Walk the town a while longer": back on the forecourt by day, free to move, the end card not shown again on reload
-      await page.evaluate(() => { for (let i = 0; i < 150; i++) TWT.update(1 / 60); T.press('KeyE', 90); T.talkThrough(); });
+      await page.evaluate(() => { for (let i = 0; i < 150; i++) TWT.update(1 / 60); T.press('ArrowDown', 3); T.press('KeyE', 90); T.talkThrough(); });
       const after = await page.evaluate(() => ({ scene: TWT.scene.id, move: TWT.canMove(), seen: TWT.state.flags.ch2EndCardSeen, phase: TWT.state.phase }));
       expect(after).toEqual({ scene: 'BLACK_RAM_EXTERIOR', move: true, seen: true, phase: 'DAY' });
       await expectClean(page, errors);

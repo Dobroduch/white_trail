@@ -6,8 +6,9 @@ This repository contains **two chapters, played as one continuous game**:
 
 - **I. The first night.** Silas Vance arrives at Blackwood Station and walks into Crow's Hollow. He meets Constable Finch, takes Room 4 at the Black Ram Hotel, hears the 02:15 scream, and finds Sheriff Nathaniel Hale's body at the old sawmill. He then decides what happened to Hale, or leaves the question open.
 - **II. Deceit and Isolation.** The second day follows straight on from the first night's end card. It visits Rusk's store and its account book, the chapel and Reverend Vale, an opened grave, and the telegraph tower with Ada Bell. It ends with a second case, *What is the Pale Order doing now?*, and supper with Finch at dusk.
+- **III. What the Snow Keeps.** The third day and night. Sheriff Hale lies at the constable's office until his burial at noon, where Gideon Mercer appears. Room 4 gives up a button and a hidden stair, and Mrs. Gable a note. A third case, *Whose blood was scrubbed from Room 4?*, is settled over supper. The night ends with a cup of drugged coffee.
 
-The first night's outcome carries into the second day. A full playthrough takes about 30–50 minutes. The game plays on desktop (keyboard and mouse) and in mobile browsers held sideways (touch).
+Each chapter's outcome carries into the next. A full playthrough takes about 50–80 minutes. The game plays on desktop (keyboard and mouse) and in mobile browsers held sideways (touch).
 
 Built with vanilla JavaScript (ES modules), HTML5 Canvas 2D and the Web Audio API. There are no runtime dependencies, no build step and no network assets (Playwright is a development-only dependency for the tests).
 

@@ -21,6 +21,8 @@ createServer(async (req, res) => {
     if (path.endsWith('/')) path += 'index.html';
     const file = normalize(join(root, path));
     if (!file.startsWith(root)) { res.writeHead(403).end('Forbidden'); return; }
+    // development-only writing (the Mystery Bible: spoilers) is never served to a browser
+    if (/[\\/]docs[\\/]private([\\/]|$)/i.test(file.slice(root.length))) throw new Error('private');
     const s = await stat(file);
     if (!s.isFile()) throw new Error('not a file');
     const body = await readFile(file);

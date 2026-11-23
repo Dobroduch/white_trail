@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 8,
- "nextobjectid": 15,
+ "nextobjectid": 18,
  "properties": [
   {
    "name": "name",
@@ -60,6 +60,11 @@
   },
   {
    "name": "atmosphere",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "chapter3",
    "type": "bool",
    "value": true
   }
@@ -1295,7 +1300,7 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"any\":[{\"phase\":\"EVENING\"},{\"phase\":\"NIGHT\"}]}"
+       "value": "{\"notFlag\":\"ch2Started\"}"
       }
      ]
     },
@@ -1397,6 +1402,11 @@
        "name": "lines",
        "type": "string",
        "value": "Empty. It smells of lye and cedar."
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"any\":[{\"notFlag\":\"ch3Started\"},{\"noEvidence\":\"EV3_BUTTON\"}]}"
       }
      ]
     },
@@ -1523,9 +1533,9 @@
        "value": "ROOM4_RUG"
       },
       {
-       "name": "phase",
+       "name": "if",
        "type": "string",
-       "value": "DAY"
+       "value": "{\"flag\":\"ch2Started\"}"
       }
      ]
     },
@@ -1551,9 +1561,106 @@
        "value": "[187,151]"
       },
       {
-       "name": "phase",
+       "name": "if",
        "type": "string",
-       "value": "DAY"
+       "value": "{\"flag\":\"ch2Started\"}"
+      }
+     ]
+    },
+    {
+     "id": 15,
+     "name": "r4_underbed",
+     "type": "interactable",
+     "x": 332,
+     "y": 228,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Under the bed"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "EV3_BUTTON"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch3Started\"},{\"evidence\":\"EV3_COAT\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "r4_panel",
+     "type": "interactable",
+     "x": 91,
+     "y": 174,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Wardrobe"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "EV3_PANEL"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch3Started\"},{\"evidence\":\"EV3_BUTTON\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "r4_stair",
+     "type": "interactable",
+     "x": 66,
+     "y": 206,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Service stair"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "EV3_GLOVE"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"stairFound\"}"
       }
      ]
     }

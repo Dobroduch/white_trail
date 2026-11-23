@@ -16,5 +16,7 @@ export const GLOBAL_EVENTS = [
   ] }, { noDeductions: true }] }, delay: 2.5, script: 'DEDUCTION_HINT' },
   // (the investigation hints the player can ask for with H are in data/hints.js; this one is the notebook tutorial)
   // Chapter 2: once the day's core finds are made (the ledger, the grave, the wire), the light starts to go
+  // Chapter 3: the coat looked at, Hale buried, Mrs. Gable's note in hand: the light goes
+  { id: 'CH3_DUSK', if: { all: [{ flag: 'ch3Started' }, { notFlag: 'ch3DuskReady' }, { examined: 'EV3_COAT' }, { flag: 'burialDone' }, { evidence: 'EV3_NOTE' }] }, delay: 2, script: 'CH3_DUSK' },
   { id: 'CH2_DUSK', if: { all: [{ flag: 'ch2Started' }, { notFlag: 'ch2DuskReady' }, { evidence: 'STORE_LEDGER' }, { examined: 'GRAVE_DISTURBED' }, { examined: 'TOWER_WIRE' }] }, delay: 2, script: 'CH2_DUSK' },
 ];

@@ -277,12 +277,32 @@ test.describe('mobile landscape, touch only', () => {
     expect(rep.r2.errors, rep.r2.steps.join('\n')).toEqual([]);
     expect(rep.r2.aftermath).toBe('AFTER2_BLAST');
     expect(rep.misses, 'actions with no touch control').toEqual([]);
-    // the end card's own menu, by a real tap: stay in town
+    // the end card's own menu, by a real tap: stay in town (the second line; the first goes on into the third day)
     await page.evaluate(() => { for (let i = 0; i < 150; i++) TWT.update(1 / 60); TWT_TEST.render(); });
-    const stay = await page.evaluate(() => { const o = TWT.overlay; const r = o.rects[0]; const p = T.uiToClient(r.x + r.w / 2, r.y + r.h / 2); return [p.x, p.y]; });
+    const stay = await page.evaluate(() => { const o = TWT.overlay; const r = o.rects[1]; const p = T.uiToClient(r.x + r.w / 2, r.y + r.h / 2); return [p.x, p.y]; });
     await page.touchscreen.tap(...stay);
     await step(page, 90);
     expect(await page.evaluate(() => ({ scene: TWT.scene.id, move: TWT.canMove(), ctx: document.documentElement.dataset.tc }))).toEqual({ scene: 'BLACK_RAM_EXTERIOR', move: true, ctx: 'world' });
+    await expectClean(page, errors);
+  });
+
+  test('chapter 3, touch only: from the second day\'s end card through the third day and night to its end card', async ({ page }) => {
+    test.setTimeout(400_000);
+    const { errors } = await mboot(page);
+    const rep = await page.evaluate(() => {
+      T.useTouch(true);
+      const r1 = T.fullRun({ conclusion: 'C_STAGED' });
+      const r2 = T.fullRun2({ conclusion: 'C2_BLAST' });
+      const r3 = T.fullRun3({ conclusion: 'C3_HALE' });
+      return { r1: r1.errors, r2: r2.errors, r3, misses: T.touchMisses, taps: T.touchTaps };
+    });
+    expect(rep.r1).toEqual([]);
+    expect(rep.r2).toEqual([]);
+    expect(rep.r3.errors, rep.r3.steps.join('\n')).toEqual([]);
+    expect(rep.r3.aftermath).toBe('AFTER3_HALE');
+    expect(rep.misses, 'actions with no touch control').toEqual([]);
+    await page.evaluate(() => { for (let i = 0; i < 150; i++) TWT.update(1 / 60); TWT_TEST.render(); });
+    await page.screenshot({ path: `test-results/review/mobile-ch3-endcard-${test.info().project.name}.png` });
     await expectClean(page, errors);
   });
 });

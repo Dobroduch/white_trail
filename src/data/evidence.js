@@ -358,14 +358,117 @@ export const EVIDENCE = {
     interpretation: 'She knows who sent for me. She is afraid of who might hear her say it.',
     related: { people: ['ADA', 'FINCH', 'CLARA'], places: ['TELEGRAPH', 'STATION'], evidence: [] },
   },
+  // ======================= Chapter 3: the third day and night =======================
+  // ---------------- The constable's office ----------------
+  EV3_COAT: {
+    title: 'Hale\'s coat', category: 'PHYSICAL', location: 'FINCH_OFFICE', importance: 'KEY', chapter: 3,
+    observed: 'Finch has laid him on a bench under canvas, in the coat he was found in. One brass button is gone from the front: the threads are still in the cloth, torn, not cut.',
+    detail: 'The right cuff is bleached in a pale ring, and the wool inside the ring has gone soft and rotten. Lye does that to wool. There was no lye at the mill.',
+    interpretation: 'He lost a button the hard way, and his sleeve lay in lye. Neither happened where he was found.',
+    related: { people: ['HALE'], places: ['FINCH_OFFICE'], evidence: ['HOTEL_ROOM4_BOARDS'] },
+    tags: ['BODY', 'ROOM4'],
+  },
+  EV3_SHELF: {
+    title: 'Hale\'s effects', category: 'PERSONAL', location: 'FINCH_OFFICE', importance: 'CORROBORATING', chapter: 3,
+    observed: 'His hat, his gunbelt and his boots on the shelf. The boots are a miner\'s: square heel, broad toe, resoled more than once.',
+    interpretation: 'Whoever stood in cavalry boots under the mill roof, it was not the sheriff.',
+    related: { people: ['HALE'], places: ['FINCH_OFFICE'], evidence: ['SAWMILL_BOOTPRINTS'] },
+    tags: ['BOOTS'],
+  },
+  EV3_PAD: {
+    title: 'Telegraph forms', category: 'DOCUMENT', location: 'FINCH_OFFICE', importance: 'OPTIONAL', chapter: 3,
+    observed: 'A pad of Blackwood telegraph forms on the desk. Every one is signed in advance at the foot, in the same hand: E. Finch, Constable.',
+    detail: 'The counterfoils are numbered. 38, 39, 40, 42. Number 41 has been torn out along the perforation, carefully, by someone who took their time.',
+    interpretation: 'Anyone who could reach this desk could send a wire in Finch\'s name.',
+    related: { people: ['FINCH'], places: ['FINCH_OFFICE', 'STATION'], evidence: [] },
+    tags: ['TELEGRAM'],
+  },
+  T3_FINCH_FORMS: {
+    title: 'Finch, on the signed forms', category: 'TESTIMONY', speaker: 'Constable Finch', location: 'FINCH_OFFICE', chapter: 3,
+    observed: '"Hale had me sign a pad of them, so the office could wire the county when I was out on the road. Don\'t look at me like that."',
+    interpretation: 'He did not say whether he had noticed one was gone. He did not need to.',
+    related: { people: ['FINCH', 'HALE'], places: ['FINCH_OFFICE'], evidence: ['EV3_PAD'] },
+  },
+  // ---------------- Room 4, again ----------------
+  EV3_BUTTON: {
+    title: 'A button under the bed', category: 'PHYSICAL', location: 'ROOM4', importance: 'KEY', chapter: 3, collect: 'BUTTON',
+    observed: 'Far under the bed, in the dust the brush never reached: a brass coat button with a star struck in it.',
+    detail: 'Sheriff\'s pattern, the same as the buttons left on Hale\'s coat. The threads in the shank are torn, not cut, and something dark has dried on the rim. I take it. And nobody carried a sheriff down past Mrs. Gable\'s desk without her seeing.',
+    interpretation: 'Hale was in this room, and lost that button the hard way.',
+    related: { people: ['HALE'], places: ['ROOM4'], evidence: ['EV3_COAT', 'HOTEL_ROOM4_BOARDS'] },
+    tags: ['ROOM4'],
+  },
+  EV3_PANEL: {
+    title: 'The back of the wardrobe', category: 'ENVIRONMENT', location: 'ROOM4', importance: 'KEY', chapter: 3,
+    observed: 'I look again at the empty wardrobe. The back panel does not sit flush: there is a draught along one edge, and a smell of cold stone.',
+    detail: 'It swings on leather hinges. Behind it a narrow servants\' stair goes down into the dark, toward the kitchen yard. The handrail is scored bright where a rope ran over it under load, and the treads are scuffed in pairs: heels, dragged.',
+    onExamine: [{ set: { stairFound: true } }],
+    interpretation: 'There was a way out of this room that did not pass the parlor, and something heavy went down it.',
+    related: { people: ['GABLE'], places: ['ROOM4'], evidence: ['EV3_BUTTON'] },
+    tags: ['ROOM4'],
+  },
+  EV3_GLOVE: {
+    title: 'A glove on the stair', category: 'PERSONAL', location: 'ROOM4', importance: 'OPTIONAL', chapter: 3, collect: 'GLOVE',
+    observed: 'On the third tread down, caught against the wall: a woman\'s glove, grey kid, a small hand.',
+    detail: 'A "C" worked on the back in grey silk. Good gloves; not a hired girl\'s. I take it.',
+    interpretation: 'A woman went down this stair and did not stop for her glove.',
+    related: { people: ['CLARA'], places: ['ROOM4'], evidence: ['EV3_PANEL'] },
+    tags: ['ROOM4'],
+  },
+  // ---------------- The Black Ram ----------------
+  T3_GABLE_STAIR: {
+    title: 'Mrs. Gable, on that night', category: 'TESTIMONY', speaker: 'Mrs. Gable', location: 'PARLOR', chapter: 3,
+    observed: '"He came up the back stair, the way he\'d been coming to see her. Then another tread after his, heavier. I heard him say a name I didn\'t know, and then nothing for a long while. I didn\'t open my door."',
+    interpretation: 'A woman in Room 4, the sheriff come up to see her, and a man come up after him. Mrs. Gable heard it, and stayed behind her door.',
+    related: { people: ['GABLE', 'HALE'], places: ['ROOM4', 'PARLOR'], evidence: ['EV3_PANEL', 'EV3_NOTE'] },
+  },
+  EV3_NOTE: {
+    title: 'The note under her door', category: 'DOCUMENT', location: 'PARLOR', importance: 'KEY', chapter: 3,
+    observed: 'A torn half-sheet in block capitals: CLEAN IT. A GUEST TOOK ILL. OR THE RAM BURNS. Under the words, five strokes, the last struck through the other four.',
+    interpretation: 'Somebody gave her the story she gave me, and signed it with a count.',
+    related: { people: ['GABLE'], places: ['PARLOR', 'ROOM4'], evidence: ['SAWMILL_MARKS'] },
+    tags: ['TALLY', 'ROOM4'],
+  },
+  // ---------------- The burial ----------------
+  EV3_HEEL: {
+    title: 'Prints by Hale\'s grave', category: 'PHYSICAL', location: 'GRAVEYARD', importance: 'OPTIONAL', chapter: 3,
+    observed: 'Where the mourners stood, the snow is trodden flat. One set stands apart, where Mr. Mercer stood: a narrow heel and a long, straight sole.',
+    interpretation: 'A cavalry boot. Old troopers keep their boots, Finch says.',
+    related: { people: ['MERCER'], places: ['GRAVEYARD'], evidence: ['SAWMILL_BOOTPRINTS', 'GRAVE_PRINTS'] },
+    tags: ['BOOTS'],
+  },
+  T3_MERCER: {
+    title: 'Mr. Mercer, on his daughter', category: 'TESTIMONY', speaker: 'Gideon Mercer', location: 'GRAVEYARD', chapter: 3,
+    observed: '"Clara has a temper and a good horse, Mister Vance. She has done this before. She will come home when she is ready, and I would pay a good deal to know where she is meanwhile."',
+    interpretation: 'He spoke of her as a daughter late for supper, not a daughter four days gone in a blizzard.',
+    related: { people: ['MERCER', 'CLARA'], places: ['GRAVEYARD'], evidence: [] },
+  },
+  // ---------------- The third night ----------------
+  EV3_CUP: {
+    title: 'My cup', category: 'PHYSICAL', location: 'PARLOR', importance: 'KEY', chapter: 3,
+    observed: 'The cup on the floor by the hob. A brown crust dried round the bottom, and a smell under the coffee: bitter, and something like cloves.',
+    detail: 'Laudanum. I have smelled it on enough wounded men. Enough to put a man under for an hour or two, not enough to keep him there.',
+    onExamine: [{ script: 'CH3_CLOSE' }],
+    interpretation: 'Somebody wanted me asleep tonight, not dead.',
+    related: { people: [], places: ['PARLOR'], evidence: ['EV3_TIN'] },
+    tags: ['POISON'],
+  },
+  EV3_TIN: {
+    title: 'The coffee tin', category: 'PHYSICAL', location: 'PARLOR', importance: 'CORROBORATING', chapter: 3,
+    observed: 'A new tin of coffee on the shelf by the hob, opened today, the grounds still loose. Rusk\'s paper label on the lid.',
+    interpretation: 'It came up from the store this afternoon. Anyone who passed through the kitchen could have reached it, before or after.',
+    related: { people: ['RUSK', 'GABLE'], places: ['PARLOR', 'RUSK_STORE'], evidence: ['EV3_CUP'] },
+    tags: ['POISON'],
+  },
 };
 
 export const PLACE_NAMES = {
   STATION: 'Blackwood Station', ROAD: 'The road', VILLAGE: "Crow's Hollow", PARLOR: 'Black Ram Hotel',
   ROOM4: 'Room 4', CREEK: 'The creek path', SAWMILL: 'The old sawmill', WHEEL_PIT: 'The wheel pit', RIDGE: 'The ridge',
   RUSK_STORE: 'Rusk\'s store', GRAVEYARD: 'The chapel and the graves', TELEGRAPH: 'The telegraph tower',
+  FINCH_OFFICE: 'The constable\'s office',
 };
 export const PEOPLE_NAMES = {
   HALE: 'Sheriff Nathaniel Hale', FINCH: 'Constable Edgar Finch', GABLE: 'Mrs. Gable', CLARA: 'Clara Mercer',
-  RUSK: 'Jonah Rusk', VALE: 'Reverend Elias Vale', ADA: 'Ada Bell',
+  RUSK: 'Jonah Rusk', VALE: 'Reverend Elias Vale', ADA: 'Ada Bell', MERCER: 'Gideon Mercer',
 };

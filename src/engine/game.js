@@ -126,6 +126,7 @@ export class Game {
     // into the second day exactly as it would have without the reload.
     if (s.flags.sliceComplete && !s.flags.ch2Started) { this.fade.v = 1; this.openEndCard(1); }
     else if (s.flags.chapter2Complete && !s.flags.ch2EndCardSeen) { this.fade.v = 1; this.openEndCard(2); }
+    else if (s.flags.chapter3Complete && !s.flags.ch3EndCardSeen) { this.fade.v = 1; this.openEndCard(3); }
   }
   startPlay(sceneId, spawn, x, facing) {
     this.mode = 'play';
@@ -133,6 +134,7 @@ export class Game {
     this.hints.reset(null);
     this.overlays = [];
     this.hud.clear();
+    this.distort = null;
     this.nbKnown = null; // the notebook's contents as last seen by watchNotebook (null: take the next look as the baseline)
     this.cutscene = null; this.scriptQueue = [];
     this.playerControl = true;
@@ -357,7 +359,14 @@ export class Game {
     if (o instanceof Inventory && act.startsWith('doc:')) { this.openDocument(act.slice(4)); return; }
     if (o instanceof EndCard) {
       // Chapter 1 -> Chapter 2: the end of the first night leads straight on into the second day (no menu, no new game).
-      if (act === 'nextChapter') { this.popOverlay(); this.cutscene = null; this.scriptQueue = []; this.runScript('CH2_OPEN'); }
+      if (act === 'nextChapter') {
+        if (o.chapter === 2) this.state.flags.ch2EndCardSeen = true;
+        this.popOverlay(); this.cutscene = null; this.scriptQueue = []; this.runScript(o.chapter === 2 ? 'CH3_OPEN' : 'CH2_OPEN');
+        return;
+      }
+      // after Chapter 3: stay in the parlor, at night, where the chapter ended
+      if (o.chapter === 3 && (act === 'stay' || act === 'title')) this.state.flags.ch3EndCardSeen = true;
+      if (o.chapter === 3 && act === 'stay') { this.popOverlay(); this.cutscene = null; this.playerControl = true; this.fadeTo(0, 0.8); this.checkpoint(); return; }
       // after Chapter 2: stay in the town at the end of the second day
       if (o.chapter === 2 && (act === 'stay' || act === 'title')) this.state.flags.ch2EndCardSeen = true;
       if (act === 'stay') { this.popOverlay(); this.cutscene = null; this.loadScene('BLACK_RAM_EXTERIOR', 'fromHotel'); this.fade.v = 1; this.fadeTo(0, 1.2); this.playerControl = true; this.checkpoint(); }
@@ -522,6 +531,7 @@ export class Game {
     this.explore();
     this.weather.update(dt, this.camera.pos, this.windOverride);
     this.hud.update(dt);
+    if (this.distort) this.distort.t += dt;
     if ((this.nbTick = ((this.nbTick || 0) + 1) % 10) === 0) this.watchNotebook();
     updateLantern(this.state, dt);
     const nearFire = this.scene.id === 'PARLOR' && this.state.phase !== 'NIGHT' && this.player.x < 140;
@@ -664,7 +674,8 @@ export class Game {
     if (o.kind === 'npc') { this.startDialogue(o.ref.dialogue, o.ref); return; }
     if (o.kind === 'door') {
       const d = o.ref;
-      if (d.scriptIf && test(d.scriptIf.if, this.state)) { this.runScript(d.scriptIf.script); return; } // e.g. the second day ends at the hotel door
+      const dsi = [].concat(d.scriptIf || []).find((x) => test(x.if, this.state)); // one { if, script } or a list of them
+      if (dsi) { this.runScript(dsi.script); return; } // e.g. the second and third days end at the hotel door
       if (test(d.if, this.state)) this.transitionTo(d.to, d.spawn, d.minutes != null ? d.minutes : 1);
       else { this.audio.sfx('refuse'); this.dialogue.startLines(d.blockedLines || ['It won\'t open.']); }
       return;
@@ -710,7 +721,8 @@ export class Game {
     const ex = (this.scene.exits || []).find((e) => e.side === side);
     if (!ex) return;
     this.exitCooldown = 0.8;
-    if (ex.scriptIf && test(ex.scriptIf.if, this.state)) { this.runScript(ex.scriptIf.script); return; }
+    const esi = [].concat(ex.scriptIf || []).find((x) => test(x.if, this.state));
+    if (esi) { this.runScript(esi.script); return; }
     if (test(ex.if, this.state)) { this.transitionTo(ex.to, ex.spawn); return; }
     if (ex.blockedScript) { this.runScript(ex.blockedScript); return; }
     this.dialogue.startLines(ex.blockedLines || ['No way through.']);
@@ -799,6 +811,7 @@ export class Game {
     nativeT();
     this.weather.draw(ctx, false);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (this.distort) this.drawDistortion(ctx);
 
     // compose to the screen
     const fo = cam.screenFocus();
@@ -913,6 +926,27 @@ export class Game {
     ctx.fillStyle = '#030408'; ctx.fillRect(UI_LEFT, UI_TOP, UI_RIGHT - UI_LEFT, UI_BOTTOM - UI_TOP);
     font(ctx, this.card.lines[0].length < 8 ? 11 : 7);
     this.card.lines.forEach((l, i) => text(ctx, l, UI_W / 2, 92 + i * 12, UI.bone, 'center'));
+  }
+
+  // The poisoned coffee (GDD §14), and only that: the room stretched a little longer than it is, a second faint copy of
+  // it drifting beside the first, and one shadow that moves against the light. Eases in over two seconds; with Reduced
+  // motion the copy and the shadow hold still.
+  drawDistortion(ctx) {
+    const t = this.distort.t, k = Math.min(1, t / 2);
+    const still = this.settings.reducedMotion;
+    if (!this.distortBuf || this.distortBuf.width !== FB_W) this.distortBuf = makeCanvas(FB_W, FB_H);
+    const b = this.distortBuf.getContext('2d');
+    b.clearRect(0, 0, FB_W, FB_H); b.drawImage(ctx.canvas, 0, 0);
+    const stretch = 0.08 * k * (still ? 1 : 0.8 + Math.sin(t * 0.9) * 0.2);
+    ctx.drawImage(this.distortBuf, -FB_W * stretch / 2, 0, FB_W * (1 + stretch), FB_H);
+    ctx.globalAlpha = 0.26 * k;
+    ctx.drawImage(this.distortBuf, still ? 12 : Math.sin(t * 1.3) * 18 * k, 0);
+    // a shadow on the wall, moving the wrong way
+    const sx = FB_W * (still ? 0.3 : 0.5 - Math.sin(t * 0.55) * 0.32), sy = FB_H * 0.42;
+    const g = ctx.createRadialGradient(sx, sy, 4, sx, sy, FB_H * 0.22);
+    g.addColorStop(0, 'rgba(5,7,12,0.9)'); g.addColorStop(1, 'rgba(5,7,12,0)');
+    ctx.globalAlpha = 0.55 * k; ctx.fillStyle = g; ctx.fillRect(sx - FB_H * 0.22, sy - FB_H * 0.3, FB_H * 0.44, FB_H * 0.6);
+    ctx.globalAlpha = 1;
   }
 
   ambient() {

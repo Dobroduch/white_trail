@@ -74,6 +74,7 @@ test.describe('the Black Ram by the hour', () => {
     const r = await page.evaluate(() => {
       const g = TWT, s = g.state;
       Object.assign(s.flags, { ch2Started: true, hasRoom4Key: true });
+      g.reloadScene(); // the rug, once laid on the second day, is there from then on (a story flag, not the hour)
       T.talkThrough();
       const out = { props: g.props.map((p) => p.id) };
       T.walkTo(187); out.prompt = g.prompt && g.prompt.label;

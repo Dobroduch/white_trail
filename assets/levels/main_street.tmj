@@ -12,7 +12,7 @@
  "compressionlevel": -1,
  "backgroundcolor": "#000000",
  "nextlayerid": 17,
- "nextobjectid": 22,
+ "nextobjectid": 24,
  "properties": [
   {
    "name": "name",
@@ -66,6 +66,11 @@
   },
   {
    "name": "chapter2",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "chapter3",
    "type": "bool",
    "value": true
   }
@@ -4732,6 +4737,11 @@
        "name": "phase",
        "type": "string",
        "value": "DAY"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notFlag\":\"ch3Started\"}"
       }
      ]
     },
@@ -4761,6 +4771,74 @@
        "name": "if",
        "type": "string",
        "value": "{\"all\":[{\"phase\":\"DAY\"},{\"notFlag\":\"villageDaySeen\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "name": "officeDoor",
+     "type": "door",
+     "x": 64,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Constable's office"
+      },
+      {
+       "name": "verb",
+       "type": "string",
+       "value": "Go in"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "FINCH_OFFICE"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromStreet"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"ch3Started\"}"
+      },
+      {
+       "name": "blockedLines",
+       "type": "string",
+       "value": "Locked. A card in the window, in a careful hand: CONSTABLE OUT. ENQUIRE AT THE BLACK RAM."
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "name": "fromOffice",
+     "type": "spawn",
+     "x": 64,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
       }
      ]
     }

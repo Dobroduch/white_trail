@@ -18,9 +18,12 @@
 // statements and deductions are still worked on the same page) until a later chapter extends them.
 export const QUESTIONS = [
   { id: 'Q_HALE', case: 'HALE', title: 'What happened to Sheriff Hale?', short: 'The sheriff', if: { flag: 'foundSheriffBody' } },
-  { id: 'Q_ROOM4', title: 'Whose blood was scrubbed from Room 4?', short: 'Room 4', if: { evidence: 'HOTEL_ROOM4_BOARDS' } },
+  // Room 4 is worked on from the first night, but it is settled (a case) only on the third day (caseIf)
+  { id: 'Q_ROOM4', case: 'ROOM4', caseIf: { flag: 'ch3Started' }, title: 'Whose blood was scrubbed from Room 4?', short: 'Room 4', if: { evidence: 'HOTEL_ROOM4_BOARDS' } },
   // Chapter 2, the second day
   { id: 'Q_ORDER', case: 'ORDER', title: 'What is the Pale Order doing now?', short: 'The Order, now', if: { flag: 'ch2Started' } },
+  // Chapter 3, the third night (open: carried into the next chapter)
+  { id: 'Q_COFFEE', title: 'Who put me to sleep, and why?', short: 'The coffee', if: { flag: 'woke3' } },
 ];
 
 // ---------------- key statements ----------------
@@ -38,7 +41,7 @@ export const STATEMENTS = {
     { if: { evidence: 'SAWMILL_DRAG' }, text: 'A furrow runs up from the creek bank toward the wheel, along the ground.' },
     { if: {}, text: 'His broken watch lay between the body and the creek.' },
   ] },
-  S_MARKS: { q: 'Q_HALE', label: 'Marks cut in the post', text: 'Fresh tally marks, cut at eye height and facing the path.', sources: ['SAWMILL_MARKS'] },
+  S_MARKS: { q: 'Q_HALE', qs: ['Q_HALE', 'Q_ROOM4'], label: 'Marks cut in the post', text: 'Fresh tally marks, cut at eye height and facing the path.', sources: ['SAWMILL_MARKS'] },
   S_LEDGER: { q: 'Q_HALE', label: 'The Pale Order ledger', text: 'The Pale Order\'s old accounts, thrown on a dead fire and left half-burned.', sources: ['SAWMILL_LEDGER'] },
   S_SCREAM: { q: 'Q_HALE', label: 'The scream at 02:15', text: 'A scream from the mill at 02:15. Mrs. Gable knew at once where it came from.', sources: ['T_GABLE_NIGHT'], also: ['T_GABLE_VOICE'], if: { flag: 'heardScream' } },
   S_TRACKS: { q: 'Q_HALE', label: 'Fresh tracks to the mill', text: 'One set of prints went down the creek path fast tonight, before me.', sources: ['CREEK_TRACKS'] },
@@ -57,6 +60,26 @@ export const STATEMENTS = {
     { if: { evidence: 'T_GABLE_REGISTER' }, text: 'Mrs. Gable says a guest took ill in Room 4, and paid to be kept out of the book.' },
     { if: {}, text: 'Mrs. Gable says a guest took ill in Room 4.' },
   ] },
+  // --- Q_ROOM4 on the third day ---
+  S3_COAT: { q: 'Q_ROOM4', label: 'A button gone from his coat', text: 'Hale\'s coat is short one brass button, torn from the cloth, not cut.', sources: ['EV3_COAT'], also: ['EV3_SHELF'] },
+  S3_LYE: { q: 'Q_ROOM4', label: 'Lye on his sleeve', text: 'Hale\'s right cuff is bleached and rotted in a ring. Lye, and there was none at the mill.', sources: ['EV3_COAT'], if: { examined: 'EV3_COAT' } },
+  S3_BUTTON: { q: 'Q_ROOM4', label: 'A button under the bed', sources: ['EV3_BUTTON'], variants: [
+    { if: { examined: 'EV3_BUTTON' }, text: 'A sheriff\'s brass button under the Room 4 bed: threads torn in the shank, something dark dried on the rim.' },
+    { if: {}, text: 'A brass button with a star struck in it, far under the bed in Room 4.' },
+  ] },
+  S3_STAIR: { q: 'Q_ROOM4', label: 'A stair behind the wardrobe', sources: ['EV3_PANEL'], also: ['EV3_GLOVE'], variants: [
+    { if: { examined: 'EV3_PANEL' }, text: 'Behind the wardrobe a servants\' stair goes down to the kitchen yard. The rail is rope-scored and the treads are heel-dragged.' },
+    { if: {}, text: 'The back of the wardrobe in Room 4 lets in a draught and a smell of cold stone.' },
+  ] },
+  S3_HEARD: { q: 'Q_ROOM4', label: 'What Mrs. Gable heard', text: 'Mrs. Gable heard Hale come up the back stair to her guest, a heavier tread after him, and then nothing for a long while.', sources: ['T3_GABLE_STAIR'] },
+  S3_NOTE: { q: 'Q_ROOM4', label: 'A note under her door', text: 'In the morning a note under Mrs. Gable\'s door: clean it, say a guest took ill, or the Ram burns. Five strokes under it, the last struck through.', sources: ['EV3_NOTE'] },
+  // --- Q_COFFEE (the third night) ---
+  S3_DRUGGED: { q: 'Q_COFFEE', label: 'Laudanum in my cup', sources: ['EV3_CUP'], variants: [
+    { if: { examined: 'EV3_CUP' }, text: 'Laudanum in the coffee: enough to put me under for an hour or two, not to kill me.' },
+    { if: {}, text: 'A bitter brown crust in my cup, and a smell like cloves.' },
+  ] },
+  S3_SEARCHED: { q: 'Q_COFFEE', label: 'The note taken from my coat', text: 'While I was under, someone turned out my pockets and took the note Mrs. Gable gave me. Nothing else.', sources: [], if: { flag: 'woke3' } },
+  S3_TIN: { q: 'Q_COFFEE', label: 'A new tin from Rusk\'s', text: 'The coffee was from a new tin, opened today, with Rusk\'s label on the lid.', sources: ['EV3_TIN'] },
   S_REGISTER: { q: 'Q_ROOM4', label: 'No one in the register', text: 'The register shows no guest in Room 4 for a fortnight.', sources: ['HOTEL_REGISTER'] },
   // --- Q_ORDER (Chapter 2) ---
   S2_FREIGHT: { q: 'Q_ORDER', label: 'The scraped freight entry', sources: ['STORE_LEDGER'], also: ['STORE_OIL'], variants: [
@@ -173,6 +196,10 @@ export const DEDUCTIONS = {
     pairs: [['S_GABLE_GUEST', 'S_REGISTER']],
     text: 'Mrs. Gable says a guest took ill in Room 4. Her own register shows no one in Room 4 for a fortnight. Either the guest was kept off the books, or there was no guest at all.',
     limits: 'Whose blood was scrubbed from the floor, and why it was hidden, remains open.',
+    readings: {
+      REAL: { label: 'A guest, off the book', text: 'Someone did stay in Room 4, paying not to be written down.', if: { any: [{ evidence: 'T_GABLE_REGISTER' }, { evidence: 'T3_GABLE_STAIR' }, { evidence: 'EV3_GLOVE' }] } },
+      NONE: { label: 'No guest at all', text: 'There was no guest. "A guest took ill" covers something that happened in that room.' },
+    },
     details: ['HOTEL_ROOM4_BOARDS', 'T_GABLE_REGISTER'],
     links: [],
     map: { x: 0.5, y: 0.5 },
@@ -257,6 +284,74 @@ Object.assign(DEDUCTIONS, {
   },
 });
 
+// --- Q_ROOM4 on the third day (Chapter 3) ---
+Object.assign(DEDUCTIONS, {
+  D3_HALE_HERE: {
+    q: 'Q_ROOM4', title: 'Hale was in Room 4',
+    ask: 'Whose button was under the bed?',
+    raisedBy: ['S3_BUTTON'],
+    pairs: [['S3_BUTTON', 'S3_COAT']],
+    text: 'The button under the bed is off Hale\'s coat: the same brass, the same star, and the coat is short by one.',
+    limits: 'When he was in that room, and whether he was alive, the button alone cannot say.',
+    readings: {
+      STRUGGLE: { label: 'Torn off fighting', text: 'He tore it off himself, struggling, there on the floor.', if: { examined: 'EV3_BUTTON' } },
+      LATER: { label: 'Dropped afterwards', text: 'He was dead before it came off: whoever carried his coat through the room lost it.' },
+    },
+    details: ['EV3_BUTTON', 'EV3_COAT'],
+    links: ['D3_LYE', 'D_UNWRITTEN_GUEST'],
+    map: { x: 0.15, y: 0.62 },
+  },
+  D3_LYE: {
+    q: 'Q_ROOM4', title: 'The same lye',
+    ask: 'Where did the lye on his sleeve come from?',
+    raisedBy: ['S3_LYE'],
+    pairs: [['S3_LYE', 'S_BOARDS']],
+    text: 'The lye that rotted his cuff is the lye that scrubbed the boards of Room 4. His sleeve lay in that blood, or in that bucket.',
+    limits: 'Whose blood the boards held, the lye cannot say on its own.',
+    details: ['EV3_COAT', 'HOTEL_ROOM4_BOARDS'],
+    links: ['D3_HALE_HERE'],
+    map: { x: 0.5, y: 0.82 },
+  },
+  D3_STAIR: {
+    q: 'Q_ROOM4', title: 'The back way',
+    ask: 'Where does the back of the wardrobe lead?',
+    raisedBy: ['S3_STAIR'],
+    pairs: [['S3_STAIR', 'S3_HEARD'], ['S3_STAIR', 'S_BOARDS']],
+    text: 'A stair runs from Room 4 down to the kitchen yard, out of sight of the parlor. Whatever happened in that room could leave it without passing Mrs. Gable\'s desk.',
+    limits: 'Who went down it, the stair keeps to itself.',
+    readings: {
+      CARRIED: { label: 'Carried down', text: 'He was carried down that stair, by men who knew it was there.', if: { examined: 'EV3_PANEL' } },
+      FLED: { label: 'The guest fled', text: 'The guest went down it in a hurry, and the trouble went with her.' },
+    },
+    details: ['EV3_PANEL', 'EV3_GLOVE', 'T3_GABLE_STAIR'],
+    links: ['D3_HALE_HERE'],
+    map: { x: 0.85, y: 0.62 },
+  },
+  D3_THREAT: {
+    q: 'Q_ROOM4', title: 'The same counting, again',
+    ask: 'Who wrote the note under her door?',
+    raisedBy: ['S3_NOTE'],
+    pairs: [['S3_NOTE', 'S_MARKS']],
+    text: 'Five strokes, the last struck through the others: the count cut into the mill post. Whoever made Mrs. Gable clean that room signed it as the Order\'s business.',
+    limits: 'Whose hand wrote it, I have nothing yet to match it against.',
+    details: ['EV3_NOTE', 'SAWMILL_MARKS'],
+    links: [],
+    map: { x: 0.85, y: 0.15 },
+  },
+  // --- Q_COFFEE (open into the next chapter) ---
+  D3_DRUGGED: {
+    q: 'Q_COFFEE', title: 'Put to sleep for a note',
+    ask: 'What was in my coffee?',
+    raisedBy: ['S3_DRUGGED'],
+    pairs: [['S3_DRUGGED', 'S3_SEARCHED'], ['S3_DRUGGED', 'S3_TIN']],
+    text: 'Laudanum in the coffee, enough to put me under for an hour or two, and while I was under someone went through my coat and took back the note, and nothing else.',
+    limits: 'Who dosed it, and who came for the note, the cup does not say.',
+    details: ['EV3_CUP', 'EV3_TIN'],
+    links: [],
+    map: { x: 0.5, y: 0.4 },
+  },
+});
+
 export const DEDUCTION_REFUSAL = 'The evidence does not establish that.';
 
 // ---------------- conclusions ----------------
@@ -331,12 +426,51 @@ Object.assign(CONCLUSIONS, {
   },
 });
 
+// Chapter 3: whose blood was scrubbed from Room 4. Exactly one is true; the readings of the three exclude each other.
+Object.assign(CONCLUSIONS, {
+  C3_HALE: {
+    q: 'Q_ROOM4', title: 'Hale died in Room 4', truth: true,
+    requires: { D3_HALE_HERE: 'STRUGGLE', D3_STAIR: 'CARRIED', D_UNWRITTEN_GUEST: 'REAL' },
+    text: 'Hale came up the back stair to a guest kept off the book. He was killed on the floor of Room 4, fighting, and carried down the same stair. Mrs. Gable was made to scrub it and tell me a guest took ill.',
+    outcome: {
+      aftermath: 'AFTER3_HALE',
+      do: [{ set: { gableConfides: true } }, { char: { gable: { cooperation: 'OPEN' } } }, { log: 'Told Finch: Hale died in Room 4, and went down the back stair.' }],
+      epilogue: 'Mrs. Gable bolted the kitchen passage herself tonight, and showed me she had. Finch knows now where his sheriff died. He does not yet know who he went there to see, and neither, quite, do I.',
+    },
+  },
+  C3_GUEST: {
+    q: 'Q_ROOM4', title: 'The guest\'s trouble',
+    requires: { D3_HALE_HERE: 'LATER', D3_STAIR: 'FLED', D_UNWRITTEN_GUEST: 'REAL' },
+    text: 'The blood in Room 4 is the guest\'s. She was hurt there and fled down the back stair; Hale came after, looking for her, and brought the button and the lye with him.',
+    outcome: {
+      aftermath: 'AFTER3_GUEST',
+      do: [{ set: { huntForGuest: true } }, { log: 'Told Finch the blood was the guest\'s. He has gone to find her.' }],
+      epilogue: 'Finch went out into the snow to find a hurt woman nobody has seen. Whoever else is looking for her will hear that he is looking, and where.',
+    },
+  },
+  C3_GABLE: {
+    q: 'Q_ROOM4', title: 'Mrs. Gable\'s own work',
+    requires: { D_UNWRITTEN_GUEST: 'NONE', D3_HALE_HERE: 'STRUGGLE' },
+    text: 'There was no guest. Hale died fighting in Room 4, and the woman who scrubbed the floor and wrote the story is the woman who owns the room.',
+    outcome: {
+      aftermath: 'AFTER3_GABLE',
+      do: [{ set: { gableAccused: true } }, { char: { gable: { cooperation: 'COLD' } } }, { log: 'Told Finch it was Mrs. Gable\'s own work. He took her keys.' }],
+      epilogue: 'Finch has Mrs. Gable\'s keys in his coat and her silence for good. The Black Ram\'s doors are locked by the law tonight, which suits whoever has a key of their own.',
+    },
+  },
+});
+
 // The aftermath when Silas leaves a case without committing to anything (per case).
 export const OPEN_OUTCOMES = {
   HALE: {
     aftermath: 'AFTER_OPEN',
     do: [{ log: 'Left the mill without a conclusion.' }],
     epilogue: 'I told Finch what I had seen, and nothing of what I made of it. He cut the sheriff down at first light, because somebody had to. The question stays open in my notebook.',
+  },
+  ROOM4: {
+    aftermath: 'AFTER3_OPEN',
+    do: [{ log: 'Kept what I made of Room 4 to myself.' }],
+    epilogue: 'I told Finch about the stair and nothing about what I made of it. He went home looking at every door he passed.',
   },
   ORDER: {
     aftermath: 'AFTER2_OPEN',
@@ -351,11 +485,14 @@ export const OPEN_OUTCOME = OPEN_OUTCOMES.HALE; // (the first chapter's name for
 // the current question's threads and the clues joined to them are drawn.
 export const STATEMENT_MAP = {
   S_LITTLE_BLOOD: { x: 0.0, y: 0.0 }, S_HOISTED: { x: 0.33, y: 0.0 }, S_FROM_CREEK: { x: 0.0, y: 0.5 },
-  S_MARKS: { x: 0.67, y: 0.0 }, S_LEDGER: { x: 1.0, y: 0.0 },
+  S_LEDGER: { x: 1.0, y: 0.0 },
   S_OLD_BLOOD: { x: 0.0, y: 1.0 }, S_MISSING: { x: 0.33, y: 1.0 },
   S_SCREAM: { x: 0.67, y: 1.0 }, S_TRACKS: { x: 1.0, y: 1.0 }, S_RIDGE: { x: 1.0, y: 0.5, Q_ORDER: { x: 1.0, y: 1.0 } },
   S_PIT: { x: 0.5, y: 0.5 },
-  S_GABLE_GUEST: { x: 0.1, y: 0.15 }, S_REGISTER: { x: 0.9, y: 0.15 }, S_BOARDS: { x: 0.5, y: 0.95 },
+  S_GABLE_GUEST: { x: 0.0, y: 0.0 }, S_REGISTER: { x: 0.33, y: 0.0 }, S_BOARDS: { x: 0.5, y: 1.0 },
+  S3_COAT: { x: 0.0, y: 0.38 }, S3_BUTTON: { x: 0.0, y: 0.9 }, S3_LYE: { x: 0.2, y: 1.0 }, S3_STAIR: { x: 1.0, y: 0.38 }, S3_HEARD: { x: 1.0, y: 0.92 },
+  S3_NOTE: { x: 0.62, y: 0.0 }, S_MARKS: { x: 0.67, y: 0.0, Q_ROOM4: { x: 1.0, y: 0.0 } },
+  S3_DRUGGED: { x: 0.5, y: 0.0 }, S3_SEARCHED: { x: 0.0, y: 0.9 }, S3_TIN: { x: 1.0, y: 0.9 },
   S2_FREIGHT: { x: 0.0, y: 0.0 }, S2_CRATE: { x: 0.3, y: 0.0 }, S2_CACHE: { x: 0.58, y: 0.0 }, S2_HEELS: { x: 1.0, y: 0.0 },
   S2_COIN: { x: 0.0, y: 0.46 }, S2_HALE_ASKED: { x: 0.3, y: 0.6 }, S2_MILL_HEELS: { x: 1.0, y: 0.48 },  S2_FIGURE: { x: 1.0, y: 0.66 },
   S2_WIRE: { x: 0.0, y: 1.0 }, S2_LINE_DEAD: { x: 0.33, y: 1.0 }, S2_SOOT: { x: 0.64, y: 1.0 },

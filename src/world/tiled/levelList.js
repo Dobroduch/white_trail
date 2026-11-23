@@ -16,4 +16,6 @@ export const LEVELS = [
   { id: 'RUSK_STORE', url: 'assets/levels/rusk_store.tmj' },
   { id: 'GRAVEYARD', url: 'assets/levels/chapel_graveyard.tmj' },
   { id: 'TELEGRAPH', url: 'assets/levels/telegraph_tower.tmj' },
+  // Chapter 3, the third day: the constable's office and jail, the west cabin on Main Street.
+  { id: 'FINCH_OFFICE', url: 'assets/levels/constable_office.tmj' },
 ];

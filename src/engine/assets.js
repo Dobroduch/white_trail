@@ -146,6 +146,7 @@ export const NATIVE_SHEETS = [
   { url: 'assets/export/characters/rusk.png', fw: 26, fh: 42, anchor: 11, sprites: { rusk_idle: [0, 1] } },
   { url: 'assets/export/characters/vale.png', fw: 26, fh: 42, anchor: 10.5, sprites: { vale_idle: [0, 1] } },
   { url: 'assets/export/characters/ada.png', fw: 26, fh: 42, anchor: 11, sprites: { ada_idle: [0, 1] } },
+  { url: 'assets/export/characters/mercer.png', fw: 26, fh: 42, anchor: 10.5, sprites: { mercer_idle: [0, 1] } },
 ];
 
 function loadImage(url) {

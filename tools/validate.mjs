@@ -105,12 +105,12 @@ for (const [id, sc] of Object.entries(SCENES)) {
     ok(SCENES[ex.to], `${id}: exit to unknown ${ex.to}`);
     ok(SCENES[ex.to] && SCENES[ex.to].spawns[ex.spawn], `${id}: exit spawn ${ex.to}.${ex.spawn} missing`);
     if (ex.blockedScript) ok(SCRIPTS[ex.blockedScript], `${id}: blocked script missing`);
-    if (ex.scriptIf) ok(SCRIPTS[ex.scriptIf.script], `${id}: scriptIf missing`);
+    for (const si of [].concat(ex.scriptIf || [])) ok(SCRIPTS[si.script], `${id}: scriptIf missing`);
     walkConds(ex.if, id);
   }
   for (const d of sc.doors || []) {
     ok(SCENES[d.to] && SCENES[d.to].spawns[d.spawn], `${id}: door ${d.id} -> ${d.to}.${d.spawn} missing`);
-    if (d.scriptIf) { ok(SCRIPTS[d.scriptIf.script], `${id}: door ${d.id} scriptIf script missing`); walkConds(d.scriptIf.if, id); }
+    for (const si of [].concat(d.scriptIf || [])) { ok(SCRIPTS[si.script], `${id}: door ${d.id} scriptIf script missing`); walkConds(si.if, id); }
     ok(d.x >= sc.bounds[0] - 20 && d.x <= sc.bounds[1] + 20, `${id}: door ${d.id} outside interaction reach`);
     walkConds(d.if, id);
   }

@@ -5,3 +5,5 @@ Thumbs.db
 test-results/
 playwright-report/
 *.tiled-session
+# Development-only writing (the Mystery Bible: spoilers). Kept local, never published.
+docs/private/

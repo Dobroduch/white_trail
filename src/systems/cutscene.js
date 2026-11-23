@@ -61,6 +61,10 @@ export class Cutscene {
     if (s.murmur) { g.audio.murmur(s.murmur === 'stop' ? 0 : 1); return finish(); }
     if ('wind' in s) { g.windOverride = s.wind; g.audio.windDip(s.wind); return finish(); }
     if (s.set) { apply([{ set: s.set }], g.state); return finish(); }
+    // { do: [effects] }: any story effects (items taken away, evidence, flags) with the game's usual feedback
+    if (s.do) { g.handleEffects(apply(s.do, g.state)); return finish(); }
+    // { distort: true|false }: the poisoned coffee's perceptual distortion (GDD §14: the one hallucination in the game)
+    if ('distort' in s) { g.distort = s.distort ? { t: 0 } : null; return finish(); }
     if (s.log) { apply([{ log: s.log }], g.state); return finish(); }
     if (s.char) { apply([{ char: s.char }], g.state); return finish(); }
     if (s.phase) {
