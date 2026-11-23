@@ -33,6 +33,9 @@ html.touch #touch { display: block; }
 #touch .tc-act button.act.idle .lbl { color: #64748b; }
 #touch button.lit { color: #fcd34d; border-color: #b45309; }
 #touch button.ready { border-color: #f59e0b; color: #f59e0b; animation: tc-pulse 1.6s ease-in-out infinite; }
+/* something new in the notebook: a small ink-red mark on its button */
+#touch button.notebook { position: relative; }
+#touch button.notebook.unread::after { content: ''; position: absolute; top: 14%; right: 14%; width: 16%; height: 16%; background: #b91c1c; box-shadow: 0 0 0 1px rgba(5, 7, 12, 0.8); }
 @keyframes tc-pulse { 50% { box-shadow: inset 0 0 0 1px rgba(5, 7, 12, 0.9), 0 0 8px rgba(245, 158, 11, 0.55); } }
 /* quieter while someone is talking or a cutscene holds the camera */
 html.touch[data-tc='dialogue'] #touch .tc-sys, html.touch[data-tc='cutscene'] #touch .tc-sys { opacity: 0.55; }

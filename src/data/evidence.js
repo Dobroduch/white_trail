@@ -220,6 +220,16 @@ export const EVIDENCE = {
     related: { people: ['RUSK'], places: ['RUSK_STORE'], evidence: ['SAWMILL_BOOTPRINTS'] },
     tags: ['BOOTS'],
   },
+  // ---------------- The Black Ram by day ----------------
+  ROOM4_RUG: {
+    title: 'A rug in Room 4', category: 'ENVIRONMENT', location: 'ROOM4', importance: 'CORROBORATING', chapter: 2,
+    observed: 'A rag rug lies at the foot of the bed, square over the pale patch of boards. It was not here last night.',
+    detail: 'I turn back a corner. The boards under it have been scrubbed again since I went out, and are still damp. Lye, fresh.',
+    onExamine: [{ examine: 'HOTEL_ROOM4_BOARDS' }],
+    interpretation: 'Somebody came into my room while I was gone, to cover that patch and scrub it again.',
+    related: { people: ['GABLE'], places: ['ROOM4'], evidence: ['HOTEL_ROOM4_BOARDS'] },
+    tags: ['ROOM4', 'BLOOD'],
+  },
   // ---------------- The chapel and the graves ----------------
   GRAVE_STONE: {
     title: 'Amos Pell\'s headstone', category: 'ENVIRONMENT', location: 'GRAVEYARD', importance: 'CORROBORATING', chapter: 2,

@@ -24,8 +24,9 @@ import { Notebook } from '../ui/notebook.js';
 import { TitleMenu, PauseMenu, SettingsMenu, ControlsHelp, Confirm, Inventory, DocumentView, EndCard } from '../ui/menus.js';
 import { UI, font, text, wrap } from '../ui/text.js';
 import { CaseReview } from '../ui/caseReview.js';
-import { Hints } from '../systems/hints.js';
-import { commit, caseOpenForDecision, outcomeOf, migrateCaseState } from '../systems/caseSystem.js';
+import { Hints, objectiveFor } from '../systems/hints.js';
+import { commit, caseOpenForDecision, outcomeOf, migrateCaseState, notebookKeys, statementKnown, unread } from '../systems/caseSystem.js';
+import { STATEMENTS, DEDUCTIONS } from '../data/caseData.js';
 import { TEST } from './testMode.js';
 import { touchify } from '../ui/touchText.js';
 
@@ -132,6 +133,7 @@ export class Game {
     this.hints.reset(null);
     this.overlays = [];
     this.hud.clear();
+    this.nbKnown = null; // the notebook's contents as last seen by watchNotebook (null: take the next look as the baseline)
     this.cutscene = null; this.scriptQueue = [];
     this.playerControl = true;
     this.windOverride = null;
@@ -270,9 +272,39 @@ export class Game {
   onDialogueNode(runner) { this.dialogueView.onNode(runner); if (runner.lastWho) this.focusDialogue(runner.lastWho); }
   onDialogueEnd() { this.camera.setMode('exploration'); this.input.clearAll(); this.dialogueCooldown = 0.2; }
 
+  // Discovery feedback, kept for what matters: a new clue is inked into the notebook (a quiet handwritten slip), a new
+  // question it raises crosses Silas's mind (a passing thought once the conversation is over), and a closer look that
+  // adds to a clue already written says so. A minor observation gets nothing but the scratch of the pen. The objective
+  // line appears when Silas's aim changes. Nothing here is saved; after a load the current contents are the baseline.
+  watchNotebook() {
+    const s = this.state;
+    if (this.mode !== 'play' || !s) return;
+    const keys = notebookKeys(s);
+    const obj = objectiveFor(s);
+    if (!this.nbKnown) { this.nbKnown = new Set(keys); this.objective = obj; this.nbUnread = unread(s).length > 0; return; }
+    let thought = false;
+    for (const k of keys) {
+      if (this.nbKnown.has(k)) continue;
+      this.nbKnown.add(k);
+      if (STATEMENTS[k]) this.hud.inked('Into my notebook', STATEMENTS[k].label);
+      else if (k.startsWith('T_') && !thought && DEDUCTIONS[k.slice(2)]) { this.hud.thought(DEDUCTIONS[k.slice(2)].ask); thought = true; }
+    }
+    if (obj !== this.objective) { this.objective = obj; this.hud.objective(obj); }
+    this.nbUnread = unread(s).length > 0;
+  }
+  // the clue a recorded piece of evidence is filed under, if that clue is already in the notebook
+  clueOf(evId) {
+    const s = this.state;
+    return Object.keys(STATEMENTS).find((id) => [...(STATEMENTS[id].sources || []), ...(STATEMENTS[id].also || [])].includes(evId) && statementKnown(s, id) && this.nbKnown && this.nbKnown.has(id)) || null;
+  }
+
   handleEffects(results, pendingScripts) {
     for (const r of results) {
-      if (r.noted) { this.hud.noted(r.noted, r.detail); this.audio.sfx('pen'); this.checkpointSoon = true; }
+      if (r.noted) {
+        this.audio.sfx('pen'); this.checkpointSoon = true;
+        const c = r.detail && this.clueOf(r.noted);
+        if (c) this.hud.inked('Added to my notes', STATEMENTS[c].label, true);
+      }
       if (r.item && ITEMS[r.item]) this.hud.item(ITEMS[r.item].name, r.item);
       if (r.script) { if (pendingScripts) pendingScripts.push(r.script); else this.runScript(r.script); }
     }
@@ -490,8 +522,9 @@ export class Game {
     this.explore();
     this.weather.update(dt, this.camera.pos, this.windOverride);
     this.hud.update(dt);
+    if ((this.nbTick = ((this.nbTick || 0) + 1) % 10) === 0) this.watchNotebook();
     updateLantern(this.state, dt);
-    const nearFire = this.scene.id === 'PARLOR' && this.state.phase === 'EVENING' && this.player.x < 140;
+    const nearFire = this.scene.id === 'PARLOR' && this.state.phase !== 'NIGHT' && this.player.x < 140;
     updateWarmth(this.state, dt, this.scene, this.weather.wind, nearFire);
     this.audio.update(dt, { scene: this.scene.id });
     if (this.ridgeLight) {

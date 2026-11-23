@@ -67,6 +67,7 @@ export const PEOPLE = [
     ],
     notes: [
       { if: { evidence: 'T_FINCH_TELEGRAM' }, text: 'Read the telegram for a long while, and did not say he sent it.' },
+      { if: { flag: 'adaKnowsSender' }, text: 'Ada Bell writes down who hands in every telegram. She would not tell me it was him.' },
       { if: { evidence: 'T_FINCH_RIDGE' }, text: 'Laughed off the talk of lights on the ridge. The laugh didn\'t take.' },
       { if: { trust: { finch: 'STEADY' } }, text: 'He has begun to trust me, a little.' },
       { if: { any: [{ trust: { finch: 'GUARDED' } }, { trust: { finch: 'COLD' } }] }, text: 'He has stopped telling me things.' },
@@ -79,9 +80,12 @@ export const PEOPLE = [
     ],
     notes: [
       { if: { evidence: 'T_GABLE_ROOM4' }, text: 'Says a guest took ill in Room 4.' },
+      { if: { all: [{ evidence: 'T_GABLE_ROOM4' }, { evidence: 'HOTEL_REGISTER' }] }, text: 'Her own register has nobody in Room 4 for a fortnight.' },
       { if: { evidence: 'T_GABLE_REGISTER' }, text: 'Some guests, she says, pay to be kept out of her book.' },
       { if: { evidence: 'T_GABLE_NIGHT' }, text: 'Knew at once that the scream came from the mill.' },
       { if: { evidence: 'T_GABLE_PIT' }, text: 'Knows the old mill: the race, the wheel pit.' },
+      { if: { evidence: 'ROOM4_RUG' }, text: 'While I was out, somebody laid a rug over the scrubbed boards in my room.' },
+      { if: { flag: 'askedGableRug' }, text: '"The floors are cold in the mornings." She did not look up from her book.' },
     ] },
   { id: 'CONDUCTOR', name: 'The conductor', role: 'Railway conductor', if: { flag: 'introDone' },
     portrait: { sprite: 'conductor_idle', crop: [2, 0, 18, 18] },
@@ -109,6 +113,7 @@ export const PEOPLE = [
       { if: {}, text: 'Keeps the chapel and the burying ground. Preaches the Pale Figure every winter.' },
     ],
     notes: [
+      { if: { evidence: 'T_GABLE_VALE' }, text: 'Preaches the Pale Figure every winter, Mrs. Gable says, "and it fills his pews".' },
       { if: { evidence: 'T_VALE_FIGURE' }, text: 'The Figure carries a lamp on the ridge; those who follow it to the old workings do not come down.' },
       { if: { evidence: 'T_VALE_ORDER' }, text: 'Says the Order paid for Amos Pell\'s stone, "and for a great many things, then".' },
       { if: { evidence: 'T_VALE_PELL' }, text: 'Blamed the opened grave on dogs. Never once looked at it.' },
@@ -121,9 +126,18 @@ export const PEOPLE = [
     ],
     notes: [
       { if: { evidence: 'T_ADA_LINE' }, text: 'The line died at six the evening I came, and a mile of it is cut.' },
-      { if: { flag: 'adaKnowsSender' }, text: 'Knows who handed in my telegram. Would not say, up there.' },
+      { if: { evidence: 'T_ADA_TELEGRAM' }, text: '"I write down who hands it in." She would not say who handed in mine.' },
       { if: { flag: 'adaWarned' }, text: 'I told her to go home. "Neither is the station" safe, she said.' },
     ] },
+];
+
+// The Case page's opening lines: what the mystery is, as Silas would put it now. First matching variant is shown.
+export const CASE_SUMMARY = [
+  { if: { flag: 'chapter2Complete' }, text: 'Two days in. Hale is dead, Clara Mercer is still missing, and the valley is shut in with whoever is behind it.' },
+  { if: { flag: 'ch2Started' }, text: 'The second day. The pass is shut and the telegraph is dead. Somebody in Crow\'s Hollow is still busy with the Pale Order\'s old business.' },
+  { if: { flag: 'sliceComplete' }, text: 'The first night is over. Sheriff Hale is dead. Clara Mercer is still missing, and nobody will say her name.' },
+  { if: { flag: 'foundSheriffBody' }, text: 'Sheriff Hale is dead, hung by his ankles from the old mill wheel. The town will have a story for it by morning. I need my own first.' },
+  { if: {}, text: 'A telegram brought me up the line to Crow\'s Hollow: the sheriff gone three nights, and a girl gone with him that nobody will name.' },
 ];
 
 export const TELEGRAM_TEXT = [

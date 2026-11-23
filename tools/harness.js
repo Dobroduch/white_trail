@@ -8,6 +8,8 @@
 // on the canvas at the choice / text. A key with no visible touch equivalent is recorded in T.touchMisses, so a
 // touch-only playthrough proves every action it needed has a touch control. Walking holds the walk pads.
 import { UI_OX, UI_OY, UI_DEV } from '/src/engine/display.js';
+import { DEDUCTIONS } from '/src/data/caseData.js';
+import { threadsFor, threadClues } from '/src/systems/caseSystem.js';
 
 export function install() {
   const G = () => window.TWT;
@@ -117,18 +119,43 @@ export function install() {
       g.render();
       return T.info();
     },
-    // Full scripted playthrough of the vertical slice using real inputs. Returns a report.
-    // Notebook must be open on the Deductions page: mark statement a, then b (real Up/Down/E input).
+    // Notebook open on the Deductions board (the question already chosen): answer the question that clues a and b
+    // settle together, with real Up/Down/E input: select its open thread, E, choose the clue it does not already show,
+    // E. With no such pair, the thread raised by a is answered with b (and refused). Returns whether it formed.
     deduce(a, b) {
-      const nb = G().notebook;
-      for (const id of [a, b]) {
-        const i = nb.listFor(nb.tab).indexOf('S:' + id);
+      const g = G(), nb = g.notebook, s = g.state;
+      if (nb.pick) T.press('Escape', 1);
+      const pairOf = (d) => DEDUCTIONS[d].pairs.some((p) => p.includes(a) && p.includes(b));
+      const ts = threadsFor(s, nb.q);
+      const did = ts.find(pairOf) || ts.find((d) => !s.deductions.includes(d) && threadClues(s, d)[0] === a) || ts.find((d) => !s.deductions.includes(d) && threadClues(s, d).includes(a));
+      if (!did) return false;
+      if (s.deductions.includes(did)) return true;
+      const go = (id) => {
+        const i = nb.listFor(nb.tab).indexOf(id);
         if (i < 0) return false;
         for (let k = 0; k < 60 && nb.sel !== i; k++) T.press(nb.sel < i ? 'ArrowDown' : 'ArrowUp', 1);
-        T.press('KeyE', 1);
-      }
-      return true;
+        return nb.sel === i;
+      };
+      if (!go('T:' + did)) return false;
+      T.press('KeyE', 1);
+      const shown = threadClues(s, did)[0];
+      const pick = shown === b ? a : b;
+      if (!nb.pick || !go('P:' + pick)) { if (nb.pick) T.press('Escape', 1); return false; }
+      T.press('KeyE', 1);
+      const ok = s.deductions.includes(did);
+      if (nb.pick) T.press('Escape', 1); // refused: back to the board
+      return ok;
     },
+    // Open the notebook's Deductions board on question qid (real input: tabs by Left/Right, questions by Q).
+    toBoard(qid) {
+      const g = G();
+      if (!(g.overlay && g.overlay.panelKind === 'notebook')) T.press('Tab');
+      const nb = g.notebook;
+      for (let k = 0; k < 6 && nb.tabName() !== 'DEDUCTIONS'; k++) T.press(nb.tab < 2 ? 'ArrowRight' : 'ArrowLeft', 1);
+      for (let k = 0; k < 4 && qid && nb.q !== qid; k++) T.press('KeyQ', 1);
+      return nb.tabName() === 'DEDUCTIONS' && (!qid || nb.q === qid);
+    },
+    // Full scripted playthrough of the vertical slice using real inputs. Returns a report.
     // In the case review (top overlay): set each reading the conclusion rests on, then commit and confirm.
     decide(cid) {
       const g = G();
@@ -247,13 +274,13 @@ export function install() {
         check('back up in the mill yard', g.scene.id === 'SAWMILL');
       }
       // deduction via the notebook (key statements, not raw records)
-      T.press('Tab');
-      const nb = g.notebook; while (nb.tab !== 4) T.press('ArrowRight', 1);
+      T.toBoard('Q_HALE');
+      const nb = g.notebook;
       if (g.state.evidence.SAWMILL_BODY) {
         T.deduce('S_LITTLE_BLOOD', 'S_HOISTED');
         check('deduction formed: he did not bleed here', g.state.deductions.includes('D_SCENE_ARRANGED'));
-        T.deduce('S_LITTLE_BLOOD', 'S_LEDGER');
-        check('a wrong pair is refused without a hint', nb.result && !nb.result.ok && g.state.deductions.length === 1);
+        T.deduce('S_MARKS', 'S_LITTLE_BLOOD');
+        check('a clue that does not answer the question is refused, without a hint', nb.result && !nb.result.ok && g.state.deductions.length === 1);
       } else {
         // fairness: without the body examined, the deduction is not on offer at all
         check('no deduction without its evidence', !nb.listFor(nb.tab).includes('S:S_LITTLE_BLOOD') && !g.state.deductions.includes('D_SCENE_ARRANGED'));
@@ -370,11 +397,10 @@ export function install() {
       T.walkTo(440); T.hold('KeyD', 20); T.step(20); T.talkThrough();
       check('the ridge path onward is closed for now', g.scene.id === 'TELEGRAPH');
       // ---- the notebook: the second question ----
-      T.press('Tab');
-      const nb = g.notebook; for (let k = 0; k < 10 && nb.tab !== 4; k++) T.press('ArrowRight', 1);
-      for (let k = 0; k < 4 && nb.q !== 'Q_ORDER'; k++) T.press('KeyQ', 1);
-      check('the second question is on the Deductions page', nb.q === 'Q_ORDER');
-      const pairs = [['S2_FREIGHT', 'S2_COIN'], ['S2_CACHE', 'S2_CRATE'], ['S2_WIRE', 'S2_LINE_DEAD'], ['S2_SOOT', s.flags.ridgeLightSeen ? 'S2_WATCHER' : 'S2_FIGURE'], ['S2_HEELS', 'S2_MILL_HEELS'], ['S2_HALE_ASKED', 'S2_FREIGHT']];
+      T.toBoard('Q_ORDER');
+      const nb = g.notebook;
+      check('the second question is on the Deductions board', nb.q === 'Q_ORDER');
+      const pairs = [['S2_FREIGHT', 'S2_COIN'], ['S2_CACHE', 'S2_CRATE'], ['S2_WIRE', 'S2_LINE_DEAD'], ['S2_SOOT', s.flags.ridgeLightSeen ? 'S_RIDGE' : 'S2_FIGURE'], ['S2_HEELS', 'S2_MILL_HEELS'], ['S2_HALE_ASKED', 'S2_FREIGHT']];
       for (const [a, b] of pairs) T.deduce(a, b);
       check('the three deductions with readings formed', ['D2_GRAVE_POWDER', 'D2_CUT_OFF', 'D2_TOWER_LIGHT'].every((d) => s.deductions.includes(d)));
       T.press('Escape');
@@ -397,7 +423,7 @@ export function install() {
       for (let i = 0; i < 600 && !g.dialogue.active; i++) g.update(1 / 60);
       rep.aftermath = g.dialogue.id;
       T.step(100); // the card has gone and the parlor fades in under the conversation
-      check('supper with Finch is seen, in the parlor, not over a black screen', g.scene.id === 'PARLOR' && !g.card && g.fade.v < 0.05 && g.npcs.some((n) => n.id === 'finch' && !n.hidden) && g.props.some((p) => p.id === 'fireSupper'));
+      check('supper with Finch is seen, in the parlor, not over a black screen', g.scene.id === 'PARLOR' && !g.card && g.fade.v < 0.05 && g.npcs.some((n) => n.id === 'finch' && !n.hidden) && g.props.some((p) => p.id === 'hearth'));
       T.talkThrough([], 4000); T.step(60);
       check('supper with Finch played once', !!s.flags.aftermath_ORDER);
       check('the second day\'s end card', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 2 && s.flags.chapter2Complete);

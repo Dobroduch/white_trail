@@ -23,6 +23,7 @@ export function newState() {
     deductions: [], // formed deduction ids (data/caseData.js)
     readings: {}, // deduction id -> the reading Silas has chosen
     cases: {}, // case id -> { conclusion, readings, t } once committed (systems/caseSystem.js)
+    notebookRead: {}, // notebook entries (clues, threads, deductions) the player has already seen there
     looked: {}, // interactable id -> times examined
     seen: {}, // 'DIALOGUE.node' -> true
     flags: { receivedTelegram: true, trappedInVillage: true },

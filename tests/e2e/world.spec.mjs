@@ -343,7 +343,7 @@ test.describe('Hotel interiors (tile-built)', () => {
   test('Parlor: the fire prop is placed and the key row sits under the pigeonholes (key 4 is drawn missing)', async ({ page }) => {
     const { errors } = await boot(page, { test: '1', scene: 'PARLOR' });
     await page.evaluate(() => T.talkThrough());
-    const fire = await page.evaluate(() => { const p = TWT.props.find((q) => q.id === 'fire'); return !!p; });
+    const fire = await page.evaluate(() => { const p = TWT.props.find((q) => q.id === 'hearth'); return !!p; });
     expect(fire).toBe(true);
     const tiles = await page.evaluate(async () => { const m = await (await fetch('assets/levels/black_ram_parlor.tmj')).json(); const ids = await (await fetch('tools/data/hotel_tiles.json')).json(); const l = m.layers.find((q) => q.name === 'furniture'); const row = []; for (let c = 23; c <= 28; c++) row.push(l.data[10 * m.width + c] - 1); return { row, keyrow: ['keyrow_0_0', 'keyrow_0_1', 'keyrow_0_2', 'keyrow_0_3', 'keyrow_0_4', 'keyrow_0_5'].map((n) => ids[n]) }; });
     expect(tiles.row).toEqual(tiles.keyrow); // the six key tiles are in place; tile 3 (key 4) is drawn without its key by design

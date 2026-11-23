@@ -285,6 +285,7 @@ export class TouchControls {
       const tier = g.hints ? g.hints.available() : 0;
       this.set('hint', !!tier, (v) => this.btnHint.classList.toggle('ready', v));
       this.set('panelsOk', g.canOpenPanel(), (v) => { for (const b of [this.btnNotebook, this.btnInventory, this.btnMap]) b.disabled = !v; });
+      this.set('nbUnread', !!g.nbUnread, (v) => this.btnNotebook.classList.toggle('unread', v)); // something new in the notebook
     }
     const open = g.overlay && g.overlay.panelKind;
     this.set('openPanel', open || '', (v) => {
@@ -296,7 +297,7 @@ export class TouchControls {
     });
     if (this.ctx === 'panel-notebook') {
       const tab = g.notebook.tabName ? g.notebook.tabName() : '';
-      this.set('nbTab', tab, (v) => { this.btnQuestion.style.display = v === 'DEDUCTIONS' || v === 'MIND MAP' ? '' : 'none'; });
+      this.set('nbTab', tab, (v) => { this.btnQuestion.style.display = v === 'DEDUCTIONS' ? '' : 'none'; });
     }
   }
 

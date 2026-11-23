@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 8,
- "nextobjectid": 13,
+ "nextobjectid": 15,
  "properties": [
   {
    "name": "name",
@@ -55,6 +55,11 @@
   },
   {
    "name": "chapter2",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "atmosphere",
    "type": "bool",
    "value": true
   }
@@ -1286,6 +1291,11 @@
        "name": "evidence",
        "type": "string",
        "value": "HOTEL_ROOM4_BOARDS"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"any\":[{\"phase\":\"EVENING\"},{\"phase\":\"NIGHT\"}]}"
       }
      ]
     },
@@ -1488,6 +1498,62 @@
        "name": "if",
        "type": "string",
        "value": "{\"notFlag\":\"enteredRoom4\"}"
+      }
+     ]
+    },
+    {
+     "id": 13,
+     "name": "r4_rug",
+     "type": "interactable",
+     "x": 280,
+     "y": 228,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Rug"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "ROOM4_RUG"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      }
+     ]
+    },
+    {
+     "id": 14,
+     "name": "rug",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "rug"
+      },
+      {
+       "name": "args",
+       "type": "string",
+       "value": "[187,151]"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
       }
      ]
     }

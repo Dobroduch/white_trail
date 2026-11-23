@@ -1,12 +1,12 @@
-// Case review: the deliberate decision. Left, every deduction of the question with its two readings (Left/Right
-// changes the reading). Right, the conclusions those deductions put on the table, each with what it rests on and
+// Case review: the deliberate decision. Left, every deduction of the question with the readings that have come to mind
+// (Left/Right changes the reading; one not yet suggested by the evidence shows as "…"). Right, the conclusions those deductions put on the table, each with what it rests on and
 // whether Silas's current readings support it. E on a supported conclusion asks for confirmation, then commits.
 // It never says which conclusion is true; that only shows in what follows (systems/caseSystem.js, the aftermath).
 //
 // `prompt` mode is used by the end of the night (SLICE_END): it adds "Leave it open for now".
 import { UI, font, text, panel, wrap, spaced, UI_CX, UI_LEFT, UI_RIGHT, UI_TOP, UI_BOTTOM } from './text.js';
 import { DEDUCTIONS, CONCLUSIONS } from '../data/caseData.js';
-import { question, deductionsFor, readingOf, setReading, hasReadings, conclusionsFor, committed } from '../systems/caseSystem.js';
+import { question, deductionsFor, readingOf, setReading, hasReadings, conclusionsFor, committed, readingsOffered, readingUnlocked } from '../systems/caseSystem.js';
 import { Confirm } from './menus.js';
 
 export class CaseReview {
@@ -45,10 +45,11 @@ export class CaseReview {
     const dir = (input.pressed('right') ? 1 : 0) - (input.pressed('left') ? 1 : 0);
     if (r.kind === 'd' && (dir || input.pressed('interact'))) {
       if (this.locked) { this.msg = 'I have already acted on what I believe.'; this.game.audio.sfx('refuse'); return null; }
-      const keys = Object.keys(DEDUCTIONS[r.id].readings);
+      const keys = readingsOffered(s, r.id);
       const cur = readingOf(s, r.id);
-      const next = cur ? keys[(keys.indexOf(cur) + (dir || 1) + keys.length) % keys.length] : keys[dir < 0 ? 1 : 0];
-      if (setReading(s, r.id, next)) { this.game.audio.sfx('pen'); this.game.checkpointSoon = true; }
+      if (cur && keys.length === 1) { this.msg = 'No other way of reading it comes to mind. Not yet.'; return null; }
+      const next = cur ? keys[(keys.indexOf(cur) + (dir || 1) + keys.length) % keys.length] : keys[dir < 0 ? keys.length - 1 : 0];
+      if (setReading(s, r.id, next)) { this.game.audio.sfx('pen'); this.game.checkpointSoon = true; this.msg = null; }
       return null;
     }
     if (r.kind === 'c' && input.pressed('interact') && this.t > 0.2) {
@@ -99,6 +100,7 @@ export class CaseReview {
       let x = 22;
       font(ctx, 4.9);
       for (const [key, rd] of Object.entries(d.readings)) {
+        if (!readingUnlocked(s, r.id, key)) { font(ctx, 4.9, { italic: true }); text(ctx, '…', x, y + 7.2, UI.inkDim); x += 9; continue; }
         const chosen = key === cur;
         font(ctx, 4.9, { bold: chosen, italic: !chosen });
         const w = ctx.measureText(rd.label).width;

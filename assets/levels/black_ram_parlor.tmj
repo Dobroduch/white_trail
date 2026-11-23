@@ -57,6 +57,11 @@
    "name": "chapter2",
    "type": "bool",
    "value": true
+  },
+  {
+   "name": "atmosphere",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -1759,14 +1764,14 @@
        "value": "Fireplace"
       },
       {
-       "name": "variants",
-       "type": "string",
-       "value": "[{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"Embers. The room has gone cold around them.\"]},{\"if\":{},\"lines\":[\"Pine logs, burning well. The first warm air I've breathed since the train.\"]}]"
-      },
-      {
        "name": "warm",
        "type": "bool",
        "value": true
+      },
+      {
+       "name": "variants",
+       "type": "string",
+       "value": "[{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"Embers. The room has gone cold around them.\"]},{\"if\":{\"phase\":\"DAY\"},\"lines\":[\"Built up again since the small hours, and burning hard. Whatever else Mrs. Gable lets go, she does not let the fire go.\"]},{\"if\":{},\"lines\":[\"Pine logs, burning well. The first warm air I've breathed since the train.\"]}]"
       }
      ]
     },
@@ -1923,9 +1928,14 @@
        "value": "[84,148]"
       },
       {
+       "name": "id",
+       "type": "string",
+       "value": "hearth"
+      },
+      {
        "name": "if",
        "type": "string",
-       "value": "{\"phase\":\"EVENING\"}"
+       "value": "{\"any\":[{\"phase\":\"EVENING\"},{\"phase\":\"DAY\"}]}"
       }
      ]
     },
@@ -2158,40 +2168,6 @@
        "name": "if",
        "type": "string",
        "value": "{\"flag\":\"ch2Supper\"}"
-      }
-     ]
-    },
-    {
-     "id": 25,
-     "name": "fire",
-     "type": "prop",
-     "x": 0,
-     "y": 0,
-     "width": 0,
-     "height": 0,
-     "rotation": 0,
-     "visible": true,
-     "point": true,
-     "properties": [
-      {
-       "name": "propType",
-       "type": "string",
-       "value": "fire"
-      },
-      {
-       "name": "args",
-       "type": "string",
-       "value": "[84,148]"
-      },
-      {
-       "name": "id",
-       "type": "string",
-       "value": "fireSupper"
-      },
-      {
-       "name": "if",
-       "type": "string",
-       "value": "{\"all\":[{\"phase\":\"DAY\"},{\"flag\":\"ch2Supper\"}]}"
       }
      ]
     }

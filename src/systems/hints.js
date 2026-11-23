@@ -4,8 +4,12 @@
 //   tier 2  the specific follow-up can be asked for (after the nudge was read and followUpDelay more stuck time)
 // The game calls update(dt, active) every step; `active` is false while paused, in a blocking cutscene, or hidden.
 // Not saved: after a reload the timer starts again from zero for the current step.
-import { HINT_STEPS, HINT_TIMING } from '../data/hints.js';
+import { HINT_STEPS, HINT_TIMING, OBJECTIVE_DONE } from '../data/hints.js';
 import { test } from './storyState.js';
+
+// Silas's current objective: the current step's one-line aim (never how, never the answer).
+export function currentStepOf(s) { return HINT_STEPS.find((h) => test(h.if, s) && !test(h.done, s)) || null; }
+export function objectiveFor(s) { const st = currentStepOf(s); return st ? st.objective : OBJECTIVE_DONE; }
 
 export class Hints {
   constructor(timing = {}) {

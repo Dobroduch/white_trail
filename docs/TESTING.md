@@ -44,7 +44,8 @@ The game is served by `tools/serve.mjs` on port 8094 (`PW_PORT`), started automa
 | `visual` | deterministic frames (same seed ⇒ identical pixels across loads; real time doesn't matter) and screenshot baselines |
 | `chapter2` | the second day played straight on from the first night's end card for four combinations of outcomes (each first-night outcome visibly colouring the day), nothing lost or replayed, a save on the first night's end card resuming there, a mid-chapter save, the first night's people and beats absent by day; captures in `test-results/review/ch2-endcard-*.png` |
 | `mobile` | (mobile projects only) see below |
-| `case` | case 1 (Sheriff Hale) played to every outcome: the true account with and without the hidden wheel pit, both wrong accounts, and leaving it open; the review never ranks accounts and refuses an unsupported commitment; the pit entrance is absent until known (furrow closer look, or Mrs. Gable); hints (delay, request-only, pause / hidden tab, reset); People and Mind map pages; reload mid-investigation; saves from the previous build (`tests/e2e/fixtures/save-v1-*.json`); lantern only in hand while lit; Silas's speaker styling; the Road sign; the night sky. Review captures go to `test-results/review/` |
+| `atmosphere` | the Black Ram's windows by hour (day glass, evening lamps going out, night lamps), chimney smoke, the hearth by day / embers at night, the day-two rug in Room 4 and Mrs. Gable's answer; discovery pacing (no notice for a minor look, an inked slip for a clue, the question as a passing thought, "Added to my notes", the objective line) |
+| `case` | case 1 (Sheriff Hale) played to every outcome: the true account with and without the hidden wheel pit, both wrong accounts, and leaving it open; the review never ranks accounts and refuses an unsupported commitment; the pit entrance is absent until known (furrow closer look, or Mrs. Gable); hints (delay, request-only, pause / hidden tab, reset); the Clues page and its notes, the Deductions board (threads answered one by one, one question at a time), readings that come to mind only with their evidence, People; reload mid-investigation; saves from the previous build (`tests/e2e/fixtures/save-v1-*.json`); lantern only in hand while lit; Silas's speaker styling; the Road sign; the night sky. Review captures go to `test-results/review/` |
 
 ## Mobile (landscape, touch only)
 
@@ -110,7 +111,7 @@ only on the step count and the seeded `Math.random`, so a frame is a pure functi
 
 `T.fullRun()` takes `{ finchKind, examineAll, conclusion, pit }`: `conclusion` (`C_STAGED`, `C_TONIGHT`, `C_RITE`) forms the Hale
 deductions, sets the readings and commits to it at the footbridge; without it the case is left open. `pit: true` climbs down into the
-wheel pit. `T.deduce(a, b)` marks two key statements on the Deductions page; `T.decide(cid)` sets readings and commits in the case review.
+wheel pit. `T.toBoard(qid)` opens the Deductions board on a question; `T.deduce(a, b)` answers the open thread that clues a and b settle (E on the thread, then the clue); `T.decide(cid)` sets readings and commits in the case review.
 
 The save fixtures were captured from the build before the case system (commit 32fb956) by playing `T.fullRun()` there and keeping the
 saves it wrote; they must keep loading.

@@ -163,7 +163,7 @@ test.describe('journal pages', () => {
       s.flags.metFinch = true; s.flags.parlorEntered = true; s.flags.foundSheriffBody = true;
       s.evidence.T_GABLE_HALE = { observed: true, examined: true, n: 1 };
       out.later = g.notebook.people(); out.finchSeen1 = seen('FINCH'); out.haleSeen1 = seen('HALE'); out.gableSeen = seen('GABLE');
-      g.openPanel('notebook'); g.notebook.tab = 6; g.notebook.sel = 0; TWT_TEST.render();
+      g.openPanel('notebook'); g.notebook.tab = 3; g.notebook.sel = 0; TWT_TEST.render();
       return out;
     });
     expect(r.start).toEqual(['HALE', 'CLARA', 'FINCH', 'CONDUCTOR']);
@@ -174,33 +174,71 @@ test.describe('journal pages', () => {
     await expectClean(page, errors);
   });
 
-  test('Deductions page shows one question at a time; Mind map grows with each deduction', async ({ page }) => {
+  test('Clues are filed by question and open onto their notes; the board shows one question\'s threads at a time', async ({ page }) => {
     const { errors } = await boot(page, { test: '1', scene: 'SAWMILL', phase: 'NIGHT' });
     const r = await page.evaluate(() => {
       const g = TWT, s = g.state, nb = g.notebook;
       Object.assign(s.flags, { foundSheriffBody: true, heardScream: true });
-      for (const e of ['T_FINCH_HALE', 'SAWMILL_ROPE', 'SAWMILL_MARKS', 'SAWMILL_LEDGER', 'CREEK_TRACKS', 'HOTEL_REGISTER', 'T_GABLE_ROOM4']) s.evidence[e] = { observed: true, examined: true, n: 1 };
+      for (const e of ['T_FINCH_HALE', 'SAWMILL_ROPE', 'SAWMILL_MARKS', 'SAWMILL_LEDGER', 'CREEK_TRACKS', 'HOTEL_REGISTER', 'T_GABLE_ROOM4', 'T_GABLE_NIGHT']) s.evidence[e] = { observed: true, examined: true, n: 1 };
       s.evidence.SAWMILL_BODY = { observed: true, examined: true, n: 2 };
       s.evidence.HOTEL_ROOM4_BOARDS = { observed: true, examined: true, n: 3 };
-      g.openPanel('notebook'); while (nb.tab !== 4) T.press('ArrowRight', 1);
-      const out = { q: nb.q, rows: nb.listFor(4), map: [] };
-      nb.tab = 5; out.map.push(nb.mapNodes().length); nb.tab = 4;
-      for (const [a, b] of [['S_LITTLE_BLOOD', 'S_HOISTED'], ['S_MARKS', 'S_LEDGER'], ['S_SCREAM', 'S_TRACKS']]) { T.deduce(a, b); out.map.push(nb.mapNodes().length); }
-      T.press('KeyQ', 1); out.q2 = nb.q; out.rows2 = nb.listFor(4);
+      s.evidence.T_GABLE_VOICE = { observed: true, examined: true, n: 4 };
+      g.openPanel('notebook');
+      const out = { opened: nb.tabName() }; // something new: the notebook opens on it
+      // Clues: one list, a header per question, Room 4's clues under their own question
+      for (let k = 0; k < 4 && nb.tabName() !== 'CLUES'; k++) T.press('ArrowLeft', 1);
+      out.clues = nb.listFor(nb.tab);
+      // read the notes behind the scream (its own record and Mrs. Gable on the voice, filed with it)
+      nb.sel = out.clues.indexOf('S:S_SCREAM'); T.press('KeyE', 1);
+      out.inspect = nb.inspect && nb.inspect.sid; T.press('ArrowRight', 1); out.page = nb.inspect && nb.inspect.i;
+      T.press('Escape', 1); out.back = !nb.inspect && g.overlay && g.overlay.panelKind === 'notebook';
+      // the board: open questions first, answered one by one
+      T.toBoard('Q_HALE');
+      out.q = nb.q;
+      const count = () => ({ open: nb.boardNodes().filter((x) => x.startsWith('T:')).length, formed: nb.boardNodes().filter((x) => x.startsWith('D:')).length });
+      out.counts = [count()];
+      for (const [a, b] of [['S_LITTLE_BLOOD', 'S_HOISTED'], ['S_MARKS', 'S_LEDGER'], ['S_SCREAM', 'S_TRACKS']]) { T.deduce(a, b); out.counts.push(count()); }
+      out.nodes = nb.boardNodes();
+      T.press('KeyQ', 1); out.q2 = nb.q; out.nodes2 = nb.boardNodes();
       T.press('KeyQ', 1);
-      while (nb.tab !== 5) T.press('ArrowRight', 1);
-      const nodes = nb.mapNodes(); nb.sel = nodes.indexOf('S:S_HOISTED'); TWT_TEST.render();
-      out.selected = nodes[nb.sel];
+      nb.sel = nb.boardNodes().indexOf('S:S_HOISTED'); TWT_TEST.render();
+      out.selected = nb.boardNodes()[nb.sel];
       return out;
     });
+    expect(r.opened).toBe('CLUES');
+    expect(r.clues[0]).toBe('H:Q_HALE');
+    expect(r.clues.indexOf('H:Q_ROOM4')).toBeGreaterThan(r.clues.indexOf('S:S_SCREAM'));
+    expect(r.clues.indexOf('S:S_BOARDS')).toBeGreaterThan(r.clues.indexOf('H:Q_ROOM4'));
+    expect(r.clues.filter((x) => x.startsWith('S:')).length).toBeLessThanOrEqual(14);
+    expect([r.inspect, r.page, r.back]).toEqual(['S_SCREAM', 1, true]);
     expect(r.q).toBe('Q_HALE');
-    expect(r.rows.filter((x) => x.startsWith('S:')).length).toBeLessThanOrEqual(12);
-    expect(r.rows).not.toContain('S:S_BOARDS'); // Room 4's statements stay under their own question
-    expect(r.map).toEqual([0, 3, 6, 9]);
+    expect(r.counts).toEqual([{ open: 4, formed: 0 }, { open: 3, formed: 1 }, { open: 2, formed: 2 }, { open: 1, formed: 3 }]);
+    expect(r.nodes).not.toContain('T:D_WHERE_KEPT'); // the wheel pit's question is raised only by the wheel pit
+    expect(r.nodes.some((x) => x.includes('S_BOARDS') || x.includes('UNWRITTEN'))).toBe(false);
     expect(r.q2).toBe('Q_ROOM4');
-    expect(r.rows2).toContain('S:S_BOARDS');
+    expect(r.nodes2).toContain('T:D_UNWRITTEN_GUEST');
     expect(r.selected).toBe('S:S_HOISTED');
-    await page.screenshot({ path: 'test-results/review/mind-map.png' });
+    await page.screenshot({ path: 'test-results/review/board.png' });
+    await expectClean(page, errors);
+  });
+
+  test('a reading comes to mind only once the evidence for it is found; the account it supports waits for it', async ({ page }) => {
+    const { errors } = await boot(page, { test: '1', scene: 'SAWMILL', phase: 'NIGHT' });
+    const r = await page.evaluate(async () => {
+      const cs = await import('/src/systems/caseSystem.js');
+      const g = TWT, s = g.state;
+      Object.assign(s.flags, { foundSheriffBody: true, heardScream: true, ridgeLightSeen: true });
+      for (const e of ['T_FINCH_HALE', 'SAWMILL_ROPE', 'SAWMILL_LEDGER', 'SAWMILL_MARKS']) s.evidence[e] = { observed: true, examined: false, n: 1 };
+      s.evidence.SAWMILL_BODY = { observed: true, examined: true, n: 2 };
+      for (const [a, b] of [['S_LITTLE_BLOOD', 'S_HOISTED'], ['S_OLD_BLOOD', 'S_MISSING'], ['S_MARKS', 'S_LEDGER'], ['S_SCREAM', 'S_RIDGE']]) cs.tryPair(s, a, b);
+      const out = { offered: cs.readingsOffered(s, 'D_SAME_COUNTING'), staged: cs.conclusionsFor(s, 'Q_HALE').find((c) => c.id === 'C_STAGED').available };
+      out.refused = cs.setReading(s, 'D_SAME_COUNTING', 'DRESSING');
+      s.evidence.SAWMILL_MARKS.examined = true; // the closer look: cut to be seen, facing the path
+      out.offered2 = cs.readingsOffered(s, 'D_SAME_COUNTING');
+      out.staged2 = cs.conclusionsFor(s, 'Q_HALE').find((c) => c.id === 'C_STAGED').available;
+      return out;
+    });
+    expect(r).toEqual({ offered: ['CLAIM'], staged: false, refused: false, offered2: ['CLAIM', 'DRESSING'], staged2: true });
     await expectClean(page, errors);
   });
 });
@@ -218,9 +256,9 @@ test.describe('saves', () => {
       T.walkTo(371); T.press('KeyE'); T.talkThrough();
       T.walkTo(437); T.press('KeyE'); T.step(90); T.talkThrough(); T.walkTo(144); T.press('KeyE'); T.talkThrough(); // into the pit
       s.evidence.SAWMILL_BODY = { observed: true, examined: false, n: 40 };
-      g.openPanel('notebook'); while (g.notebook.tab !== 4) T.press('ArrowRight', 1);
+      T.toBoard('Q_HALE');
       T.deduce('S_LITTLE_BLOOD', 'S_HOISTED');
-      const rows = g.notebook.listFor(4); g.notebook.sel = rows.indexOf('D:D_SCENE_ARRANGED'); T.press('KeyE', 1); T.press('KeyE', 1); // MOVED
+      const rows = g.notebook.listFor(2); g.notebook.sel = rows.indexOf('D:D_SCENE_ARRANGED'); T.press('KeyE', 1); T.press('KeyE', 1); // MOVED
       T.press('Escape'); T.step(10); g.checkpoint();
     });
     const saved = await page.evaluate(() => ({ scene: TWT.scene.id, d: TWT.state.deductions, r: TWT.state.readings, pit: !!TWT.state.evidence.PIT_HOLLOW, k: TWT.state.flags.knowsWheelPit, lantern: TWT.state.lanternOn }));
@@ -248,18 +286,19 @@ test.describe('saves', () => {
       await page.waitForFunction(() => document.documentElement.dataset.ready === '1');
       await page.evaluate(async () => { (await import('/tools/harness.js')).install(); TWT.continueGame(); T.step(90); });
       const old = JSON.parse(fixture(name)).state;
-      const s = await page.evaluate(() => ({ scene: TWT.scene.id, d: TWT.state.deductions, readings: TWT.state.readings, cases: TWT.state.cases, ev: Object.keys(TWT.state.evidence).length, lantern: TWT.state.lanternOn, k: !!TWT.state.flags.knowsWheelPit }));
+      const s = await page.evaluate(async () => ({ scene: TWT.scene.id, d: TWT.state.deductions, readings: TWT.state.readings, cases: TWT.state.cases, ev: Object.keys(TWT.state.evidence).length, lantern: TWT.state.lanternOn, k: !!TWT.state.flags.knowsWheelPit, unread: (await import('/src/systems/caseSystem.js')).unread(TWT.state) }));
       expect(s.scene).toBe(old.scene);
       expect(s.ev).toBe(Object.keys(old.evidence).length);
       expect(s.d).toEqual(old.deductions);
       expect(s.readings).toEqual({});
       expect(s.cases).toEqual({});
       expect(s.lantern).toBe(old.lanternOn);
+      expect(s.unread).toEqual([]); // what the old notebook already held is not suddenly "new"
       expect(s.k).toBe(!!(old.evidence.SAWMILL_DRAG && old.evidence.SAWMILL_DRAG.examined)); // what the old closer look taught
       if (name === 'sawmill') {
         // carry the old investigation through to a commitment and its aftermath
         const end = await page.evaluate(() => {
-          const g = TWT; g.openPanel('notebook'); while (g.notebook.tab !== 4) T.press('ArrowRight', 1);
+          const g = TWT; T.toBoard('Q_HALE');
           for (const [a, b] of [['S_OLD_BLOOD', 'S_MISSING'], ['S_MARKS', 'S_LEDGER'], ['S_SCREAM', 'S_TRACKS']]) T.deduce(a, b);
           T.press('Escape'); T.walkTo(6); T.hold('KeyA', 20); T.step(20); T.talkThrough([0]); T.decide('C_TONIGHT');
           if (g.overlay) T.press('Escape', 2);

@@ -629,3 +629,46 @@ Firefox for Android was not tried.
 - iPhone Safari cannot lock orientation or go fullscreen for a page: the rotate card is the fallback, and "Add to Home Screen" gives the most room.
 - On 16:9 phones the bottom bar covers the notebook's key-hint footer, so in touch mode the footer is hidden instead.
 - The hint timer, case review and mind map are unchanged; they are touch-operable through the buttons and taps.
+
+## 22. Atmosphere at the Black Ram, the notebook rebuilt, and pacing (2026-11-14)
+
+Goal: a slower, more discoverable mystery with a simpler interface. Story progression, both cases and their outcomes are unchanged; saves keep loading.
+
+### The Black Ram by the hour
+- Windows left the baked glow tile layers. One `hotelWindows` prop draws seven windows, each tied to a room (`tools/patch-hotel-atmosphere.mjs`, idempotent, map property `atmosphere`).
+  - Day: the glass reflects grey snow-light and darkens after 16:00. The parlor panes show the fire low behind them; its lamps come on at dusk.
+  - Evening: every window starts lit. The guest rooms go dark at 20:00 and 21:00, Gable's room turns low at 21:30, the neighbouring house goes dark at 21:15.
+  - Night: Room 4 keeps a low lamp and the parlor shows Gable's candle. Now and then a candle passes an *empty* guest room's window. This is unexplained on purpose; **for review**.
+- Chimney smoke rises from both chimneys. The west one follows the parlor fire.
+- The hearth burns by day and in the evening, and is embers at night (prop id `hearth`; `fireSupper` is gone).
+  - It has an ember bed, sparks, two flickering lights, and an occasional draught that dims the room.
+- Room 4, day two: a rag rug covers the scrubbed boards (record `ROOM4_RUG`). Lifting it shows the boards were scrubbed again.
+  - Mrs. Gable has a new day choice about the rug.
+
+### The notebook (`src/ui/notebook.js`)
+The pages are now **Case · Clues · Deductions · People · Map ›**. The old Evidence, Statements, Leads and Mind map tabs are folded in.
+- **Case:** a summary, the current objective, up to three open questions, and the latest events. It also holds the telegram, the decisions and the timeline.
+- **Clues:** one entry per discovery, filed under its question.
+  - "…" marks a closer look not yet taken.
+  - E opens the notes behind the clue. Records that aren't clues themselves are filed under one (`also`).
+  - The validator checks that every record can be reached.
+- **Deductions:** a board per question. A clue raises an open thread (`ask`). You answer it by choosing the clue that does.
+  - An answered thread becomes an established fact with readings.
+  - Some readings appear only once the evidence for them is found (`reading.if`). An account is offered in the review only when all its readings are available.
+  - `raisedBy` keeps questions from appearing before their clue does.
+- **People:** new notes show contradictions as they come up (Gable's register, the rug, Ada and the telegram).
+- **Map ›** opens the map panel.
+
+### Pacing
+- Each step has an `objective` (data/hints.js), shown on the Case page and as a "NOW" line when it changes.
+- Feedback by size of discovery:
+  - minor observations get only the pen sound;
+  - new clues get an inked paper slip;
+  - a closer look that adds to a clue says "Added to my notes";
+  - a new question is shown as a passing thought;
+  - an unread mark appears on the notebook button.
+- Hints now wait 180 s, then a further 90 s.
+- Day two opens on a question instead of directions. Finch, Rusk, Vale and Ada each get one small-talk line.
+
+### Saves
+New field `notebookRead`. In a save from before this pass, everything already in the notebook is marked read on load.

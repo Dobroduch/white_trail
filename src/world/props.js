@@ -234,9 +234,16 @@ function wheelAt(ctx, cx, cy, r, phase) {
 }
 
 // ---------------- Parlor fire ----------------
+// A burning hearth: a glowing ember bed under the logs, flames that lean and gutter, sparks, and a flickering
+// light that reaches the furniture around it. Every so often a draught from the front door flattens the flames
+// for a moment and the room darkens with them (the "slightly unsettling" half of a cosy fire). `embersOnly` is
+// the dead fire of the small hours.
 export function fireProp(x, y, { embersOnly = false } = {}) {
   let t = 0;
   const rng = mulberry32(9);
+  const sparks = [];
+  let gutter = 0; // 0..1: how far a draught has flattened the flames
+  let nextDraught = 14;
   return {
     z: 1,
     update(dt, game) {
@@ -246,34 +253,223 @@ export function fireProp(x, y, { embersOnly = false } = {}) {
         const d = Math.abs(game.player.x - x);
         game.audio.fire(0.12 + 0.88 / (1 + (d / 110) ** 2), { embers: embersOnly });
       }
+      if (embersOnly) return;
+      nextDraught -= dt;
+      if (nextDraught <= 0) { gutter = 1; nextDraught = 16 + rng() * 22; }
+      gutter = Math.max(0, gutter - dt * 0.9);
+      if (rng() < dt * 2.2) sparks.push({ x: (rng() - 0.5) * 8, y: 0, vy: 6 + rng() * 6, life: 0.6 + rng() * 0.8 });
+      for (const s of sparks) { s.y += s.vy * dt; s.x += Math.sin((t + s.life) * 7) * dt * 3; s.life -= dt; }
+      for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
     },
     draw(ctx, camX) {
       const bx = Math.round(x - camX);
-      rect(ctx, bx - 8, y - 4, 16, 3, '#2a1a10');
-      line(ctx, bx - 9, y - 2, bx + 6, y - 5, '#3a2416');
+      // fire dogs and the two logs
+      rect(ctx, bx - 8, y - 4, 16, 3, PAL.wood1);
+      line(ctx, bx - 9, y - 2, bx + 6, y - 5, PAL.wood2);
+      line(ctx, bx - 5, y - 5, bx + 9, y - 2, PAL.wood0);
+      vline(ctx, bx - 9, y - 3, y - 1, PAL.iron2); vline(ctx, bx + 9, y - 3, y - 1, PAL.iron2);
     },
     glow(ctx, camX) {
       const bx = Math.round(x - camX);
       const f = Math.floor(t * 9);
-      if (embersOnly) {
-        for (let i = 0; i < 7; i++) if ((f + i * 3) % 5 !== 0) px(ctx, bx - 7 + i * 2, y - 4 + (i % 2), i % 2 ? '#b45309' : '#7c2d12');
-        return;
+      // the ember bed: always there, breathing slowly
+      for (let i = 0; i < 9; i++) {
+        const on = (f + i * 3) % (embersOnly ? 5 : 7) !== 0;
+        if (on) px(ctx, bx - 8 + i * 2, y - 2 - (i % 2), i % 3 === 0 ? PAL.amber : i % 2 ? PAL.ember : '#7c2d12');
       }
+      if (embersOnly) return;
       const r2 = mulberry32(f);
+      const lean = Math.round(Math.sin(t * 1.7) * 1.2); // the draw of the chimney
+      const scale = 1 - gutter * 0.6;
       for (let i = -7; i <= 7; i++) {
-        const h = Math.max(1, Math.round(10 - Math.abs(i) * 1.1 + r2() * 5));
+        const h = Math.max(1, Math.round((10 - Math.abs(i) * 1.1 + r2() * 5) * scale));
         for (let k = 0; k < h; k++) {
           const tt = k / h;
           const col = tt < 0.3 ? PAL.amberHi : tt < 0.65 ? PAL.amber : PAL.kerosene;
           if (tt > 0.75 && r2() > 0.5) continue;
-          px(ctx, bx + i, y - 4 - k, col);
+          px(ctx, bx + i + (k > h / 2 ? lean : 0), y - 4 - k, col);
         }
       }
-      if (rng() > 0.7) px(ctx, bx + Math.floor(r2() * 10) - 5, y - 16 - Math.floor(r2() * 6), PAL.amberHi);
+      for (const s of sparks) px(ctx, bx + Math.round(s.x), Math.round(y - 12 - s.y), s.life > 0.4 ? PAL.amberHi : PAL.ember);
     },
     lights() {
-      const flick = embersOnly ? 0 : Math.round(Math.sin(t * 13) * 2 + Math.sin(t * 7.3) * 2);
-      return [{ x: x, y: y - 8, r: (embersOnly ? 34 : 92) + flick, warm: embersOnly ? 0.12 : 0.28, world: true }];
+      if (embersOnly) return [{ x, y: y - 6, r: 34, warm: 0.12, world: true }];
+      const flick = Math.round(Math.sin(t * 13) * 2 + Math.sin(t * 7.3) * 2 + Math.sin(t * 2.1) * 3);
+      const k = 1 - gutter * 0.35;
+      return [
+        { x, y: y - 8, r: Math.round((92 + flick) * k), warm: 0.28 * k, world: true },
+        { x: x + 2, y: y - 2, r: 30 + flick, warm: 0.18 * k, world: true }, // the hearthstones and the floor in front
+      ];
+    },
+  };
+}
+
+// ---------------- Black Ram windows ----------------
+// The hotel's windows (and its neighbour's) answer the hour instead of being baked into one lit tile layer.
+// Each window is the 2×2-tile window of black_ram_exterior.png at tile (tx, ty) and has a `room`:
+//   parlor  — lit while the parlor is (fire + lamps in the evening, Gable's candle at night, the fire by day)
+//   room4   — Silas's room: lamp lit in the evening and at night, out by day
+//   guest   — empty guest rooms: lamps put out one by one through the evening, dark at night
+//   keeper  — Mrs. Gable's own room: lit late in the evening
+//   house   — the neighbouring house: lit in the early evening only
+// By day every pane reflects the grey snow-light (darkening toward dusk), and the parlor panes show the fire
+// low behind the glass. Coordinates are native px (the tile grid); 1 native px = 2/3 world unit.
+const N = 1 / 1.5;
+const LIT = [ // the emissive window pattern (the old winlit tiles): pane rows top→bottom, curtain pair
+  [5, 7, '#fcd36b'], [8, 10, '#e6b66c'], [11, 12, '#e0a04a'], [13, 13, '#d68a3f'],
+  [16, 18, '#fcd36b'], [19, 21, '#e6b66c'], [22, 23, '#e0a04a'], [24, 24, '#d68a3f'],
+];
+const LOW = [[5, 7, '#e0a04a'], [8, 10, '#d68a3f'], [11, 13, '#b56e22'], [16, 18, '#d68a3f'], [19, 21, '#b56e22'], [22, 24, '#a65c2c']];
+const CANDLE = [[20, 22, '#b56e22'], [23, 24, '#a65c2c']];
+const PANES_X = [5, 17];
+const PANES_Y = [5, 16];
+export function windowState(room, s, t) {
+  const min = s.time.h * 60 + s.time.m;
+  const night = s.phase === 'NIGHT', day = s.phase === 'DAY';
+  if (day) {
+    const dusk = min >= 16 * 60;
+    if (room === 'parlor') return dusk ? 'low' : 'dayFire';
+    return dusk ? 'dusk' : 'day';
+  }
+  if (night) {
+    if (room === 'room4') return 'low';
+    if (room === 'parlor') return 'candle';
+    // one of the empty rooms upstairs, now and then: somebody walking with a candle where nobody is staying
+    if (room === 'guest2') return (t % 41) > 35 ? 'candle' : 'dark';
+    return 'dark';
+  }
+  // evening: lamps go out as the night wears on
+  if (room === 'parlor' || room === 'room4') return 'lit';
+  if (room === 'keeper') return min >= 21 * 60 + 30 ? 'low' : 'lit';
+  if (room === 'guest1') return min < 20 * 60 ? 'lit' : 'dark';
+  if (room === 'guest2') return min < 21 * 60 ? 'lit' : 'dark';
+  if (room === 'house') return min < 21 * 60 + 15 ? 'lit' : 'dark';
+  return 'dark';
+}
+export function hotelWindowsProp(...wins) {
+  let t = 0;
+  const box = (ctx, camX, nx, ny, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(nx * N - camX, ny * N, w * N, h * N); };
+  // daylight glass: grey sky in the upper panes, darker toward the sill, one bright diagonal glint per pane
+  const glass = (ctx, camX, ox, oy, dusk) => {
+    const rows = dusk ? ['#5d6a80', '#5d6a80', '#4d5d7f', '#4d5d7f', '#4d5d7f', '#39466a', '#39466a'] : ['#7d8aa0', '#7d8aa0', '#5d6a80', '#5d6a80', '#5d6a80', '#4d5d7f', '#4d5d7f'];
+    const glint = dusk ? '#7d8aa0' : '#c8d1de';
+    PANES_X.forEach((px0, side) => PANES_Y.forEach((py0) => {
+      for (let r = 0; r < 7; r++) box(ctx, camX, ox + px0, oy + py0 + r, 10, 1, rows[r]);
+      for (let r = 0; r < 2; r++) box(ctx, camX, ox + px0, oy + py0 + 7 + r, 10, 1, r ? '#334155' : '#475569');
+      for (let r = 0; r < 7; r++) {
+        const c0 = side ? 7 - r : 5 - r;
+        for (const c of [c0, c0 + 1]) if (c >= 0 && c < 10 && !(r === 6 && c === c0 + 1)) box(ctx, camX, ox + px0 + c, oy + py0 + r, 1, 1, glint);
+      }
+    }));
+  };
+  const emit = (ctx, camX, ox, oy, rows, curtains) => {
+    for (const [y0, y1, col] of rows) for (const px0 of PANES_X) box(ctx, camX, ox + px0, oy + y0, 10, y1 - y0 + 1, col);
+    if (!curtains) return;
+    for (const cx of [3, 27]) for (let y = 5; y <= 24; y++) {
+      if (y === 14 || y === 15) continue;
+      box(ctx, camX, ox + cx, oy + y, 2, 1, (y - 5) % 3 === 1 ? '#a65c2c' : '#b56e22');
+    }
+  };
+  return {
+    z: 0.5,
+    update(dt) { t += dt; },
+    draw(ctx, camX, game) {
+      for (const w of wins) {
+        const st = windowState(w.room, game.state, t);
+        if (st === 'day' || st === 'dayFire' || st === 'dusk') glass(ctx, camX, w.tx * 16, w.ty * 16, st === 'dusk');
+      }
+    },
+    glow(ctx, camX, game) {
+      for (const w of wins) {
+        const ox = w.tx * 16, oy = w.ty * 16;
+        const st = windowState(w.room, game.state, t);
+        if (st === 'lit') emit(ctx, camX, ox, oy, LIT, true);
+        else if (st === 'low') emit(ctx, camX, ox, oy, LOW, true);
+        else if (st === 'candle') {
+          const flick = Math.floor(t * 6) % 5 === 0;
+          emit(ctx, camX, ox, oy, flick ? CANDLE.slice(1) : CANDLE, false);
+        } else if (st === 'dayFire') {
+          // the parlor fire, low behind the glass: a few warm pixels along the bottom of the lower panes
+          const f = Math.floor(t * 5);
+          for (const px0 of PANES_X) for (let c = 0; c < 10; c++) {
+            if ((f + c) % 5 === 0) continue;
+            box(ctx, camX, ox + px0 + c, oy + 22, 1, 1, (f + c) % 3 ? '#b56e22' : '#a65c2c');
+            if ((f * 3 + c) % 4 === 1) box(ctx, camX, ox + px0 + c, oy + 21, 1, 1, '#d68a3f');
+          }
+        }
+      }
+    },
+    lights(game) {
+      const out = [];
+      for (const w of wins) {
+        const st = windowState(w.room, game.state, t);
+        if (st !== 'lit' && st !== 'low') continue;
+        // a pool of window light on the snow below
+        out.push({ x: (w.tx * 16 + 16) * N, y: (w.ty * 16 + 30) * N, r: st === 'lit' ? 22 : 15, warm: st === 'lit' ? 0.07 : 0.04, world: true });
+      }
+      return out;
+    },
+  };
+}
+
+// ---------------- Chimney smoke ----------------
+// Smoke from a chimney top at (x, y) world units, carried off by the wind. `hearth` chimneys answer the parlor
+// fire (thick by day and evening, a thin thread from the embers at night); others always draw a thin thread.
+export function chimneySmokeProp(x, y, kind = 'stove') {
+  let t = 0;
+  const rng = mulberry32(Math.round(x * 7 + y));
+  const puffs = [];
+  let acc = 0;
+  return {
+    z: -0.5,
+    puffs, // (read by the tests)
+    update(dt, game) {
+      t += dt;
+      const s = game && game.state;
+      const thick = kind === 'hearth' && s && s.phase !== 'NIGHT';
+      const rate = thick ? 6 : 2.2;
+      acc += dt * rate;
+      while (acc >= 1) {
+        acc -= 1;
+        puffs.push({ x: (rng() - 0.5) * 1.5, y: 0, life: 0, max: thick ? 4.5 + rng() * 2 : 2.6 + rng(), big: thick && rng() > 0.5 });
+      }
+      const wind = (game && game.weather && game.weather.wind != null ? game.weather.wind : 0.6) * 9;
+      for (const p of puffs) { p.life += dt; p.y -= dt * (5 + p.life * 0.8); p.x += dt * (wind * Math.min(1, p.life / 1.5) + Math.sin(t * 0.7 + p.max) * 0.6); }
+      for (let i = puffs.length - 1; i >= 0; i--) if (puffs[i].life >= puffs[i].max) puffs.splice(i, 1);
+    },
+    draw(ctx, camX) {
+      for (const p of puffs) {
+        const k = p.life / p.max;
+        ctx.globalAlpha = Math.max(0, 0.8 * (1 - k * k));
+        const size = (p.big ? 3 : 2) + Math.floor(k * 3);
+        ctx.fillStyle = k < 0.35 ? PAL.snow2 : k < 0.7 ? PAL.snow1 : PAL.snow0;
+        ctx.fillRect(Math.round((x + p.x - camX) * 1.5) / 1.5, Math.round((y + p.y) * 1.5) / 1.5, size * N, size * N);
+      }
+      ctx.globalAlpha = 1;
+    },
+  };
+}
+
+// ---------------- Room 4 by day: a rag rug over the scrubbed boards ----------------
+export function rugProp(x, y) {
+  let c = null;
+  return {
+    z: 0.4,
+    draw(ctx, camX) {
+      if (!c) {
+        // a braided rag rug seen from the side-on floor: banded rows of old cloth, wider toward the viewer
+        const W = 40, H = 13;
+        const [cc, g] = canvas(W, H);
+        const bands = ['#565049', '#b5ab92', '#5b3423', '#475569', '#b5ab92', '#4a1010', '#565049', '#b5ab92', '#5b3423', '#475569', '#b5ab92', '#5b3423', '#3b2a1e'];
+        for (let r = 0; r < H; r++) {
+          const inset = Math.max(0, 3 - Math.floor(r / 2)); // the far edge looks narrower
+          hline(g, inset, W - 1 - inset, r, bands[r]);
+          for (let i = inset + (r % 2); i < W - inset; i += 4) px(g, i, r, r % 3 ? '#8d8574' : '#2a1c14'); // the braid
+        }
+        for (let i = 2; i < W - 2; i += 3) px(g, i, H - 1, '#b5ab92'); // fringe
+        c = cc;
+      }
+      ctx.drawImage(c, Math.round(x - camX) - 20, y);
     },
   };
 }
@@ -550,6 +746,7 @@ export const PROP_FACTORIES = {
   stamp: stampProp,
   train: trainProp, fire: fireProp, embers: (x, y) => fireProp(x, y, { embersOnly: true }),
   patrons: patronsProp, deskFront: deskFrontProp, watcher: (x, y) => watcherProp(x, y), windowSnow: windowSnowProp,
+  hotelWindows: hotelWindowsProp, chimneySmoke: chimneySmokeProp, rug: rugProp,
   lamp: lampLight, body: bodyProp, watch: watchProp, ledger: ledgerProp, ridgeLight: ridgeLightProp,
 };
 void signText;

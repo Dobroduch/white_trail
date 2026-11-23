@@ -1,5 +1,6 @@
-// Minimal HUD: location/time label, contextual interaction prompt, hints, barks, "noted" toast,
-// and small lantern / cold cues. No bars, scores, markers or counters.
+// Minimal HUD: location/time label, contextual interaction prompt, hints, barks, the handwritten "into my notebook"
+// slip for real discoveries, Silas's passing thoughts, his current objective when it changes, and small lantern /
+// cold cues. No bars, scores, markers or counters; minor observations get no notice at all.
 import { UI, font, text, spaced, panel, keycap, wrap, UI_W, UI_H, UI_CX, UI_LEFT, UI_RIGHT } from './text.js';
 import { timeString } from '../systems/storyState.js';
 import { EVIDENCE } from '../data/evidence.js';
@@ -36,6 +37,7 @@ export class HUD {
   constructor(game) {
     this.game = game;
     this.label = null; this.hintMsg = null; this.barkMsg = null; this.toasts = []; this.titleT = null;
+    this.pendingThought = null; this.objMsg = null;
   }
   showLabel(scene, state) {
     this.label = { text: `${scene.name}  —  ${timeString(state.time)}`, t: 0 };
@@ -43,22 +45,30 @@ export class HUD {
   showTitle() { this.titleT = 0; }
   hint(msg, dur = 6) { this.hintMsg = { text: this.game.touchUI && this.game.touchUI() ? touchify(msg) : msg, t: 0, dur }; }
   bark(msg, dur = 4.2) { this.barkMsg = { text: msg, t: 0, dur }; }
-  noted(id, detail) {
-    const ev = EVIDENCE[id];
-    if (!ev) return;
-    const kind = ev.category === 'TESTIMONY' ? 'Statement noted' : detail ? 'Noted — closer look' : 'Noted';
-    this.toasts.push({ head: kind, text: ev.title, t: 0 });
+  // (kept for older callers: a minor observation is no longer announced)
+  noted(id) { void EVIDENCE[id]; }
+  // a real discovery, inked into the notebook: a paper slip whose line writes itself in
+  inked(head, str, small = false) {
+    if (this.toasts.some((t) => t.ink && t.text === str)) return;
+    this.toasts.push({ head, text: str, t: 0, ink: true, small });
     if (this.toasts.length > 3) this.toasts.shift();
   }
+  // a question crossing Silas's mind: said as a passing thought once nothing else is being said
+  thought(str) { this.pendingThought = str; }
+  objective(str) { this.objMsg = { text: str, t: 0 }; }
   item(name, id) { this.toasts.push({ head: 'Taken', text: name, icon: id, t: 0 }); }
-  clear() { this.label = null; this.hintMsg = null; this.barkMsg = null; this.toasts = []; this.titleT = null; }
+  clear() { this.label = null; this.hintMsg = null; this.barkMsg = null; this.toasts = []; this.titleT = null; this.pendingThought = null; this.objMsg = null; }
 
   update(dt) {
     if (this.label) { this.label.t += dt; if (this.label.t > 6) this.label = null; }
     if (this.hintMsg) { this.hintMsg.t += dt; if (this.hintMsg.t > this.hintMsg.dur) this.hintMsg = null; }
     if (this.barkMsg) { this.barkMsg.t += dt; if (this.barkMsg.t > this.barkMsg.dur) this.barkMsg = null; }
+    const g = this.game;
+    const talking = g.dialogue && g.dialogue.active;
     for (const t of this.toasts) t.t += dt;
-    this.toasts = this.toasts.filter((t) => t.t < 3.6);
+    this.toasts = this.toasts.filter((t) => t.t < (t.ink ? 4.6 : 3.6));
+    if (this.pendingThought && !talking && !this.barkMsg && !(g.cutsceneBlocking && g.cutsceneBlocking())) { this.bark(this.pendingThought + '', 4.4); this.barkMsg.thought = true; this.pendingThought = null; }
+    if (this.objMsg && !talking) { this.objMsg.t += dt; if (this.objMsg.t > 7.5) this.objMsg = null; }
     if (this.titleT != null) { this.titleT += dt; if (this.titleT > 7) this.titleT = null; }
   }
 
@@ -79,10 +89,30 @@ export class HUD {
         ctx.drawImage(icons, i * 16, 0, 16, 16, r.x + 1, r.y + 1, 12, 12);
         ctx.imageSmoothingEnabled = sm;
       } else { font(ctx, 6); text(ctx, r.key, r.x + r.w / 2, r.y + 9.5, UI.bone, 'center'); }
+      if (r.kind === 'notebook' && g.nbUnread) { ctx.fillStyle = '#b91c1c'; ctx.fillRect(r.x + r.w - 3.5, r.y + 1.5, 2, 2); }
       font(ctx, 3.6);
       text(ctx, r.key, r.x + r.w / 2, r.y + r.h + 4.6, hov || on ? UI.amber : UI.faint, 'center');
       if (hov && !on) { font(ctx, 4.2, { italic: true }); text(ctx, r.label, r.x + r.w / 2, r.y + r.h + 10, UI.dim, 'center'); }
     }
+    ctx.globalAlpha = 1;
+  }
+
+  // A slip of notebook paper; the line writes itself in, then the pen underlines it.
+  drawInk(ctx, t, i, touch, fadeIO) {
+    const a = fadeIO(t.t, 0.3, 3.4, 0.9);
+    ctx.globalAlpha = a;
+    font(ctx, t.small ? 4.9 : 5.4, { italic: true });
+    const w = Math.max(64, ctx.measureText(t.text).width + 14);
+    const y = touch ? 30 + i * 18 : 144 - (this.toasts.length - 1 - i) * 18;
+    const x = UI_RIGHT - 8 - w;
+    panel(ctx, x, y, w, 16, UI.paper, '#3b2f22');
+    font(ctx, 4.1, { bold: true });
+    spaced(ctx, t.head.toUpperCase(), x + 5, y + 6, UI.inkRed, 0.5);
+    const k = Math.min(1, t.t / 1.1);
+    const shown = t.text.slice(0, Math.ceil(t.text.length * k));
+    font(ctx, t.small ? 4.9 : 5.4, { italic: true });
+    text(ctx, shown, x + 6, y + 12.6, UI.ink);
+    if (k >= 1) { const u = Math.min(1, (t.t - 1.1) / 0.5); ctx.fillStyle = UI.inkRed; ctx.fillRect(x + 6, y + 13.8, (w - 12) * u, 0.5); }
     ctx.globalAlpha = 1;
   }
 
@@ -135,7 +165,17 @@ export class HUD {
       lines.forEach((l, i) => text(ctx, l, x0 + 4, bottom - h + 7 + i * 6.5, UI.dim));
       ctx.globalAlpha = 1;
     }
-    // bark: Silas's passing observation
+    // what Silas is after now, when it changes: one quiet line under the place name
+    if (this.objMsg && !g.dialogue.active) {
+      const a = fadeIO(this.objMsg.t, 0.8, 5, 1.6);
+      ctx.globalAlpha = a * 0.95;
+      const y = this.label ? 27 : 16;
+      const x0 = touch ? Math.max(12, UI_LEFT + 12) : 12;
+      font(ctx, 4.3, { bold: true }); const w = spaced(ctx, 'NOW', x0, y, UI.amber, 0.7);
+      font(ctx, 5, { italic: true }); text(ctx, this.objMsg.text, x0 + w + 4, y, UI.bone);
+      ctx.globalAlpha = 1;
+    }
+    // bark: Silas's passing observation (or a question crossing his mind)
     if (this.barkMsg && !g.dialogue.active) {
       const a = fadeIO(this.barkMsg.t, 0.4, this.barkMsg.dur - 1.2, 0.8);
       ctx.globalAlpha = a;
@@ -145,8 +185,9 @@ export class HUD {
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     }
-    // "noted" toasts — quiet, top-right
+    // toasts — quiet, top-right: taken items and the map; real discoveries as an inked slip of notebook paper
     this.toasts.forEach((t, i) => {
+      if (t.ink) { this.drawInk(ctx, t, i, touch, fadeIO); return; }
       const a = fadeIO(t.t, 0.3, 2.5, 0.8);
       ctx.globalAlpha = a;
       font(ctx, 4.5, { italic: true });

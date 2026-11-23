@@ -10,12 +10,32 @@ export function ensureCaseState(s) {
   if (!s.readings || typeof s.readings !== 'object') s.readings = {};
   if (!s.cases || typeof s.cases !== 'object') s.cases = {};
   if (!Array.isArray(s.deductions)) s.deductions = [];
+  if (!s.notebookRead || typeof s.notebookRead !== 'object') s.notebookRead = {};
   return s;
 }
+
+// ---------------- what is new in the notebook ----------------
+// state.notebookRead: 'S_x' (a clue) / 'T_D_x' (an open thread) / 'D_x' (a formed deduction) -> true once seen there.
+export function notebookKeys(s) {
+  const out = [];
+  for (const q of questions(s)) {
+    for (const id of knownStatements(s, q.id)) if (!out.includes(id)) out.push(id);
+    for (const did of threadsFor(s, q.id)) out.push(s.deductions.includes(did) ? did : 'T_' + did);
+  }
+  return out;
+}
+export function unread(s) { ensureCaseState(s); return notebookKeys(s).filter((k) => !s.notebookRead[k]); }
+export function markRead(s, key) { ensureCaseState(s); s.notebookRead[key] = true; }
+export function markAllRead(s) { ensureCaseState(s); for (const k of notebookKeys(s)) s.notebookRead[k] = true; }
 
 // ---------------- questions & statements ----------------
 export function questions(s) { return QUESTIONS.filter((q) => test(q.if, s)); }
 export function question(id) { return QUESTIONS.find((q) => q.id === id) || null; }
+
+// The questions a statement (clue) belongs to: its own, plus any it is carried over to (`qs`).
+export function qsOf(id) { const st = STATEMENTS[id]; return (st && (st.qs || [st.q])) || []; }
+// The question a clue is filed under on the Clues page: the first of its questions that is open to the player.
+export function filedUnder(s, id) { const shown = questions(s).map((q) => q.id); return qsOf(id).find((q) => shown.includes(q)) || null; }
 
 export function statementKnown(s, id) {
   const st = STATEMENTS[id];
@@ -30,8 +50,49 @@ export function statementText(s, id) {
 }
 // The journal records behind a statement that Silas has actually recorded.
 export function statementSources(s, id) { return (STATEMENTS[id].sources || []).filter((e) => s.evidence[e]); }
+// Everything filed under a clue that Silas has recorded: its sources, then the related records (`also`).
+export function clueRecords(s, id) {
+  const st = STATEMENTS[id];
+  return [...(st.sources || []), ...(st.also || [])].filter((e, i, a) => s.evidence[e] && EVIDENCE[e] && a.indexOf(e) === i);
+}
+// A clue has more to show: one of its physical records has a closer look not yet taken.
+export function clueUnexamined(s, id) {
+  return clueRecords(s, id).some((e) => EVIDENCE[e].detail && EVIDENCE[e].category !== 'TESTIMONY' && !s.evidence[e].examined);
+}
 export function knownStatements(s, qid) {
-  return Object.keys(STATEMENTS).filter((id) => (!qid || STATEMENTS[id].q === qid) && statementKnown(s, id));
+  return Object.keys(STATEMENTS).filter((id) => (!qid || qsOf(id).includes(qid)) && statementKnown(s, id));
+}
+
+// ---------------- threads (the Deductions board) ----------------
+// A deduction is first an open question (`ask`) that one of its clues raises. It appears on the board as soon as any
+// clue of its pairs is known, and is answered by connecting a clue: the connection holds when the chosen clue and
+// some other known clue make one of its authored pairs. Only the current question's threads are ever shown.
+// `raisedBy` (optional) names the clues that raise the question; by default any clue of its pairs does.
+export function raisersOf(did) { const d = DEDUCTIONS[did]; return d.raisedBy || [...new Set(d.pairs.flat())]; }
+export function threadOpen(s, did) {
+  const d = DEDUCTIONS[did];
+  return !!d && raisersOf(did).some((x) => statementKnown(s, x));
+}
+export function threadsFor(s, qid) {
+  return Object.keys(DEDUCTIONS).filter((did) => DEDUCTIONS[did].q === qid && (s.deductions.includes(did) || threadOpen(s, did)));
+}
+// The known clues of a thread, the one that raised it first (an open thread shows only that one).
+export function threadClues(s, did) {
+  const out = raisersOf(did).filter((x) => statementKnown(s, x));
+  for (const p of DEDUCTIONS[did].pairs) for (const x of p) if (statementKnown(s, x) && !out.includes(x)) out.push(x);
+  return out;
+}
+// Can the thread be answered with what is known (two clues of one pair)? Used by hints and the board's cue.
+export function threadAnswerable(s, did) { return DEDUCTIONS[did].pairs.some((p) => p.every((x) => statementKnown(s, x))); }
+// Answer a thread with a clue. Returns { ok:false } | { ok:true, id, fresh }.
+export function connect(s, did, sid) {
+  const d = DEDUCTIONS[did];
+  if (!d || !statementKnown(s, sid)) return { ok: false };
+  if (s.deductions.includes(did)) return { ok: true, id: did, fresh: false };
+  const hit = d.pairs.some((p) => p.includes(sid) && p.every((x) => statementKnown(s, x)));
+  if (!hit) return { ok: false };
+  s.deductions.push(did);
+  return { ok: true, id: did, fresh: true };
 }
 
 // ---------------- deductions ----------------
@@ -64,11 +125,21 @@ export function committed(s, caseId) { return (s.cases && s.cases[caseId]) || nu
 function lockedDeduction(s, did) { const c = caseOfQuestion(DEDUCTIONS[did].q); return !!(c && committed(s, c)); }
 
 // Readings: null until the player picks one. Cycling goes unset -> first -> second -> first ...
+// A reading with an `if` is not offered until the evidence that suggests it has been found (the interpretation
+// "comes to mind"); a reading already chosen stays available whatever happens.
 export function readingOf(s, did) { return (s.readings && s.readings[did]) || null; }
+export function readingUnlocked(s, did, key) {
+  const r = DEDUCTIONS[did] && DEDUCTIONS[did].readings && DEDUCTIONS[did].readings[key];
+  return !!r && (!r.if || test(r.if, s) || readingOf(s, did) === key);
+}
+export function readingsOffered(s, did) {
+  const d = DEDUCTIONS[did];
+  return d && d.readings ? Object.keys(d.readings).filter((k) => readingUnlocked(s, did, k)) : [];
+}
 export function setReading(s, did, key) {
   const d = DEDUCTIONS[did];
   if (!d || !d.readings || !s.deductions.includes(did) || lockedDeduction(s, did)) return false;
-  if (key != null && !d.readings[key]) return false;
+  if (key != null && (!d.readings[key] || !readingUnlocked(s, did, key))) return false;
   ensureCaseState(s);
   if (key == null) delete s.readings[did]; else s.readings[did] = key;
   return true;
@@ -76,7 +147,8 @@ export function setReading(s, did, key) {
 export function cycleReading(s, did, dir = 1) {
   const d = DEDUCTIONS[did];
   if (!d || !d.readings) return false;
-  const keys = Object.keys(d.readings);
+  const keys = readingsOffered(s, did);
+  if (!keys.length) return false;
   const cur = readingOf(s, did);
   const i = cur ? keys.indexOf(cur) : dir > 0 ? -1 : keys.length;
   return setReading(s, did, keys[(i + dir + keys.length) % keys.length]);
@@ -88,7 +160,8 @@ export function cycleReading(s, did, dir = 1) {
 export function conclusionsFor(s, qid) {
   return Object.entries(CONCLUSIONS).filter(([, c]) => c.q === qid).map(([id, c]) => {
     const rows = Object.entries(c.requires).map(([did, key]) => ({ did, key, formed: s.deductions.includes(did), chosen: readingOf(s, did), match: readingOf(s, did) === key }));
-    const available = rows.every((r) => r.formed);
+    // on the table only once every deduction it rests on is formed and every reading it needs has come to mind
+    const available = rows.every((r) => r.formed && readingUnlocked(s, r.did, r.key));
     return { id, c, rows, available, supported: available && rows.every((r) => r.match) };
   });
 }
@@ -126,7 +199,8 @@ export function caseOpenForDecision(s, caseId) {
 // ---------------- saves ----------------
 // Saves written before the case system: add the new fields, drop deduction ids that no longer exist, and apply what a
 // recorded closer look teaches (onExamine) so an old save that had examined the furrow knows about the wheel pit.
-export function migrateCaseState(s) {
+// `legacy`: the save predates the redesigned notebook (it has no notebookRead of its own).
+export function migrateCaseState(s, { legacy = false } = {}) {
   ensureCaseState(s);
   // people added in a later chapter (Rusk, Vale, Ada Bell) join an older save with their starting state
   const fresh = newState();
@@ -139,5 +213,7 @@ export function migrateCaseState(s) {
     const ev = EVIDENCE[id];
     if (ev && ev.onExamine && rec && rec.examined) apply(ev.onExamine.filter((e) => e.set), s);
   }
+  // saves from before the redesigned notebook: everything already in it counts as read (no wall of "new" marks)
+  if (legacy) markAllRead(s);
   return s;
 }

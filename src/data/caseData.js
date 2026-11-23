@@ -1,10 +1,14 @@
-// The case-solving data: questions, the short key statements the deduction page works with, deductions (each formed
-// from an authored pair of statements, most with two plausible readings), and the conclusions those readings can
-// add up to. All of it is conditional on explicit story state; the rules live in systems/caseSystem.js.
+// The case-solving data: questions, the short clues (key statements) the notebook shows, deductions (each the
+// answer to a question Silas asks himself, formed from an authored pair of clues, most with two plausible readings),
+// and the conclusions those readings can add up to. All of it is conditional on explicit story state; the rules
+// live in systems/caseSystem.js.
 //
-// The flow, after the Sherlock Holmes games:
-//   evidence (journal) ─► key statements (short, merged, per question) ─► pair two ─► deduction
-//   deduction ─► choose one of its readings ─► the chosen readings add up to a conclusion ─► commit to one.
+// The flow, after the Sherlock Holmes games, kept deliberately small on the page:
+//   evidence (journal records) ─► clues (one short entry per discovery, merged, per question)
+//   a clue raises a question (`ask`: an open thread on the Deductions board) ─► connect the clue that answers it
+//   ─► deduction: an established fact ─► choose one of its readings (interpretations; some appear only once the
+//   evidence that suggests them has been found: reading.if) ─► the readings add up to a conclusion ─► commit to one.
+// Evidence that does not make a clue of its own is filed under the clue it belongs to (`also`) and read there.
 // The same deductions support several conclusions; small details in dialogue and the scenes (listed as `details`)
 // bear on which reading holds. Nothing in the UI says which conclusion is true while the player is deciding:
 // `truth` is read only after commitment, by the aftermath.
@@ -25,7 +29,7 @@ export const QUESTIONS = [
 // first text whose condition holds. `label` is the short list name.
 export const STATEMENTS = {
   // --- Q_HALE ---
-  S_MISSING: { q: 'Q_HALE', label: 'Gone three nights', text: 'Hale went out after dark three nights ago and did not come back.', sources: ['T_FINCH_HALE', 'ROAD_NOTICE', 'T_GABLE_HALE'] },
+  S_MISSING: { q: 'Q_HALE', label: 'Gone three nights', text: 'Hale went out after dark three nights ago and did not come back.', sources: ['T_FINCH_HALE', 'ROAD_NOTICE', 'T_GABLE_HALE'], also: ['T_FINCH_PAPERS', 'T_FINCH_LATE'] },
   S_LITTLE_BLOOD: { q: 'Q_HALE', label: 'Little blood beneath him', text: 'The snow under the body is nearly clean: a few dark spots, no more.', sources: ['SAWMILL_BODY'] },
   S_OLD_BLOOD: { q: 'Q_HALE', label: 'Old, frozen blood', text: 'The blood on his coat froze long before tonight, and his hands are frozen hard as wood.', sources: ['SAWMILL_BODY'], if: { examined: 'SAWMILL_BODY' } },
   S_HOISTED: { q: 'Q_HALE', label: 'Hauled up by hand', text: 'He was hauled up over the beam on new rope and tied off at the post.', sources: ['SAWMILL_ROPE'] },
@@ -36,23 +40,30 @@ export const STATEMENTS = {
   ] },
   S_MARKS: { q: 'Q_HALE', label: 'Marks cut in the post', text: 'Fresh tally marks, cut at eye height and facing the path.', sources: ['SAWMILL_MARKS'] },
   S_LEDGER: { q: 'Q_HALE', label: 'The Pale Order ledger', text: 'The Pale Order\'s old accounts, thrown on a dead fire and left half-burned.', sources: ['SAWMILL_LEDGER'] },
-  S_SCREAM: { q: 'Q_HALE', label: 'The scream at 02:15', text: 'A scream from the mill at 02:15. Mrs. Gable knew at once where it came from.', sources: ['T_GABLE_NIGHT'], if: { flag: 'heardScream' } },
+  S_SCREAM: { q: 'Q_HALE', label: 'The scream at 02:15', text: 'A scream from the mill at 02:15. Mrs. Gable knew at once where it came from.', sources: ['T_GABLE_NIGHT'], also: ['T_GABLE_VOICE'], if: { flag: 'heardScream' } },
   S_TRACKS: { q: 'Q_HALE', label: 'Fresh tracks to the mill', text: 'One set of prints went down the creek path fast tonight, before me.', sources: ['CREEK_TRACKS'] },
-  S_RIDGE: { q: 'Q_HALE', label: 'A watcher on the ridge', text: 'A lantern on the ridge watched me find him, then went dark.', sources: [], if: { flag: 'ridgeLightSeen' } },
-  S_PIT: { q: 'Q_HALE', label: 'The hollow in the pit', text: 'Something man-sized lay in the wheel pit, on the ice, before it was dragged out.', sources: ['PIT_HOLLOW'] },
+  // the lantern on the ridge: one sighting, carried from the first night's question to the second day's
+  S_RIDGE: { q: 'Q_HALE', qs: ['Q_ORDER', 'Q_HALE'], label: 'A watcher on the ridge', sources: [], also: ['T_FINCH_RIDGE'], if: { flag: 'ridgeLightSeen' }, variants: [
+    { if: { flag: 'ch2Started' }, text: 'The night I found Hale, a lantern on the ridge watched me, swung once, and went dark.' },
+    { if: {}, text: 'A lantern on the ridge watched me find him, then went dark.' },
+  ] },
+  S_PIT: { q: 'Q_HALE', label: 'The hollow in the pit', text: 'Something man-sized lay in the wheel pit, on the ice, before it was dragged out.', sources: ['PIT_HOLLOW'], also: ['T_GABLE_PIT'] },
   // --- Q_ROOM4 ---
-  S_BOARDS: { q: 'Q_ROOM4', label: 'Blood scrubbed out', text: 'Someone scrubbed blood out of the floor of Room 4 with lye.', sources: ['HOTEL_ROOM4_BOARDS'], if: { examined: 'HOTEL_ROOM4_BOARDS' } },
+  S_BOARDS: { q: 'Q_ROOM4', label: 'Blood scrubbed out', sources: ['HOTEL_ROOM4_BOARDS', 'ROOM4_RUG'], if: { examined: 'HOTEL_ROOM4_BOARDS' }, variants: [
+    { if: { evidence: 'ROOM4_RUG' }, text: 'Someone scrubbed blood out of the floor of Room 4 with lye, then scrubbed it again and covered it while I was out.' },
+    { if: {}, text: 'Someone scrubbed blood out of the floor of Room 4 with lye.' },
+  ] },
   S_GABLE_GUEST: { q: 'Q_ROOM4', label: 'Gable: a sick guest', sources: ['T_GABLE_ROOM4', 'T_GABLE_REGISTER'], variants: [
     { if: { evidence: 'T_GABLE_REGISTER' }, text: 'Mrs. Gable says a guest took ill in Room 4, and paid to be kept out of the book.' },
     { if: {}, text: 'Mrs. Gable says a guest took ill in Room 4.' },
   ] },
   S_REGISTER: { q: 'Q_ROOM4', label: 'No one in the register', text: 'The register shows no guest in Room 4 for a fortnight.', sources: ['HOTEL_REGISTER'] },
   // --- Q_ORDER (Chapter 2) ---
-  S2_FREIGHT: { q: 'Q_ORDER', label: 'The scraped freight entry', sources: ['STORE_LEDGER'], variants: [
+  S2_FREIGHT: { q: 'Q_ORDER', label: 'The scraped freight entry', sources: ['STORE_LEDGER'], also: ['STORE_OIL'], variants: [
     { if: { examined: 'STORE_LEDGER' }, text: 'Forty pounds came up on Rusk\'s last freight, and the book was scraped to say lamp oil. Under it: "Powd—".' },
     { if: {}, text: 'Rusk\'s last freight came up from the railhead nine days ago.' },
   ] },
-  S2_COIN: { q: 'Q_ORDER', label: 'Paid in coin, fetched at night', sources: ['T_RUSK_FREIGHT'], variants: [
+  S2_COIN: { q: 'Q_ORDER', label: 'Paid in coin, fetched at night', sources: ['T_RUSK_FREIGHT'], also: ['T_RUSK_SCRAPED'], variants: [
     { if: { evidence: 'T_RUSK_SCRAPED' }, text: 'Rusk: the freight was paid in coin and fetched after dark, no name on it; the page "came to him like that".' },
     { if: {}, text: 'Rusk: the freight was paid in coin and fetched after dark, no name on it.' },
   ] },
@@ -60,14 +71,18 @@ export const STATEMENTS = {
     { if: { examined: 'STORE_CRATE' }, text: 'An empty GIANT POWDER crate in Rusk\'s back corner, a paper band in the sawdust dated this autumn.' },
     { if: {}, text: 'A long crate in Rusk\'s back corner, packed with sawdust, empty.' },
   ] },
-  S2_CACHE: { q: 'Q_ORDER', label: 'Powder in a miner\'s grave', text: 'Dynamite, fuse and caps buried in Amos Pell\'s grave, wrapped in an old cavalry jacket.', sources: ['GRAVE_DISTURBED'], if: { examined: 'GRAVE_DISTURBED' } },
-  S2_HEELS: { q: 'Q_ORDER', label: 'Riding boots at the grave', text: 'Riding-boot prints around the opened grave: a narrow heel, a long straight sole.', sources: ['GRAVE_PRINTS'] },
-  S2_MILL_HEELS: { q: 'Q_ORDER', label: 'Riding boots at the mill', text: 'The same narrow heel under the mill roof, the night Hale was hung.', sources: ['SAWMILL_BOOTPRINTS'], if: { all: [{ flag: 'ch2Started' }, { evidence: 'SAWMILL_BOOTPRINTS' }] } },
+  S2_CACHE: { q: 'Q_ORDER', label: 'Powder in a miner\'s grave', text: 'Dynamite, fuse and caps buried in Amos Pell\'s grave, wrapped in an old cavalry jacket.', sources: ['GRAVE_DISTURBED'], also: ['GRAVE_CACHE', 'GRAVE_STONE', 'T_VALE_ORDER', 'T_VALE_PELL'], if: { examined: 'GRAVE_DISTURBED' } },
+  S2_HEELS: { q: 'Q_ORDER', label: 'Riding boots at the grave', text: 'Riding-boot prints around the opened grave: a narrow heel, a long straight sole.', sources: ['GRAVE_PRINTS'], also: ['T_FINCH_BOOTS', 'STORE_BOOTS'] },
+  // One discovery, one entry: the boot prints under the mill roof belong to the sheriff's question on the first night
+  // and carry over to the Order's question on the second day (`qs`: listed under the first of them shown).
+  S2_MILL_HEELS: { q: 'Q_ORDER', qs: ['Q_ORDER', 'Q_HALE'], label: 'Riding boots at the mill', sources: ['SAWMILL_BOOTPRINTS'], variants: [
+    { if: { flag: 'ch2Started' }, text: 'The same narrow heel stood under the mill roof, the night Hale was hung.' },
+    { if: {}, text: 'Someone in riding boots stood under the mill roof, sheltered, facing the wheel.' },
+  ] },
   S2_WIRE: { q: 'Q_ORDER', label: 'The wire was cut', text: 'The telegraph wire was cut clean, and the end bent back to look torn.', sources: ['TOWER_WIRE'], if: { examined: 'TOWER_WIRE' } },
-  S2_LINE_DEAD: { q: 'Q_ORDER', label: 'Dead since I came', text: 'Ada Bell: the line went dead at six the evening I arrived; the next mile is cut too.', sources: ['T_ADA_LINE'] },
-  S2_SOOT: { q: 'Q_ORDER', label: 'A lantern kept at the tower', text: 'Fresh soot over a lantern hook on the tower platform, which looks straight down on the mill.', sources: ['TOWER_SOOT'] },
-  S2_FIGURE: { q: 'Q_ORDER', label: 'Vale\'s Pale Figure', text: 'Vale: the Pale Figure carries a lamp on the ridge, and those who follow it to the old workings do not come down.', sources: ['T_VALE_FIGURE'] },
-  S2_WATCHER: { q: 'Q_ORDER', label: 'The watcher on the ridge', text: 'Last night a lantern on the ridge watched me find Hale, swung once, and went dark.', sources: [], if: { all: [{ flag: 'ch2Started' }, { flag: 'ridgeLightSeen' }] } },
+  S2_LINE_DEAD: { q: 'Q_ORDER', label: 'Dead since I came', text: 'Ada Bell: the line went dead at six the evening I arrived; the next mile is cut too.', sources: ['T_ADA_LINE'], also: ['T_ADA_MEND', 'T_CONDUCTOR_PASS'] },
+  S2_SOOT: { q: 'Q_ORDER', label: 'A lantern kept at the tower', text: 'Fresh soot over a lantern hook on the tower platform, which looks straight down on the mill.', sources: ['TOWER_SOOT'], also: ['TOWER_VIEW'] },
+  S2_FIGURE: { q: 'Q_ORDER', label: 'Vale\'s Pale Figure', text: 'Vale: the Pale Figure carries a lamp on the ridge, and those who follow it to the old workings do not come down.', sources: ['T_VALE_FIGURE'], also: ['T_GABLE_VALE'] },
   S2_HALE_ASKED: { q: 'Q_ORDER', label: 'Hale asked about the freight', sources: ['T_RUSK_HALE', 'T_FINCH_FREIGHT'], variants: [
     { if: { evidence: 'T_RUSK_HALE' }, text: 'Hale read Rusk\'s freight book "like scripture" a fortnight before he died, and asked about that freight.' },
     { if: {}, text: 'Hale went out the last night with one of Rusk\'s freight bills folded in his coat.' },
@@ -78,12 +93,15 @@ export const STATEMENTS = {
 // pairs:    authored pairs of statements that form it (alternative routes)
 // readings: two plausible interpretations; the player chooses one (state.readings[id])
 // details:  journal records that bear on which reading holds (shown once recorded; never ranked)
-// links:    other deductions it bears on (drawn as edges on the mind map)
-// map:      position on the question's mind map, in 0..1 of the map area
+// ask:      the question its first clue raises (an open thread on the board until it is answered)
+// raisedBy: (optional) the clues that raise it; by default any clue of its pairs
+// links:    other deductions it bears on (drawn as edges on the board)
+// map:      position on the question's board, in 0..1 of the board area
 // IDs kept from the first version (D_SCENE_ARRANGED, D_SAME_COUNTING, D_UNWRITTEN_GUEST) so existing saves keep them.
 export const DEDUCTIONS = {
   D_SCENE_ARRANGED: {
     q: 'Q_HALE', title: 'He did not bleed here',
+    ask: 'Did he die where he hangs?',
     pairs: [['S_LITTLE_BLOOD', 'S_HOISTED'], ['S_LITTLE_BLOOD', 'S_FROM_CREEK']],
     text: 'Too little blood beneath him for where he hangs, and the rest of the scene shows labour: a rope hauled over a beam and tied off, a body brought along the ground. Hands made this display.',
     limits: 'Who did it, and why they wanted him seen this way, the evidence does not yet say.',
@@ -93,10 +111,12 @@ export const DEDUCTIONS = {
     },
     details: ['SAWMILL_DRAG', 'SAWMILL_ROPE', 'T_FINCH_RIDGE'],
     links: ['D_LONG_DEAD', 'D_SAME_COUNTING'],
-    map: { x: 0.2, y: 0.25 },
+    map: { x: 0.2, y: 0.22 },
   },
   D_LONG_DEAD: {
     q: 'Q_HALE', title: 'Old blood, three nights gone',
+    ask: 'When did he die?',
+    raisedBy: ['S_OLD_BLOOD', 'S_MISSING'],
     pairs: [['S_OLD_BLOOD', 'S_MISSING']],
     text: 'The blood on his coat froze long before tonight, and nobody has seen him since he went out three nights ago.',
     limits: 'Where he was in between, the body alone cannot tell me.',
@@ -106,45 +126,50 @@ export const DEDUCTIONS = {
     },
     details: ['SAWMILL_BODY', 'PIT_HOLLOW', 'T_GABLE_HALE'],
     links: ['D_THE_SCREAM'],
-    map: { x: 0.2, y: 0.75 },
+    map: { x: 0.0, y: 0.72 },
   },
   D_SAME_COUNTING: {
     q: 'Q_HALE', title: 'The same counting',
+    ask: 'What do the marks on the post count?',
     pairs: [['S_MARKS', 'S_LEDGER']],
     text: 'The strokes cut into the post are grouped the way the tallies run down the burned ledger\'s columns. Whoever carved them knew those books, or wanted the finder to think of them.',
     limits: 'What the marks count, I cannot yet read.',
     readings: {
       CLAIM: { label: 'A claim', text: 'The Order\'s own mark: whoever killed him is putting the Order\'s name to it.' },
-      DRESSING: { label: 'Set dressing', text: 'Left to be found: someone wants the finder to think of the Order.' },
+      DRESSING: { label: 'Set dressing', text: 'Left to be found: someone wants the finder to think of the Order.', if: { examined: 'SAWMILL_MARKS' } },
     },
     details: ['SAWMILL_MARKS', 'SAWMILL_LEDGER', 'T_FINCH_RIDGE'],
     links: [],
-    map: { x: 0.82, y: 0.25 },
+    map: { x: 0.8, y: 0.22 },
   },
   D_THE_SCREAM: {
     q: 'Q_HALE', title: 'A scream, and someone abroad',
+    ask: 'Whose scream was it?',
     pairs: [['S_SCREAM', 'S_TRACKS'], ['S_SCREAM', 'S_RIDGE']],
     text: 'A scream from the mill at 02:15, and someone else out by the creek tonight: fresh prints going down, a lantern on the ridge.',
     limits: 'Whose voice it was, or whose lantern, I have not seen.',
     readings: {
       DEATH: { label: 'His death', text: 'The scream was Hale\'s: he was killed at the mill at 02:15.' },
-      SUMMONS: { label: 'A summons', text: 'The scream was meant to be heard: someone wanted him found tonight.' },
+      SUMMONS: { label: 'A summons', text: 'The scream was meant to be heard: someone wanted him found tonight.', if: { any: [{ evidence: 'T_GABLE_VOICE' }, { deduction: 'D_LONG_DEAD' }] } },
     },
     details: ['T_GABLE_VOICE', 'CREEK_TRACKS', 'T_GABLE_NIGHT'],
     links: [],
-    map: { x: 0.82, y: 0.75 },
+    map: { x: 1.0, y: 0.72 },
   },
   D_WHERE_KEPT: { // only from the optional wheel pit
     q: 'Q_HALE', title: 'Kept in the cold',
+    ask: 'Where was he, those three nights?',
+    raisedBy: ['S_PIT'], // only the optional wheel pit raises this one
     pairs: [['S_PIT', 'S_FROM_CREEK'], ['S_PIT', 'S_OLD_BLOOD']],
     text: 'The furrow comes out from the wheel pit, where something the size of a man lay frozen long enough for the frost to grow over it, before it was hauled up to the wheel.',
     limits: 'Who put him there, and who hauled him out tonight, it does not say.',
     details: ['PIT_HOLLOW'],
     links: ['D_LONG_DEAD', 'D_SCENE_ARRANGED'],
-    map: { x: 0.5, y: 0.75 },
+    map: { x: 0.5, y: 0.5 },
   },
   D_UNWRITTEN_GUEST: {
     q: 'Q_ROOM4', title: 'An unwritten guest',
+    ask: 'Who stayed in Room 4?',
     pairs: [['S_GABLE_GUEST', 'S_REGISTER']],
     text: 'Mrs. Gable says a guest took ill in Room 4. Her own register shows no one in Room 4 for a fortnight. Either the guest was kept off the books, or there was no guest at all.',
     limits: 'Whose blood was scrubbed from the floor, and why it was hidden, remains open.',
@@ -158,6 +183,8 @@ export const DEDUCTIONS = {
 Object.assign(DEDUCTIONS, {
   D2_BOUGHT_QUIET: {
     q: 'Q_ORDER', title: 'Bought quietly',
+    ask: 'What came up on Rusk\'s last freight?',
+    raisedBy: ['S2_FREIGHT'],
     pairs: [['S2_FREIGHT', 'S2_COIN'], ['S2_FREIGHT', 'S2_CRATE']],
     text: 'Powder came up on Rusk\'s freight this autumn, paid for in coin, collected in the dark, and entered in the book as lamp oil.',
     limits: 'Who paid, Rusk says he never asked. Whether he scraped the page himself, I cannot tell.',
@@ -167,12 +194,13 @@ Object.assign(DEDUCTIONS, {
   },
   D2_GRAVE_POWDER: {
     q: 'Q_ORDER', title: 'Powder in the ground',
+    ask: 'What became of the powder?',
     pairs: [['S2_CACHE', 'S2_CRATE'], ['S2_CACHE', 'S2_FREIGHT']],
     text: 'There is dynamite in Amos Pell\'s grave, and a crate that held dynamite stands empty in Rusk\'s store.',
     limits: 'Who buried it, and what for, the grave does not say.',
     readings: {
       OLD: { label: 'Left from the war', text: 'An old military cache, wrapped in a dead trooper\'s jacket and kept in the ground for thirty years.' },
-      NEW: { label: 'This winter\'s freight', text: 'New powder, bought this autumn and hidden in the grave. The old jacket is only a wrapping.' },
+      NEW: { label: 'This winter\'s freight', text: 'New powder, bought this autumn and hidden in the grave. The old jacket is only a wrapping.', if: { any: [{ examined: 'GRAVE_CACHE' }, { examined: 'STORE_CRATE' }] } },
     },
     details: ['GRAVE_CACHE', 'STORE_CRATE'],
     links: ['D2_SAME_HEELS'],
@@ -180,6 +208,7 @@ Object.assign(DEDUCTIONS, {
   },
   D2_SAME_HEELS: {
     q: 'Q_ORDER', title: 'The same boots',
+    ask: 'Whose riding boots?',
     pairs: [['S2_HEELS', 'S2_MILL_HEELS']],
     text: 'The riding boots that stood under the mill roof the night Hale was hung have stood by the opened grave too.',
     limits: 'Old troopers keep their boots, Finch says. That is a good many men.',
@@ -189,12 +218,13 @@ Object.assign(DEDUCTIONS, {
   },
   D2_CUT_OFF: {
     q: 'Q_ORDER', title: 'Cut off on purpose',
+    ask: 'Why is the telegraph dead?',
     pairs: [['S2_WIRE', 'S2_LINE_DEAD']],
     text: 'The line did not fail in the storm. It was cut, the evening I came, and a mile more of it along the ridge.',
     limits: 'Whose hand held the cutters, there is nothing up there to say.',
     readings: {
       OUT: { label: 'To keep word in', text: 'Cut so that no word of Hale\'s death could go out of the valley.' },
-      IN: { label: 'To keep help out', text: 'Cut so that nobody can be sent for, until something here is done.' },
+      IN: { label: 'To keep help out', text: 'Cut so that nobody can be sent for, until something here is done.', if: { any: [{ evidence: 'T_ADA_MEND' }, { evidence: 'T_CONDUCTOR_PASS' }] } },
     },
     details: ['T_ADA_LINE', 'T_CONDUCTOR_PASS', 'T_ADA_MEND'],
     links: [],
@@ -202,12 +232,13 @@ Object.assign(DEDUCTIONS, {
   },
   D2_TOWER_LIGHT: {
     q: 'Q_ORDER', title: 'The light on the ridge',
-    pairs: [['S2_SOOT', 'S2_WATCHER'], ['S2_SOOT', 'S2_FIGURE']],
+    ask: 'Whose is the light on the ridge?',
+    pairs: [['S2_SOOT', 'S_RIDGE'], ['S2_SOOT', 'S2_FIGURE']],
     text: 'Somebody keeps a lantern at the telegraph tower, where the whole valley can be seen. A lantern on the ridge is what the town calls the Pale Figure.',
     limits: 'Who holds the lantern, I have not seen.',
     readings: {
-      FIGURE: { label: 'The Pale Figure\'s lamp', text: 'The thing the Reverend preaches walks the ridge with its lamp, as the town says.' },
-      SIGNAL: { label: 'A man, signalling', text: 'A man stands up there with a lantern to watch, and to signal down into the valley.' },
+      FIGURE: { label: 'The Pale Figure\'s lamp', text: 'The thing the Reverend preaches walks the ridge with its lamp, as the town says.', if: { any: [{ evidence: 'T_VALE_FIGURE' }, { evidence: 'T_GABLE_VALE' }] } },
+      SIGNAL: { label: 'A man, signalling', text: 'A man stands up there with a lantern to watch, and to signal down into the valley.', if: { any: [{ evidence: 'TOWER_VIEW' }, { flag: 'ridgeLightSeen' }] } },
     },
     details: ['TOWER_SOOT', 'TOWER_VIEW', 'T_VALE_FIGURE'],
     links: ['D2_CUT_OFF'],
@@ -215,6 +246,8 @@ Object.assign(DEDUCTIONS, {
   },
   D2_HALE_KNEW: {
     q: 'Q_ORDER', title: 'Hale was on the same trail',
+    ask: 'What was Hale asking about, before he died?',
+    raisedBy: ['S2_HALE_ASKED'],
     pairs: [['S2_HALE_ASKED', 'S2_FREIGHT'], ['S2_HALE_ASKED', 'S2_COIN']],
     text: 'A fortnight before he died, Sheriff Hale was asking about the same freight I am asking about now.',
     limits: 'That he died for asking, I believe. I cannot prove it.',
@@ -313,16 +346,17 @@ export const OPEN_OUTCOMES = {
 };
 export const OPEN_OUTCOME = OPEN_OUTCOMES.HALE; // (the first chapter's name for it)
 
-// Mind-map positions of the key statements (0..1 of the map area), around the deductions they support. Deduction
-// positions are on the deductions themselves (`map`). Only formed deductions and their supporting statements are drawn.
+// Board positions of the clues (0..1 of the board area), around the deductions they support (a clue shared by two
+// questions may give a position per question). Deduction positions are on the deductions themselves (`map`). Only
+// the current question's threads and the clues joined to them are drawn.
 export const STATEMENT_MAP = {
   S_LITTLE_BLOOD: { x: 0.0, y: 0.0 }, S_HOISTED: { x: 0.33, y: 0.0 }, S_FROM_CREEK: { x: 0.0, y: 0.5 },
   S_MARKS: { x: 0.67, y: 0.0 }, S_LEDGER: { x: 1.0, y: 0.0 },
   S_OLD_BLOOD: { x: 0.0, y: 1.0 }, S_MISSING: { x: 0.33, y: 1.0 },
-  S_SCREAM: { x: 0.67, y: 1.0 }, S_TRACKS: { x: 1.0, y: 1.0 }, S_RIDGE: { x: 1.0, y: 0.5 },
+  S_SCREAM: { x: 0.67, y: 1.0 }, S_TRACKS: { x: 1.0, y: 1.0 }, S_RIDGE: { x: 1.0, y: 0.5, Q_ORDER: { x: 1.0, y: 1.0 } },
   S_PIT: { x: 0.5, y: 0.5 },
   S_GABLE_GUEST: { x: 0.1, y: 0.15 }, S_REGISTER: { x: 0.9, y: 0.15 }, S_BOARDS: { x: 0.5, y: 0.95 },
   S2_FREIGHT: { x: 0.0, y: 0.0 }, S2_CRATE: { x: 0.3, y: 0.0 }, S2_CACHE: { x: 0.58, y: 0.0 }, S2_HEELS: { x: 1.0, y: 0.0 },
-  S2_COIN: { x: 0.0, y: 0.46 }, S2_HALE_ASKED: { x: 0.3, y: 0.6 }, S2_MILL_HEELS: { x: 1.0, y: 0.48 }, S2_FIGURE: { x: 1.0, y: 0.66 },
-  S2_WIRE: { x: 0.0, y: 1.0 }, S2_LINE_DEAD: { x: 0.33, y: 1.0 }, S2_SOOT: { x: 0.64, y: 1.0 }, S2_WATCHER: { x: 1.0, y: 1.0 },
+  S2_COIN: { x: 0.0, y: 0.46 }, S2_HALE_ASKED: { x: 0.3, y: 0.6 }, S2_MILL_HEELS: { x: 1.0, y: 0.48 },  S2_FIGURE: { x: 1.0, y: 0.66 },
+  S2_WIRE: { x: 0.0, y: 1.0 }, S2_LINE_DEAD: { x: 0.33, y: 1.0 }, S2_SOOT: { x: 0.64, y: 1.0 },
 };

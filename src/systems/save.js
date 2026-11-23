@@ -37,7 +37,7 @@ export function loadGame() {
     // A character recorded dead stays dead, whatever defaults say.
     for (const [id, c] of Object.entries(s.chars || {})) if (c && c.alive === false) merged.chars[id].alive = false;
     // Saves from before the case system (same version 1): new fields, retired deduction ids, onExamine knowledge.
-    migrateCaseState(merged);
+    migrateCaseState(merged, { legacy: !s.notebookRead });
     return merged;
   } catch (err) {
     console.warn('[save] save data unreadable, ignoring it:', err.message);

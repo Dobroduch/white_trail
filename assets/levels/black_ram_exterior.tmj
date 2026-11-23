@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 17,
- "nextobjectid": 19,
+ "nextobjectid": 22,
  "backgroundcolor": "#05070c",
  "properties": [
   {
@@ -66,6 +66,11 @@
   },
   {
    "name": "chapter2",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "atmosphere",
    "type": "bool",
    "value": true
   }
@@ -3757,22 +3762,14 @@
     0,
     0,
     0,
-    14,
-    15,
     0,
     0,
-    14,
-    15,
     0,
     0,
     0,
     0,
-    14,
-    15,
     0,
     0,
-    14,
-    15,
     0,
     0,
     0,
@@ -3817,22 +3814,14 @@
     0,
     0,
     0,
-    16,
-    17,
     0,
     0,
-    16,
-    17,
     0,
     0,
     0,
     0,
-    16,
-    17,
     0,
     0,
-    16,
-    17,
     0,
     0,
     0,
@@ -3982,8 +3971,6 @@
     0,
     0,
     0,
-    14,
-    15,
     0,
     0,
     0,
@@ -3997,8 +3984,6 @@
     0,
     0,
     0,
-    14,
-    15,
     0,
     0,
     0,
@@ -4009,8 +3994,28 @@
     0,
     0,
     0,
-    14,
-    15,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     0,
     0,
     0,
@@ -4042,8 +4047,6 @@
     0,
     0,
     0,
-    16,
-    17,
     0,
     0,
     0,
@@ -4057,8 +4060,6 @@
     0,
     0,
     0,
-    16,
-    17,
     0,
     0,
     0,
@@ -4069,8 +4070,12 @@
     0,
     0,
     0,
-    16,
-    17,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     0,
     0,
     0,
@@ -4816,8 +4821,6 @@
     0,
     0,
     0,
-    14,
-    15,
     0,
     0,
     0,
@@ -4876,8 +4879,10 @@
     0,
     0,
     0,
-    16,
-    17,
+    0,
+    0,
+    0,
+    0,
     0,
     0,
     0,
@@ -5900,11 +5905,6 @@
      "point": true,
      "properties": [
       {
-       "name": "bark",
-       "type": "string",
-       "value": "The Black Ram by day: the porch swept, the lamp out, every curtain drawn."
-      },
-      {
        "name": "do",
        "type": "string",
        "value": "[{\"set\":{\"forecourtDaySeen\":true}}]"
@@ -5918,6 +5918,80 @@
        "name": "delay",
        "type": "float",
        "value": 1.5
+      },
+      {
+       "name": "bark",
+       "type": "string",
+       "value": "The Black Ram by day: the porch swept, the lamp out, smoke from the parlor chimney."
+      }
+     ]
+    },
+    {
+     "id": 19,
+     "name": "hotelWindows",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "hotelWindows"
+      },
+      {
+       "name": "args",
+       "type": "string",
+       "value": "[{\"tx\":7,\"ty\":10,\"room\":\"house\"},{\"tx\":22,\"ty\":6,\"room\":\"guest1\"},{\"tx\":26,\"ty\":6,\"room\":\"guest2\"},{\"tx\":32,\"ty\":6,\"room\":\"keeper\"},{\"tx\":36,\"ty\":6,\"room\":\"room4\"},{\"tx\":22,\"ty\":10,\"room\":\"parlor\"},{\"tx\":34,\"ty\":10,\"room\":\"parlor\"}]"
+      }
+     ]
+    },
+    {
+     "id": 20,
+     "name": "smokeHearth",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "chimneySmoke"
+      },
+      {
+       "name": "args",
+       "type": "string",
+       "value": "[229.33333333333334,21.333333333333332,\"hearth\"]"
+      }
+     ]
+    },
+    {
+     "id": 21,
+     "name": "smokeStove",
+     "type": "prop",
+     "x": 0,
+     "y": 0,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "propType",
+       "type": "string",
+       "value": "chimneySmoke"
+      },
+      {
+       "name": "args",
+       "type": "string",
+       "value": "[400,21.333333333333332,\"stove\"]"
       }
      ]
     }

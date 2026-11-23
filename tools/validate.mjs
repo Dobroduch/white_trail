@@ -6,7 +6,7 @@ import { EVIDENCE } from '../src/data/evidence.js';
 import { LEADS, ITEMS, PEOPLE } from '../src/data/notebookData.js';
 import { QUESTIONS, STATEMENTS, DEDUCTIONS, CONCLUSIONS, OPEN_OUTCOMES } from '../src/data/caseData.js';
 import { HINT_STEPS, HINT_TIMING } from '../src/data/hints.js';
-import { tryPair, conclusionsFor, setReading, commit, canCommit, migrateCaseState, statementKnown } from '../src/systems/caseSystem.js';
+import { tryPair, conclusionsFor, setReading, commit, canCommit, migrateCaseState, statementKnown, threadsFor, connect } from '../src/systems/caseSystem.js';
 import { SCRIPTS } from '../src/data/scripts.js';
 import { SCENES, GLOBAL_EVENTS } from '../src/world/scenes.js';
 import { newState, test, apply, observe, examine, countAt } from '../src/systems/storyState.js';
@@ -141,13 +141,16 @@ for (const q of QUESTIONS) walkConds(q.if, q.id);
 for (const [id, st] of Object.entries(STATEMENTS)) {
   ok(qids.has(st.q), `${id}: unknown question ${st.q}`);
   ok(st.label && (st.text || st.variants), `${id}: needs label and text`);
-  for (const e of st.sources || []) ok(EVIDENCE[e], `${id}: source ${e} missing`);
+  for (const e of [...(st.sources || []), ...(st.also || [])]) ok(EVIDENCE[e], `${id}: source ${e} missing`);
+  for (const q of st.qs || []) ok(qids.has(q), `${id}: unknown question ${q} in qs`);
   ok(st.if || (st.sources || []).length, `${id}: no way to become known`);
   walkConds(st.if, id); for (const v of st.variants || []) walkConds(v.if, id);
 }
 for (const [id, d] of Object.entries(DEDUCTIONS)) {
   ok(qids.has(d.q), `${id}: unknown question ${d.q}`);
-  for (const p of d.pairs) { ok(p.length === 2, `${id}: pair must have two statements`); for (const x of p) ok(STATEMENTS[x] && STATEMENTS[x].q === d.q, `${id}: pair statement ${x} missing or of another question`); }
+  for (const p of d.pairs) { ok(p.length === 2, `${id}: pair must have two statements`); for (const x of p) ok(STATEMENTS[x] && (STATEMENTS[x].qs || [STATEMENTS[x].q]).includes(d.q), `${id}: pair statement ${x} missing or of another question`); }
+  ok(typeof d.ask === 'string' && d.ask.endsWith('?'), `${id}: needs an ask (the question its first clue raises)`);
+  for (const [k, r] of Object.entries(d.readings || {})) walkConds(r.if, `${id}.${k}`);
   for (const e of d.details || []) ok(EVIDENCE[e], `${id}: detail ${e} missing`);
   for (const l of d.links || []) ok(DEDUCTIONS[l], `${id}: link ${l} missing`);
   if (d.readings) ok(Object.keys(d.readings).length === 2, `${id}: a deduction with readings needs exactly two`);
@@ -183,6 +186,8 @@ for (const p of PEOPLE) { walkConds(p.if, p.id); for (const n of p.notes || []) 
   for (const [a, b] of [['S_LITTLE_BLOOD', 'S_HOISTED'], ['S_OLD_BLOOD', 'S_MISSING'], ['S_MARKS', 'S_LEDGER'], ['S_SCREAM', 'S_RIDGE']]) ok(tryPair(s, a, b).ok, `main route: ${a}+${b} should form a deduction`);
   ok(!tryPair(s, 'S_LITTLE_BLOOD', 'S_LEDGER').ok, 'a wrong pair must be refused');
   ok(!tryPair(s, 'S_PIT', 'S_OLD_BLOOD').ok, 'a pair with an unknown statement must be refused');
+  const notYet = conclusionsFor(s, 'Q_HALE').find((r) => r.c.truth);
+  examine(s, 'SAWMILL_MARKS'); // the post, looked at twice as the scene asks: "made to be seen" suggests set dressing
   const truth = Object.entries(CONCLUSIONS).find(([, c]) => c.truth && c.q === 'Q_HALE');
   ok(conclusionsFor(s, 'Q_HALE').every((r) => r.available), 'main route: every Hale conclusion is on the table');
   ok(!canCommit(s, truth[0]), 'no commitment without readings');
@@ -194,6 +199,19 @@ for (const p of PEOPLE) { walkConds(p.if, p.id); for (const n of p.notes || []) 
   const old = { ...newState(), deductions: ['D_SCENE_ARRANGED', 'D_GONE'], readings: undefined, cases: undefined, evidence: { SAWMILL_DRAG: { observed: true, examined: true, n: 1 } } };
   migrateCaseState(old);
   ok(old.deductions.join() === 'D_SCENE_ARRANGED' && old.readings && old.cases && old.flags.knowsWheelPit, 'old save migration');
+  ok(notYet && !notYet.available, 'a reading the evidence has not yet suggested keeps its account off the table');
+  // threads: a clue raises its question; the answer is a clue, not a pair hunted through a list
+  const t = newState(); Object.assign(t.flags, { foundSheriffBody: true }); observe(t, 'SAWMILL_ROPE');
+  ok(threadsFor(t, 'Q_HALE').includes('D_SCENE_ARRANGED') && !t.deductions.length, 'one clue opens its thread, unanswered');
+  ok(!connect(t, 'D_SCENE_ARRANGED', 'S_HOISTED').ok, 'a thread cannot be answered with only the clue that raised it');
+  observe(t, 'SAWMILL_BODY');
+  ok(!connect(t, 'D_SCENE_ARRANGED', 'S_MISSING').ok, 'an unknown or unrelated clue does not answer it');
+  ok(connect(t, 'D_SCENE_ARRANGED', 'S_LITTLE_BLOOD').fresh, 'the right clue answers it');
+}
+{ // every record in the journal can be reached from the notebook: filed under a clue, or named in a People note / lead
+  const filed = new Set(Object.values(STATEMENTS).flatMap((st) => [...(st.sources || []), ...(st.also || [])]));
+  const named = JSON.stringify([PEOPLE, LEADS]);
+  for (const id of Object.keys(EVIDENCE)) ok(filed.has(id) || named.includes(`'${id}'`) || named.includes(`"${id}"`), `${id}: reachable from no clue, person or lead`);
 }
 for (const l of LEADS) for (const v of l.variants) walkConds(v.if, l.id);
 

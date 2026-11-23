@@ -185,7 +185,7 @@ test.describe('mobile landscape, touch only', () => {
     // Notebook: open, tap a tab on the page itself, close with Back
     await tap(page, '#touch .tc-panels button[data-code="KeyN"]');
     expect(await page.evaluate(() => TWT.overlay && TWT.overlay.panelKind)).toBe('notebook');
-    const tabRect = await page.evaluate(() => { const r = TWT.notebook.tabRects[6]; const p = T.uiToClient(r.x + r.w / 2, r.y + r.h / 2); return [p.x, p.y]; });
+    const tabRect = await page.evaluate(() => { const r = TWT.notebook.tabRects[3]; const p = T.uiToClient(r.x + r.w / 2, r.y + r.h / 2); return [p.x, p.y]; });
     await page.touchscreen.tap(...tabRect);
     await step(page, 3);
     expect(await page.evaluate(() => TWT.notebook.tabName())).toBe('PEOPLE');

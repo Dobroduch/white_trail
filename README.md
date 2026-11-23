@@ -42,7 +42,7 @@ Click or press any key on the title screen. Browsers only allow audio to start a
 | `1`–`5` or `↑` / `↓` + `E` | Choose a dialogue option |
 | `Alt` + `Enter` | Toggle fullscreen (also in Pause → Settings) |
 
-Inside the notebook, `←` / `→` switch tabs, `↑` / `↓` choose an entry, and `E` marks records to compare on the **Deductions** tab.
+Inside the notebook (**Case · Clues · Deductions · People · Map**), `←` / `→` switch pages and `↑` / `↓` choose an entry. On **Clues**, `E` opens the notes behind a clue. On the **Deductions** board, `E` on an open question (?) lets you choose the clue that answers it, and `E` on an answered one changes how you read it. `Q` switches questions and `C` reviews the case.
 
 ### Phones and tablets
 
@@ -55,7 +55,7 @@ Open the game in a mobile browser (Chrome on Android, Safari on iOS) and hold th
 | Lantern, ? | Light or shutter the lantern; ask for a hint (it glows when one has come to mind) |
 | Notebook, Inventory, Map, ≡ (top-right) | The three panels and the pause menu |
 | Tap the dialogue / a choice / a menu line | Continue, choose, confirm |
-| In the notebook | Tap a tab; tap a line to select it, tap it again to use it (mark, choose a reading); ▲ ▼ scroll; Next question, Review case, Back |
+| In the notebook | Tap a page; tap a line or a board card to select it, tap it again to use it (read the notes, answer a question, choose a reading); ▲ ▼ scroll; Next question, Review case, Back |
 | ◀ ▲ ▼ ▶, OK, Back | In menus and the case review |
 
 On Android the first tap of a visit also asks for fullscreen and a landscape lock, where the browser allows it. iPhone Safari has no fullscreen for pages; add the game to the Home Screen for the most screen space. Settings → **Touch controls** can force them on or off.
