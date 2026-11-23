@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 17,
- "nextobjectid": 22,
+ "nextobjectid": 23,
  "backgroundcolor": "#05070c",
  "properties": [
   {
@@ -71,6 +71,11 @@
   },
   {
    "name": "atmosphere",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "firstLight",
    "type": "bool",
    "value": true
   }
@@ -5992,6 +5997,44 @@
        "name": "args",
        "type": "string",
        "value": "[400,21.333333333333332,\"stove\"]"
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "name": "finch",
+     "type": "npc",
+     "x": 888,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Constable Finch"
+      },
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "finch_idle"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "FINCH_DAY"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"firstLightFinch\"}"
       }
      ]
     }

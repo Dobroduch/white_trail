@@ -177,7 +177,12 @@ export const SCRIPTS = {
     { control: false },
     { casePrompt: 'HALE' }, // decide (or leave open) what happened to Hale before going back up
     { fade: { to: 1, dur: 2.0 } },
-    { aftermath: 'HALE' }, // what that decision sets in motion, at first light
+    // first light on the hotel forecourt, at the top of the creek path: Finch waiting there, the hotel's windows grey
+    // with the dawn. The "First light." card, then the forecourt fades in under the conversation.
+    { phase: 'DAY', time: [6, 40] },
+    { set: { firstLightFinch: true } },
+    { scene: { id: 'BLACK_RAM_EXTERIOR', spawn: 'fromCreek' } },
+    { aftermath: 'HALE', reveal: true }, // what that decision sets in motion
     { set: { sliceComplete: true } },
     { checkpoint: true },
     { endCard: true },
@@ -191,7 +196,7 @@ export const SCRIPTS = {
     { fade: { to: 1, dur: 0 } },
     { card: { lines: ['II', 'DECEIT AND ISOLATION'], dur: 3.6 } },
     { phase: 'DAY', time: [7, 50], day: 2 },
-    { set: { ch2Started: true } },
+    { set: { ch2Started: true, firstLightFinch: false } }, // Finch has gone off up the street
     { scene: { id: 'BLACK_RAM_EXTERIOR', spawn: 'fromCreek' } },
     { fade: { to: 0, dur: 2.0 } },
     { label: true },

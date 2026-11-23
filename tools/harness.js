@@ -303,6 +303,8 @@ export function install() {
       if (g.overlay && g.overlay.constructor.name === 'CaseReview') T.press('Escape', 2);
       for (let i = 0; i < 600 && !g.dialogue.active; i++) g.update(1 / 60);
       rep.aftermath = g.dialogue.id;
+      T.step(100); // the card has gone and the forecourt fades in under the conversation
+      check('first light with Finch is seen on the forecourt, not over a black screen', g.scene.id === 'BLACK_RAM_EXTERIOR' && g.state.phase === 'DAY' && !g.card && g.fade.v < 0.05 && g.npcs.some((n) => n.id === 'finch' && !n.hidden));
       T.talkThrough([], 4000); T.step(60);
       check('aftermath played once', !!g.state.flags.aftermath_HALE);
       check('slice end card shown', g.overlay && g.overlay.constructor.name === 'EndCard' && g.state.flags.sliceComplete);
@@ -350,6 +352,7 @@ export function install() {
       check('day two opens on the hotel forecourt, in daylight', g.scene.id === 'BLACK_RAM_EXTERIOR' && s.phase === 'DAY' && s.time.day === 2 && g.canMove());
       check('nothing carried or recorded was lost', before.items.every((i) => s.items.includes(i)) && Object.keys(s.evidence).length >= before.evidence);
       check('the first night\'s decision stands', (s.cases.HALE ? s.cases.HALE.conclusion : null) === before.hale && s.flags.sliceComplete && s.flags.aftermath_HALE);
+      check('Finch has gone off up the street', !g.npcs.some((n) => n.id === 'finch') && !s.flags.firstLightFinch);
       check('the first night\'s scripted beats do not replay', s.eventsDone.filter((e) => e === 'RIDGE_LIGHT').length <= 1 && !g.npcs.some((n) => n.id === 'finch' && n.dialogue === 'FINCH_MEET'));
       // ---- Main Street: Finch by day ----
       T.walkTo(6); leave('left');

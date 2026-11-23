@@ -638,7 +638,7 @@ Goal: a slower, more discoverable mystery with a simpler interface. Story progre
 - Windows left the baked glow tile layers. One `hotelWindows` prop draws seven windows, each tied to a room (`tools/patch-hotel-atmosphere.mjs`, idempotent, map property `atmosphere`).
   - Day: the glass reflects grey snow-light and darkens after 16:00. The parlor panes show the fire low behind them; its lamps come on at dusk.
   - Evening: every window starts lit. The guest rooms go dark at 20:00 and 21:00, Gable's room turns low at 21:30, the neighbouring house goes dark at 21:15.
-  - Night: Room 4 keeps a low lamp and the parlor shows Gable's candle. Now and then a candle passes an *empty* guest room's window. This is unexplained on purpose; **for review**.
+  - Night: Room 4 keeps a low lamp and the parlor shows Gable's candle. Now and then a candle passes an *empty* guest room's window. This is unexplained on purpose. The user decided to keep it (2026-11-23) as a seed for a later chapter.
 - Chimney smoke rises from both chimneys. The west one follows the parlor fire.
 - The hearth burns by day and in the evening, and is embers at night (prop id `hearth`; `fireSupper` is gone).
   - It has an ember bed, sparks, two flickering lights, and an occasional draught that dims the room.
@@ -672,3 +672,14 @@ The pages are now **Case · Clues · Deductions · People · Map ›**. The old 
 
 ### Saves
 New field `notebookRead`. In a save from before this pass, everything already in the notebook is marked read on load.
+
+## 23. The first night's "First light." is seen (2026-11-23)
+
+The aftermath at the end of the first night no longer plays over a black screen. It now works like the second day's supper.
+- `SLICE_END` fades out, switches to the DAY phase at 06:40 on day 1, and sets `firstLightFinch`. It then moves Silas to the hotel forecourt at the top of the creek path (spawn `fromCreek`).
+- After the "First light." card, the forecourt fades in under the conversation (`aftermath` with `reveal`).
+- Finch stands a few steps west, facing him. He is a forecourt NPC shown only while `firstLightFinch` holds; the patch tool is `tools/patch-first-light.mjs`, and the map property `firstLight` marks the map as patched.
+- The hotel windows show grey dawn glass, and the parlor fire glows low behind the panes.
+- `CH2_OPEN` clears the flag ("Finch went off up the street"), so the second day opens with him gone.
+- A save made on the first night's end card resumes there, with the dawn forecourt behind the card. Saves from earlier builds, which were in the NIGHT phase on the end card, go on into the second day as before.
+- The harness `fullRun` checks that the forecourt is visible under the conversation, with Finch in it. `fullRun2` checks that he has gone by morning.
