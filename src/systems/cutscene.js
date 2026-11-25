@@ -48,6 +48,7 @@ export class Cutscene {
     const finish = () => { st.done = true; };
     if (s.ambient) return finish();
     if (s.ifFlag && !g.state.flags[s.ifFlag]) return finish(); // a step that happens only when this flag is set
+    if (s.ifNotFlag && g.state.flags[s.ifNotFlag]) return finish(); // ...or only while it is not
     // { afterDialogue: true }: wait until the conversation or examination on screen is finished
     if (s.afterDialogue) { st.poll = () => !g.dialogue.active; return; }
     // { clock: [h, m] }: move the clock on to at least this time (never back)

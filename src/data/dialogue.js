@@ -802,7 +802,207 @@ Object.assign(DIALOGUE.VALE.nodes, {
   v4bye: { who: 'vale', text: 'Keep off the ridge tonight. Whatever is up there.', next: 'END' },
 });
 
+// ======================= Chapter 5: the fourth night =======================
+// The proof Silas can carry down (Mystery Bible §8, Q8: one living witness and one document).
+const WITNESS = { any: [{ all: [{ flag: 'claraTestifies' }, { notFlag: 'claraLost' }] }, { all: [{ flag: 'ruskConfessed' }, { notFlag: 'ruskFled' }] }, { evidence: 'T4_FINCH_CONFESS' }] };
+const DOCUMENT = { any: [{ item: 'TALLY_BOOK' }, { evidence: 'EV4_ADA_BOOK' }, { all: [{ examined: 'EV5_PAYROLL' }, { evidence: 'SAWMILL_LEDGER' }] }] };
+export const PROOF = { all: [WITNESS, DOCUMENT] };
+const CLARA_AT_CABIN = { all: [{ flag: 'knowsObservatory' }, { notFlag: 'huntForGuest' }] };
+Object.assign(DIALOGUE, {
+  // after "Sit by the fire a while" on the fourth day's end card: the front door, at night
+  NIGHT_GO: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The storm is leaning on the door. Clara Mercer is up there in it, and so is Cutler, with forty pounds of powder.', choices: [
+      choiceOf('Go up the ridge now.', 'go'),
+      choiceOf('Not yet.', 'END'),
+    ] },
+    go: { do: [{ script: 'CH5_OPEN' }], next: 'END' },
+  } },
+
+  CH5_OPEN: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Up the chapel lane in the dark, past Hale\'s new grave, to the tower. The wind takes the breath out of my mouth before I can use it.', next: 'b' },
+    b: { branch: [{ if: { flag: 'valeTurned' }, next: 'vale' }, { next: 'c' }] },
+    vale: { who: 'note', text: 'A light in the chapel as I passed. Vale, at the bell rope, waiting for a reason.', next: 'c' },
+    c: { branch: [{ if: { flag: 'huntForGuest' }, next: 'finch' }, { if: { flag: 'knowsObservatory' }, next: 'cabin' }, { next: 'blind' }] },
+    finch: { who: 'silas', text: 'The ridge path runs on east from here, to the workings. Somewhere along it is Finch, and whoever he went looking for.', next: 'END' },
+    cabin: { who: 'silas', text: 'The ridge path runs on east from here, to the workings, and past them to her mother\'s cabin. Clara first.', next: 'END' },
+    blind: { who: 'silas', text: 'The ridge path runs on east from here, to the workings. Whatever Cutler means to open, he is opening it tonight.', next: 'END' },
+  } },
+
+  // the ridge: Finch, if he went up after "the woman" yesterday
+  FINCH_RIDGE: { start: 'start', nodes: {
+    start: { branch: [{ if: { seen: 'FINCH_RIDGE.hub' }, next: 'again' }, { next: 'a' }] },
+    again: { who: 'finch', text: 'Go on, Vance. I\'ll keep.', next: 'END' },
+    a: { who: 'note', text: 'Finch, standing in the lee of a rock, his lantern broken at his feet and blood frozen in one eyebrow.', next: 'b' },
+    b: { who: 'finch', text: 'Vance. I found her. Up at the old cabin, the observatory. I\'d hardly said her name when Cutler came in behind me.', next: 'c' },
+    c: { who: 'finch', text: 'He took her down to the workings. I went up there looking for a murderess, and I led him straight to her.', do: [{ evidence: 'T5_FINCH_RIDGE' }, { set: { finchFound: true } }, { log: 'Found Finch hurt on the ridge. Cutler took Clara from the cabin to the workings.' }], next: 'hub' },
+    hub: { choices: [
+      choiceOf('Can you walk?', 'walk', { once: true }),
+      choiceOf('Keep your head down. I\'ll come back for you.', 'bye'),
+    ] },
+    walk: { who: 'finch', text: 'Down, maybe. Not up. Go.', next: 'hub' },
+    bye: { who: 'finch', text: 'She\'s alive, Vance. She was alive when he took her.', next: 'END' },
+  } },
+
+  // the observatory cabin: Clara, or the empty room Cutler left
+  CABIN_IN: { start: 'start', nodes: {
+    start: { branch: [{ if: { flag: 'claraWithSilas' }, next: 'gone' }, { if: CLARA_AT_CABIN, next: 'a' }, { next: 'empty' }] },
+    gone: { who: 'note', text: 'Her mother\'s cabin, with the stove going and nobody in it.', next: 'END' },
+    empty: { who: 'note', text: 'The door is off its top hinge. Inside, cold: the stove kicked over, a chair on its back, and nobody.', next: 'empty2' },
+    empty2: { who: 'note', text: 'Finch found her. And somebody followed Finch.', next: 'END' },
+    a: { who: 'note', text: 'A woman by the stove in a grey riding cloak, a poker in her hand. Red hair under the hood. She does not put the poker down.', do: [{ set: { claraMet: true } }, { char: { clara: { location: 'OBSERVATORY' } } }], next: 'a2' },
+    a2: { who: 'clara', text: 'Stay by the door. ...You\'re Vance.', next: 'a3' },
+    a3: { who: 'silas', text: 'You sent for me. Form forty-one, signed by a constable who never wrote it.', next: 'a4' },
+    a4: { who: 'clara', text: 'I\'m sorry it took a dead man to make it worth your fare. Do you know who killed Nathaniel Hale?', choices: [
+      choiceOf('Wade Cutler. On your father\'s word.', 'k1', { if: { evidence: 'T4_CUTLER' } }),
+      choiceOf('Your father.', 'k2'),
+      choiceOf('Not for certain. Tell me.', 'k3'),
+    ] },
+    k1: { who: 'clara', text: 'Yes.', next: 'tell' },
+    k2: { who: 'clara', text: 'My father has never held a knife in his life. He has men for that.', next: 'tell' },
+    k3: { who: 'clara', text: 'Then I will.', next: 'tell' },
+    tell: { who: 'clara', text: 'I was in Room 4. Nathaniel came up the back stair with one of Rusk\'s freight bills. Wade came up after him. My father waited in the yard; I heard him. I saw Wade\'s knife, and then I was on the stair, and then I was running.', do: [{ evidence: 'T5_CLARA' }, { log: 'Clara Mercer, at her mother\'s cabin: she saw Cutler follow Hale up the back stair, and her father waiting in the yard.' }], next: 'tell2' },
+    tell2: { who: 'clara', text: 'Wade went into the workings at dusk with the powder. My father went up after him an hour ago. I have been watching them through my mother\'s glass.', next: 'ask' },
+    ask: { who: 'clara', text: 'If I come down off this ridge with you, Mr. Vance, will you take it all the way? Even him?', choices: [
+      choiceOf('All the way. Even him.', 'yes'),
+      choiceOf('I\'ll see you safe. The rest is for the county.', 'no'),
+    ] },
+    yes: { who: 'clara', text: 'Then I will stand up and say it, in front of whoever they send.', do: [{ set: { claraTestifies: true, claraAsked: true } }], next: 'go' },
+    no: { who: 'clara', text: 'The county. ...Safe, then.', do: [{ set: { claraAsked: true } }], next: 'go' },
+    go: { who: 'clara', text: 'Come on. Before he lights it.', do: [{ set: { claraWithSilas: true } }, { char: { clara: { location: 'WITH_SILAS' } } }, { script: 'CLARA_JOINS' }], next: 'END' },
+  } },
+
+  // the workings: what Silas walks in on
+  WK_IN: { start: 'a', nodes: {
+    a: { who: 'note', text: 'Lamplight, far in. The drift runs back under the mountain on old timbers, and at the end of it the fall of \'72 goes up to the roof.', next: 'b' },
+    b: { branch: [{ if: { any: [{ flag: 'cutlerWarned' }, { flag: 'mercerAccused' }, { flag: 'huntForGuest' }] }, next: 'lit' }, { next: 'unlit' }] },
+    lit: { who: 'note', text: 'Along the floor, a thread of sparks is eating its way toward the fall. The fuse is already burning.', do: [{ set: { fuseLit: true } }], next: 'm' },
+    unlit: { who: 'note', text: 'Cutler is at the foot of the fall, tamping the last of the powder into a hole with a stick. The fuse lies coiled beside him, not lit.', next: 'm' },
+    m: { branch: [{ if: { flag: 'claraWithSilas' }, next: 'mc' }, { next: 'mh' }] },
+    mc: { who: 'note', text: 'Gideon Mercer stands by an open chest in the lamplight, a canvas bag in his hand. He sees his daughter behind me, and the bag goes still.', next: 'say' },
+    mh: { who: 'note', text: 'Gideon Mercer stands by an open chest in the lamplight, a canvas bag in his hand. Beyond him, by the fall, Clara Mercer stands with her back to the rock and her hands tied in front of her. Cutler is between her and me.', do: [{ set: { claraMet: true } }], next: 'say' },
+    say: { who: 'mercer', text: 'Mister Vance. Stay where you are, and nobody else need be hurt.', next: 'e' },
+    e: { branch: [{ if: { flag: 'fuseLit' }, next: 'now' }, { next: 'walk' }] },
+    walk: { who: 'note', text: 'Cutler has not looked round. He has the end of the fuse in his hand.', next: 'END' },
+    now: { do: [{ script: 'CLIMAX' }], next: 'END' },
+  } },
+
+  // Mercer, before it comes to Cutler (only while the fuse is not lit)
+  MERCER_WK: { start: 'start', nodes: {
+    start: { branch: [{ if: { seen: 'MERCER_WK.hub' }, next: 'again' }, { next: 'a' }] },
+    again: { who: 'mercer', text: 'Well?', next: 'hub' },
+    a: { who: 'mercer', text: 'Look in the chest before you judge anybody, Mister Vance. That is what built this town, and what will rebuild it.', next: 'hub' },
+    hub: { choices: [
+      choiceOf('Who killed Nathaniel Hale?', 'hale', { once: true }),
+      choiceOf('Call Cutler off.', 'off', { once: true }),
+      choiceOf('[Leave him]', 'END'),
+    ] },
+    hale: { who: 'mercer', text: 'A sheriff who did not know when to leave old things alone. Ask the mountain.', next: 'hub' },
+    off: { who: 'mercer', text: 'Wade has not taken an order from anyone but me since he was fourteen. He will finish, and then we will talk.', next: 'hub' },
+  } },
+  CLARA_WK: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'climaxDone' }, next: 'after' }, { if: { flag: 'claraWithSilas' }, next: 'with' }, { next: 'held' }] },
+    with: { who: 'clara', text: 'Don\'t look at him. Look at Wade. Wade is the one with the match.', next: 'END' },
+    held: { who: 'note', text: 'She does not look at me. She is looking at her father, and he is looking at the chest.', next: 'END' },
+    after: { who: 'clara', text: 'Finish it, Mr. Vance.', next: 'END' },
+  } },
+
+  // the fall: Cutler, the charge, and the one choice the revolver gives
+  CUTLER_FALL: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'climaxDone' }, next: 'done' }, { if: { flag: 'fuseLit' }, next: 'lit' }, { next: 'unlit' }] },
+    done: { who: 'cutler', text: '...', next: 'END' },
+    lit: { branch: [{ if: { flag: 'cutlerWarned' }, next: 'lw' }, { if: { flag: 'mercerAccused' }, next: 'lm' }, { next: 'lh' }] },
+    lw: { who: 'cutler', text: 'Told you to keep those three for later, Pinkerton. This is later.', next: 'l2' },
+    lm: { who: 'cutler', text: 'You named him in the street. So we\'re early. That\'s on you, mister.', next: 'l2' },
+    lh: { who: 'cutler', text: 'Your constable brought me to her. Tell him I said thanks.', next: 'l2' },
+    l2: { who: 'note', text: 'The spark is a yard from the charge and closing. Cutler stands between me and it, the knife out. One shot, and I could reach it. Hold, and it goes.', do: [{ set: { climaxStarted: true } }], choices: [
+      choiceOf('[Fire]', 'fireLit'),
+      choiceOf('[Hold fire] It\'s over, Wade. Step away from it.', 'holdLit'),
+    ] },
+    unlit: { who: 'cutler', text: 'You came up after all.', next: 'u2' },
+    u2: { branch: [{ if: { flag: 'claraWithSilas' }, next: 'u3' }, { next: 'u3h' }] },
+    u3: { who: 'note', text: 'He has the knife in one hand and the end of the fuse in the other, and a match ready on the rock.', do: [{ set: { climaxStarted: true } }], next: 'uc' },
+    u3h: { who: 'note', text: 'He has the knife in his hand, Clara at his back with her hands tied, and a match ready on the rock beside the fuse.', do: [{ set: { climaxStarted: true } }], next: 'uc' },
+    uc: { choices: [
+      choiceOf('[Fire]', 'fire'),
+      choiceOf('[Hold fire] Leave the match, Wade. It\'s over.', 'hold'),
+    ] },
+    fire: { who: 'note', text: 'The shot is enormous in the drift. Cutler sits down against the rock as if he were tired, and does not get up.', do: [{ shoot: 'cutler' }, { set: { cutlerShot: true, climaxDone: true } }, { log: 'Shot Wade Cutler at the foot of the fall.' }, { script: 'SHOT' }], next: 'END' },
+    fireLit: { who: 'note', text: 'The shot is enormous in the drift. Cutler sits down against the rock as if he were tired. I go past him on my knees and tear the fuse out of the charge with my hand.', do: [{ shoot: 'cutler' }, { set: { cutlerShot: true, fuseOut: true, climaxDone: true } }, { log: 'Shot Wade Cutler, and pulled the fuse before it reached the charge.' }, { script: 'SHOT' }], next: 'END' },
+    hold: { branch: [{ if: { flag: 'claraWithSilas' }, next: 'holdC' }, { next: 'holdH' }] },
+    holdC: { who: 'clara', text: 'Wade. Put it down.', next: 'hold2' },
+    holdH: { who: 'silas', text: 'Your father rode with him, Wade. Not for this. Not for a girl with her hands tied, in a hole in the ground.', next: 'hold2' },
+    hold2: { who: 'note', text: 'He looks a long time at nothing. Then he knocks the match into the wet with his knuckle and holds out the knife, hilt first.', do: [{ set: { cutlerTaken: true, climaxDone: true } }, { log: 'Held my fire. Cutler gave up his knife at the foot of the fall.' }, { script: 'RECKONING' }], next: 'END' },
+    holdLit: { who: 'cutler', text: 'It\'s lit, mister. Nothing\'s over.', next: 'holdLit2' },
+    holdLit2: { who: 'note', text: 'He goes past me for the mouth at a run. I let him go, and I go for the charge, and I am not going to reach it.', do: [{ set: { cutlerRan: true, cutlerTaken: true, climaxDone: true } }, { log: 'Held my fire. Cutler ran, and the fuse ran on.' }, { script: 'BLAST' }], next: 'END' },
+  } },
+
+  // after the blast (the fuse burning, the revolver held): who comes out from under it
+  AFTER_BLAST: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'claraWithSilas' }, next: 'with' }, { if: { flag: 'valeTurned' }, next: 'town' }, { next: 'lost' }] },
+    with: { who: 'note', text: 'I had Clara down behind the chest when the fall came. The roof came down where Cutler had stood, and the chest, and the drift beyond it, and the dark was full of stone dust.', do: [{ set: { workingsBlown: true } }], next: 'with2' },
+    with2: { who: 'note', text: 'When the lamp would burn again she was beside me, coughing, alive. The chest was under twenty feet of the mountain.', next: 'cut' },
+    town: { who: 'note', text: 'The fall came down between me and Clara, and the dark was full of stone dust. I dug with my hands. Then there were lanterns in the mouth behind me: Vale, and twenty men from the town with picks and shovels.', do: [{ set: { workingsBlown: true, townCame: true } }], next: 'town2' },
+    town2: { who: 'note', text: 'They had come up the ridge on the bell. They dug her out from behind the timbers an hour later, white with dust and alive.', do: [{ log: 'The town came up on Vale\'s bell and dug Clara out from behind the fall.' }], next: 'cut' },
+    lost: { who: 'note', text: 'The fall came down between me and Clara, and the dark was full of stone dust. I dug until my hands were no use to me.', do: [{ set: { workingsBlown: true, claraLost: true } }, { char: { clara: { alive: false, location: 'THE_FALL' } } }], next: 'lost2' },
+    lost2: { who: 'note', text: 'There was no one to help, and after a while there was no sound from behind the rock.', do: [{ log: 'The fall came down. Clara Mercer is behind it.' }], next: 'cut' },
+    cut: { who: 'note', text: 'Cutler was in the snow outside the mouth, where the blast had thrown him. Alive. He did not try to get up when I came for him.', next: 'END' },
+  } },
+
+  // the reckoning: Clara's question (if it has not been asked), then Mercer, the payroll in his hands
+  RECKONING: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'claraLost' }, next: 'fall' }, { if: { flag: 'claraAsked' }, next: 'm' }, { next: 'ask' }] },
+    fall: { who: 'note', text: 'Gideon Mercer was on his knees at the new fall, pulling at the rock with his bare hands, with the bag of coin still tied to his wrist.', next: 'fall2' },
+    fall2: { who: 'mercer', text: 'Clara. Clara.', next: 'fall3' },
+    fall3: { who: 'note', text: 'He did not answer me when I spoke to him. He did not answer anyone, after that.', do: [{ script: 'ENDING_FALL' }], next: 'END' },
+    ask: { who: 'clara', text: 'Mr. Vance. If I come down off this mountain, will you take it all the way? Even him?', do: [{ set: { claraAsked: true } }], choices: [
+      choiceOf('All the way. Even him.', 'yes'),
+      choiceOf('I\'ll see you safe. The rest is for the county.', 'no'),
+    ] },
+    yes: { who: 'clara', text: 'Then I will stand up and say what I saw.', do: [{ set: { claraTestifies: true } }, { evidence: 'T5_CLARA' }], next: 'm' },
+    no: { who: 'clara', text: 'Safe. ...Yes.', next: 'm' },
+    m: { branch: [{ if: { flag: 'workingsBlown' }, next: 'mb' }, { next: 'mc' }] },
+    mb: { who: 'note', text: 'Gideon Mercer stood in the settling dust with one canvas bag in his hand: all that was left out of the mountain. His daughter was watching him hold it.', next: 'offer' },
+    mc: { who: 'note', text: 'Gideon Mercer had not moved from the chest. In the lamplight the stencil on its lid read clear under the rust: U.S. PAYMASTER, 2ND DIV. His daughter was watching him.', do: [{ examine: 'EV5_PAYROLL' }], next: 'offer' },
+    offer: { who: 'mercer', text: 'Take her down, Mister Vance. Leave me the mountain. Nobody else need die for it, and nobody in that valley will thank you for the truth.', choices: [
+      choiceOf('No. You\'re coming down, and so is this.', 'take'),
+      choiceOf('Go. Take it and go.', 'let'),
+    ] },
+    take: { branch: [{ if: PROOF, next: 'proof' }, { next: 'noproof' }] },
+    proof: { who: 'note', text: 'He looked at his daughter for a long time. Then he set the bag down on the chest, and held out his hands for the rope.', do: [{ set: { mercerTaken: true } }, { log: 'Took Gideon Mercer down off the ridge with the proof.' }, { script: 'ENDING_EXPOSED' }], next: 'END' },
+    noproof: { who: 'mercer', text: 'On whose word, Mister Vance? A dead man\'s book, and a stranger\'s notebook? I hold the note on every house in that valley. Bring me down, and see who stands up.', next: 'noproof2' },
+    noproof2: { who: 'note', text: 'He was right, and he knew it. Nobody I had would stand up in front of a county judge and say it.', do: [{ set: { noProof: true } }, { log: 'Had no witness who would stand up. Mercer walked down ahead of me.' }, { script: 'ENDING_BURIED' }], next: 'END' },
+    let: { who: 'note', text: 'He did not thank me. He picked up the bag, and went out past his daughter into the storm without looking at her.', do: [{ set: { letMercerGo: true } }, { log: 'Let Gideon Mercer go with the gold.' }, { script: 'ENDING_BURIED' }], next: 'END' },
+  } },
+
+  // the epilogues, over black
+  EPI_EXPOSED: { start: 'a', nodes: {
+    a: { who: 'note', text: 'We came down off the ridge at first light: Clara, and her father between us with his hands tied in front of him, and the canvas bag on my shoulder.', next: 'b' },
+    b: { branch: [{ if: { flag: 'cutlerShot' }, next: 'bs' }, { next: 'bt' }] },
+    bs: { who: 'note', text: 'We left Wade Cutler where he sat. His tally book will have to speak for him.', next: 'c' },
+    bt: { who: 'note', text: 'Wade Cutler walked ahead of us on a rope and did not say a word the whole way down.', next: 'c' },
+    c: { branch: [{ if: { flag: 'valeTurned' }, next: 'cv' }, { next: 'd' }] },
+    cv: { who: 'note', text: 'Vale\'s bell had the whole town at the foot of the ridge. They saw what we carried down. That was the point of it.', next: 'd' },
+    d: { branch: [{ if: { flag: 'claraTestifies' }, next: 'dc' }, { next: 'do' }] },
+    dc: { who: 'note', text: 'The pass opened on the ninth day. The county men came up on the first train, and Clara Mercer told them all of it, from the paymaster\'s chest to the back stair of the Black Ram.', next: 'e' },
+    do: { who: 'note', text: 'The pass opened on the ninth day. The county men came up on the first train, and the people who had kept quiet for twenty years found, one at a time, that they had things to say.', next: 'e' },
+    e: { who: 'note', text: 'They took Gideon Mercer down the mountain to be tried. The gold went back to the government that lost it, thirty years late.', next: 'f' },
+    f: { who: 'note', text: 'I took the train down the day after. Nobody came to see me off but Ada Bell, who wrote down that I had gone.', next: 'END' },
+  } },
+  EPI_BURIED: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'letMercerGo' }, next: 'let' }, { next: 'np' }] },
+    let: { who: 'note', text: 'He went down the far side of the ridge in the storm with as much of the gold as one man and a mule can carry. Nobody in Crow\'s Hollow has seen him since.', next: 'b' },
+    np: { who: 'note', text: 'He walked down the ridge ahead of me as if he owned it, which he did. What I had would not have stood up in front of a county judge with Gideon Mercer\'s lawyers on the other side.', next: 'b' },
+    b: { who: 'note', text: 'Clara Mercer left the valley when the pass opened, on the first train down. She did not say where. Somebody had paid for her ticket in gold coin.', next: 'c' },
+    c: { who: 'note', text: 'I wrote it all down for the county. They filed it. Hale has a stone, the Pale Figure has a story, and the story is the one people will go on telling.', next: 'END' },
+  } },
+  EPI_FALL: { start: 'a', nodes: {
+    a: { who: 'note', text: 'They never opened the fall. The money is still in there, with Amos Pell and four other men, and with Clara Mercer, who sent for me.', next: 'b' },
+    b: { who: 'note', text: 'Gideon Mercer was tried at the county seat in the spring, and said nothing at his trial, or anywhere else.', next: 'c' },
+    c: { who: 'note', text: 'I took the train down when the pass opened. Her telegram is still in my coat. I have not been able to throw it away.', next: 'END' },
+  } },
+});
+
 export const SPEAKERS = {
   silas: 'SILAS VANCE', finch: 'CONSTABLE FINCH', gable: 'MRS. GABLE', conductor: 'CONDUCTOR', note: null,
-  rusk: 'JONAH RUSK', vale: 'REVEREND VALE', ada: 'ADA BELL', mercer: 'GIDEON MERCER', cutler: 'WADE CUTLER',
+  rusk: 'JONAH RUSK', vale: 'REVEREND VALE', ada: 'ADA BELL', mercer: 'GIDEON MERCER', cutler: 'WADE CUTLER', clara: 'CLARA MERCER',
 };

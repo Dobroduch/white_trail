@@ -364,7 +364,8 @@ export class EndCard {
   // chapter 1: the close of the first night, leading straight on into the second day.
   // chapter 2: the close of the second day, leading on into the third (or a last walk through the town at dusk).
   // chapter 3: the close of the third night, leading on into the fourth day (or a while longer by the dead fire).
-  // chapter 4: the close of the fourth day, the storm down (the story so far ends here).
+  // chapter 4: the close of the fourth day, the storm down, leading on into the fourth night (or a while by the fire).
+  // chapter 5: the end of the story: which ending, what became of everyone, and back to the title.
   constructor(game, chapter = 1) {
     this.game = game; this.chapter = chapter; this.t = 0; this.sel = 0;
     this.items = chapter === 1
@@ -373,7 +374,9 @@ export class EndCard {
         ? [{ label: 'Go on: the third day', act: 'nextChapter' }, { label: 'Walk the town a while longer', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }]
         : chapter === 3
           ? [{ label: 'Go on: the fourth day', act: 'nextChapter' }, { label: 'Sit by the dead fire a while', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }]
-          : [{ label: 'Sit by the fire a while', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }];
+          : chapter === 4
+            ? [{ label: 'Go on: the fourth night', act: 'nextChapter' }, { label: 'Sit by the fire a while', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }]
+            : [{ label: 'Return to the title', act: 'title' }];
   }
   update(input) {
     this.t += 1 / 60;
@@ -387,7 +390,7 @@ export class EndCard {
     const a = Math.min(1, this.t / 1.5);
     ctx.globalAlpha = a;
     font(ctx, 13); spaced(ctx, 'THE WHITE TRAIL', UI_CX, 34, UI.bone, 3, 'center');
-    if (this.chapter >= 2) { if (this.chapter === 4) this.drawChapter4(ctx, s); else if (this.chapter === 3) this.drawChapter3(ctx, s); else this.drawChapter2(ctx, s); ctx.globalAlpha = 1; if (this.t >= 2) this.rects = drawMenu(ctx, this.items, this.sel, UI_CX, this.items.length > 2 ? 150 : 156, { align: 'center', size: 5.6, gap: 8.5 }); return; }
+    if (this.chapter >= 2) { if (this.chapter === 5) this.drawEnding(ctx, s); else if (this.chapter === 4) this.drawChapter4(ctx, s); else if (this.chapter === 3) this.drawChapter3(ctx, s); else this.drawChapter2(ctx, s); ctx.globalAlpha = 1; if (this.t >= 2) this.rects = drawMenu(ctx, this.items, this.sel, UI_CX, this.items.length > 2 ? 150 : 156, { align: 'center', size: 5.6, gap: 8.5 }); return; }
     font(ctx, 5.2, { italic: true });
     text(ctx, 'The first night ends here. The storm does not.', UI_CX, 45, UI.dim, 'center');
     const total = Object.keys(EVIDENCE).filter((id) => EVIDENCE[id].location === 'SAWMILL').length;
@@ -478,6 +481,40 @@ export class EndCard {
     const all = LEADS.filter((l) => l.chapter === 4).map((l) => l.variants.find((v) => test(v.if, s))).filter(Boolean);
     for (const v of all.slice(0, 4)) { for (const ln of wrap(ctx, v.text, 262)) { text(ctx, ln, UI_CX, y, UI.dim, 'center'); y += 6.1; } }
     font(ctx, 4.6, { italic: true });
-    if (y < 145) text(ctx, 'The story continues in the next chapter.', UI_CX, 145, UI.faint, 'center');
+    if (y < 141) text(ctx, 'The story continues in the next chapter.', UI_CX, 141, UI.faint, 'center');
   }
+  // The end of the story (Mystery Bible §8, Q9): the ending's name, a line on it, and what became of each of them.
+  drawEnding(ctx, s) {
+    const f = s.flags;
+    const end = ENDINGS[f.ending] || ENDINGS.BURIED;
+    font(ctx, 5.2, { italic: true });
+    text(ctx, 'The fourth night ends here, and the story with it.', UI_CX, 45, UI.dim, 'center');
+    let y = 57;
+    font(ctx, 7, { bold: true }); spaced(ctx, end.title, UI_CX, y, UI.bone, 1.6, 'center'); y += 9;
+    font(ctx, 5, { italic: true });
+    for (const ln of wrap(ctx, end.line, 262)) { text(ctx, ln, UI_CX, y, UI.bone, 'center'); y += 6.2; }
+    y += 3;
+    font(ctx, 4.8, { bold: true }); spaced(ctx, 'WHAT BECAME OF THEM', UI_CX, y, UI.amber, 1.2, 'center'); y += 7;
+    font(ctx, 5, { italic: true });
+    for (const l of fatesOf(f)) for (const ln of wrap(ctx, l, 262)) { text(ctx, ln, UI_CX, y, UI.dim, 'center'); y += 6.1; }
+    y += 2;
+    font(ctx, 4.6, { italic: true });
+    const recorded = Object.keys(s.evidence).length, shots = s.consequences.shotsFired;
+    text(ctx, `Recorded: ${recorded}     Deductions: ${s.deductions.length}     Shots fired: ${shots}`, UI_CX, y + 4, UI.faint, 'center');
+  }
+}
+
+// The three endings (Mystery Bible §8, Q9).
+const ENDINGS = {
+  EXPOSED: { title: 'EXPOSED', line: 'Clara Mercer came down alive, and the proof came down with her.' },
+  BURIED: { title: 'KNOWN, BUT BURIED', line: 'I know all of it, and can prove none of it. The gold and Clara Mercer have left the valley.' },
+  FALL: { title: 'THE FALL', line: 'The fall came down again, and Clara Mercer is behind it.' },
+};
+// One line each for the people the ending turns on, from what actually happened.
+function fatesOf(f) {
+  const out = [];
+  out.push(f.ending === 'FALL' ? 'Clara Mercer: behind the fall in the Pale workings.' : f.ending === 'EXPOSED' ? (f.claraTestifies ? 'Clara Mercer: told the county all of it.' : 'Clara Mercer: came home, and kept her own counsel.') : 'Clara Mercer: took the first train down, and did not say where.');
+  out.push(f.mercerTaken ? 'Gideon Mercer: taken down the mountain to be tried.' : f.letMercerGo ? 'Gideon Mercer: over the far side of the ridge with the gold.' : f.ending === 'FALL' ? 'Gideon Mercer: tried in the spring, and silent.' : 'Gideon Mercer: still holds the note on half the valley.');
+  out.push(f.cutlerShot ? 'Wade Cutler: shot dead at the foot of the fall.' : 'Wade Cutler: taken alive, for what his word is worth.');
+  return out;
 }

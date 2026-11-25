@@ -46,8 +46,9 @@ test.describe('chapter 4 — the fourth day', () => {
       // the end card's open questions and the story so far
       await page.evaluate(() => { for (let i = 0; i < 150; i++) TWT.update(1 / 60); TWT_TEST.render(); });
       await page.screenshot({ path: `test-results/review/ch4-endcard-${r.aftermath}.png` });
-      // "Sit by the fire a while": the parlor at night, free to move; the card not shown again
-      await page.evaluate(() => { T.press('KeyE', 60); });
+      // "Sit by the fire a while" (the second item, after "Go on: the fourth night"): the parlor at night, free to move;
+      // the card not shown again
+      await page.evaluate(() => { T.press('ArrowDown', 2); T.press('KeyE', 60); });
       const after = await page.evaluate(() => ({ scene: TWT.scene.id, move: TWT.canMove(), seen: TWT.state.flags.ch4EndCardSeen, phase: TWT.state.phase }));
       expect(after).toEqual({ scene: 'PARLOR', move: true, seen: true, phase: 'NIGHT' });
       await expectClean(page, errors);

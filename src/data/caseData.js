@@ -27,6 +27,8 @@ export const QUESTIONS = [
   // Chapter 4, the fourth day
   { id: 'Q_KILLER', case: 'KILLER', title: 'Who came up the stair after Hale?', short: 'The killer', if: { flag: 'ch4Started' } },
   { id: 'Q_TELEGRAM', title: 'Who sent for me?', short: 'The telegram', if: { flag: 'ch4Started' } },
+  // Chapter 5, the fourth night (open: the ending, not the notebook, settles it)
+  { id: 'Q_PAYROLL', title: 'What is behind the fall?', short: 'The fall', if: { flag: 'ch5Started' } },
 ];
 
 // ---------------- key statements ----------------
@@ -45,7 +47,7 @@ export const STATEMENTS = {
     { if: {}, text: 'His broken watch lay between the body and the creek.' },
   ] },
   S_MARKS: { q: 'Q_HALE', qs: ['Q_HALE', 'Q_ROOM4'], label: 'Marks cut in the post', text: 'Fresh tally marks, cut at eye height and facing the path.', sources: ['SAWMILL_MARKS'] },
-  S_LEDGER: { q: 'Q_HALE', label: 'The Pale Order ledger', text: 'The Pale Order\'s old accounts, thrown on a dead fire and left half-burned.', sources: ['SAWMILL_LEDGER'] },
+  S_LEDGER: { q: 'Q_HALE', qs: ['Q_HALE', 'Q_PAYROLL'], label: 'The Pale Order ledger', text: 'The Pale Order\'s old accounts, thrown on a dead fire and left half-burned.', sources: ['SAWMILL_LEDGER'] },
   S_SCREAM: { q: 'Q_HALE', label: 'The scream at 02:15', text: 'A scream from the mill at 02:15. Mrs. Gable knew at once where it came from.', sources: ['T_GABLE_NIGHT'], also: ['T_GABLE_VOICE'], if: { flag: 'heardScream' } },
   S_TRACKS: { q: 'Q_HALE', label: 'Fresh tracks to the mill', text: 'One set of prints went down the creek path fast tonight, before me.', sources: ['CREEK_TRACKS'] },
   // the lantern on the ridge: one sighting, carried from the first night's question to the second day's
@@ -114,6 +116,11 @@ export const STATEMENTS = {
   S4_PAD: { q: 'Q_TELEGRAM', label: 'Form 41, torn out', text: 'Finch\'s pad of telegraph forms, every one signed in advance. Number 41 is torn out.', sources: ['EV3_PAD'], also: ['T3_FINCH_FORMS'], if: { examined: 'EV3_PAD' } },
   S4_FINCH: { q: 'Q_TELEGRAM', label: 'Finch guessed', text: 'Finch knew the telegram for Clara\'s the night I came, and kept quiet so her father would not hear it.', sources: ['T4_FINCH_CONFESS'] },
   S4_CLARA: { q: 'Q_TELEGRAM', label: 'Mrs. Gable\'s guest', text: 'Mrs. Gable: Clara Mercer was the guest in Room 4. She got out down the back stair and went to her mother\'s cabin on the ridge.', sources: ['T4_GABLE_CLARA'], also: ['EV3_GLOVE'] },
+  // --- Q_PAYROLL (Chapter 5) ---
+  S5_FIGURE: { q: 'Q_PAYROLL', label: 'A coat on a pole', text: 'The Pale Figure on the ridge: a bleached canvas duster on a pole and crosspiece, a sooted lantern hook at the top.', sources: ['EV5_FIGURE'], if: { examined: 'EV5_FIGURE' } },
+  S5_PAPERS: { q: 'Q_PAYROLL', label: 'Clara\'s copy', also: ['EV5_TELESCOPE'], text: 'Clara\'s copy of her father\'s page: a paymaster\'s chest taken on the Gap road in October 1864, $41,600 in gold, six shares, G.M. at the head.', sources: ['EV5_PAPERS'], if: { examined: 'EV5_PAPERS' } },
+  S5_CHEST: { q: 'Q_PAYROLL', label: 'U.S. Paymaster', also: ['EV5_TIMBER'], text: 'An iron chest by the fall, stencilled U.S. PAYMASTER, 2ND DIV., full of gold eagles, none dated after 1864.', sources: ['EV5_PAYROLL'], if: { examined: 'EV5_PAYROLL' } },
+  S5_CLARA: { q: 'Q_PAYROLL', qs: ['Q_PAYROLL', 'Q_KILLER'], label: 'Clara saw it', text: 'Clara Mercer saw Cutler follow Hale up the back stair with his knife, and heard her father waiting in the yard.', sources: ['T5_CLARA'] },
   S_REGISTER: { q: 'Q_ROOM4', label: 'No one in the register', text: 'The register shows no guest in Room 4 for a fortnight.', sources: ['HOTEL_REGISTER'] },
   // --- Q_ORDER (Chapter 2) ---
   S2_FREIGHT: { q: 'Q_ORDER', label: 'The scraped freight entry', sources: ['STORE_LEDGER'], also: ['STORE_OIL'], variants: [
@@ -136,10 +143,10 @@ export const STATEMENTS = {
     { if: { flag: 'ch2Started' }, text: 'The same narrow heel stood under the mill roof, the night Hale was hung.' },
     { if: {}, text: 'Someone in riding boots stood under the mill roof, sheltered, facing the wheel.' },
   ] },
-  S2_WIRE: { q: 'Q_ORDER', label: 'The wire was cut', text: 'The telegraph wire was cut clean, and the end bent back to look torn.', sources: ['TOWER_WIRE'], if: { examined: 'TOWER_WIRE' } },
+  S2_WIRE: { q: 'Q_ORDER', label: 'The wire was cut', text: 'The telegraph wire was cut clean, and the end bent back to look torn.', sources: ['TOWER_WIRE'], also: ['EV5_WIRE'], if: { examined: 'TOWER_WIRE' } },
   S2_LINE_DEAD: { q: 'Q_ORDER', label: 'Dead since I came', text: 'Ada Bell: the line went dead at six the evening I arrived; the next mile is cut too.', sources: ['T_ADA_LINE'], also: ['T_ADA_MEND', 'T_CONDUCTOR_PASS'] },
   S2_SOOT: { q: 'Q_ORDER', label: 'A lantern kept at the tower', text: 'Fresh soot over a lantern hook on the tower platform, which looks straight down on the mill.', sources: ['TOWER_SOOT'], also: ['TOWER_VIEW'] },
-  S2_FIGURE: { q: 'Q_ORDER', label: 'Vale\'s Pale Figure', text: 'Vale: the Pale Figure carries a lamp on the ridge, and those who follow it to the old workings do not come down.', sources: ['T_VALE_FIGURE'], also: ['T_GABLE_VALE'] },
+  S2_FIGURE: { q: 'Q_ORDER', qs: ['Q_ORDER', 'Q_PAYROLL'], label: 'Vale\'s Pale Figure', text: 'Vale: the Pale Figure carries a lamp on the ridge, and those who follow it to the old workings do not come down.', sources: ['T_VALE_FIGURE'], also: ['T_GABLE_VALE'] },
   S2_HALE_ASKED: { q: 'Q_ORDER', label: 'Hale asked about the freight', sources: ['T_RUSK_HALE', 'T_FINCH_FREIGHT'], variants: [
     { if: { evidence: 'T_RUSK_HALE' }, text: 'Hale read Rusk\'s freight book "like scripture" a fortnight before he died, and asked about that freight.' },
     { if: {}, text: 'Hale went out the last night with one of Rusk\'s freight bills folded in his coat.' },
@@ -560,6 +567,32 @@ Object.assign(CONCLUSIONS, {
   },
 });
 
+// --- Chapter 5: what is behind the fall ---
+Object.assign(DEDUCTIONS, {
+  D5_PAYROLL: {
+    q: 'Q_PAYROLL', title: 'The Order\'s counting',
+    ask: 'What did the Pale Order count in fives?',
+    raisedBy: ['S5_PAPERS', 'S5_CHEST'],
+    pairs: [['S5_CHEST', 'S_LEDGER'], ['S5_PAPERS', 'S_LEDGER'], ['S5_PAPERS', 'S5_CHEST']],
+    text: 'The Pale Order\'s ledger counts six men\'s shares of a Union payroll: the paymaster\'s chest Gideon Mercer\'s raiders took in 1864, buried behind the fall of \'72 when the Order dug for it.',
+    limits: 'A ledger and a chest prove a theft thirty years old. They do not put the knife in Cutler\'s hand.',
+    details: ['EV5_PAYROLL', 'EV5_PAPERS', 'SAWMILL_LEDGER', 'EV4_TALLY'],
+    links: ['D5_FIGURE'],
+    map: { x: 0.5, y: 0.2 },
+  },
+  D5_FIGURE: {
+    q: 'Q_PAYROLL', title: 'The Figure on the ridge',
+    ask: 'What is the Pale Figure?',
+    raisedBy: ['S5_FIGURE'],
+    pairs: [['S5_FIGURE', 'S2_FIGURE']],
+    text: 'The Figure Vale preached is a coat on a pole above the workings, with a lamp hung behind it on the nights the town needed reminding. It kept the valley off the ridge while the Order dug.',
+    limits: 'Who lit the lamp on which night, the pole does not say.',
+    details: ['EV5_FIGURE', 'T_VALE_FIGURE', 'TOWER_SOOT'],
+    links: [],
+    map: { x: 0.5, y: 0.8 },
+  },
+});
+
 // Chapter 4: who came up the stair after Hale, and on whose word. Exactly one is true; the readings exclude each other.
 Object.assign(CONCLUSIONS, {
   C4_CUTLER: {
@@ -624,7 +657,7 @@ export const OPEN_OUTCOME = OPEN_OUTCOMES.HALE; // (the first chapter's name for
 // the current question's threads and the clues joined to them are drawn.
 export const STATEMENT_MAP = {
   S_LITTLE_BLOOD: { x: 0.0, y: 0.0 }, S_HOISTED: { x: 0.33, y: 0.0 }, S_FROM_CREEK: { x: 0.0, y: 0.5 },
-  S_LEDGER: { x: 1.0, y: 0.0 },
+  S_LEDGER: { x: 1.0, y: 0.0, Q_PAYROLL: { x: 0.5, y: 0.0 } },
   S_OLD_BLOOD: { x: 0.0, y: 1.0 }, S_MISSING: { x: 0.33, y: 1.0 },
   S_SCREAM: { x: 0.67, y: 1.0 }, S_TRACKS: { x: 1.0, y: 1.0 }, S_RIDGE: { x: 1.0, y: 0.5, Q_ORDER: { x: 1.0, y: 1.0 } },
   S_PIT: { x: 0.5, y: 0.5 },
@@ -635,8 +668,9 @@ export const STATEMENT_MAP = {
   S4_REGISTER: { x: 0.2, y: 1.0 }, S4_RUSK: { x: 0.8, y: 1.0 },
   S4_NAME: { x: 0.5, y: 0.75 }, S4_KNIFE: { x: 0.0, y: 1.0 }, S4_ASHES: { x: 0.2, y: 0.0 }, S4_HAND: { x: 0.8, y: 0.0 },
   S4_ORDER: { x: 1.0, y: 1.0 }, S4_HEEL: { x: 1.0, y: 0.3 }, S4_WATCH: { x: 0.0, y: 0.3 },
+  S5_FIGURE: { x: 0.0, y: 1.0 }, S5_PAPERS: { x: 0.0, y: 0.0 }, S5_CHEST: { x: 1.0, y: 0.0 }, S5_CLARA: { x: 1.0, y: 0.5, Q_KILLER: { x: 0.5, y: 0.4 } },
   S4_BOOK: { x: 0.5, y: 0.0 }, S4_PAD: { x: 0.0, y: 0.9 }, S4_FINCH: { x: 0.5, y: 1.0 }, S4_CLARA: { x: 1.0, y: 0.9 },
   S2_FREIGHT: { x: 0.0, y: 0.0 }, S2_CRATE: { x: 0.3, y: 0.0 }, S2_CACHE: { x: 0.58, y: 0.0 }, S2_HEELS: { x: 1.0, y: 0.0 },
-  S2_COIN: { x: 0.0, y: 0.46 }, S2_HALE_ASKED: { x: 0.3, y: 0.6 }, S2_MILL_HEELS: { x: 1.0, y: 0.48 },  S2_FIGURE: { x: 1.0, y: 0.66 },
+  S2_COIN: { x: 0.0, y: 0.46 }, S2_HALE_ASKED: { x: 0.3, y: 0.6 }, S2_MILL_HEELS: { x: 1.0, y: 0.48 },  S2_FIGURE: { x: 1.0, y: 0.66, Q_PAYROLL: { x: 1.0, y: 1.0 } },
   S2_WIRE: { x: 0.0, y: 1.0 }, S2_LINE_DEAD: { x: 0.33, y: 1.0 }, S2_SOOT: { x: 0.64, y: 1.0 },
 };

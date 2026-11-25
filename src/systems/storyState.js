@@ -100,6 +100,12 @@ export function apply(effects, s) {
     if (e.removeItem) s.items = s.items.filter((i) => i !== e.removeItem);
     if (e.char) for (const [c, patch] of Object.entries(e.char)) Object.assign(s.chars[c], patch);
     if (e.script) out.push({ script: e.script });
+    if (e.shoot) { // the revolver fired at someone, in an authored scene: one cartridge gone, the man dead (GDD §20.5)
+      s.consequences.shotsFired += 1;
+      s.revolver.loaded = Math.max(0, s.revolver.loaded - 1);
+      if (!s.consequences.peopleKilled.includes(e.shoot)) s.consequences.peopleKilled.push(e.shoot);
+      if (s.chars[e.shoot]) s.chars[e.shoot].alive = false;
+    }
     if (e.threat && !s.consequences.threatsMade.includes(e.threat)) s.consequences.threatsMade.push(e.threat); // the revolver drawn on someone
     if (e.log && !s.timeline.some((t) => t.text === e.log)) s.timeline.push({ t: timeString(s.time), text: e.log });
   }

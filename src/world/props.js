@@ -893,3 +893,179 @@ export function coffeePotProp(x, y) {
 }
 
 Object.assign(PROP_FACTORIES, { jailCell: jailCellProp, shroud: shroudProp, newGrave: newGraveProp, coffeePot: coffeePotProp });
+
+// ======================= Chapter 5: the fourth night =======================
+// The mine mouth on the ridge: squared timbers round a black opening, lamplight far inside. (x, y): world base centre.
+export function mineMouthProp(x, y) {
+  let img = null, t = 0;
+  return {
+    z: -0.5,
+    update(dt) { t += dt; },
+    draw(ctx, camX) {
+      if (!img) {
+        img = nativePiece(66, 72, (g) => {
+          // the rock face the adit is cut into
+          for (let yy = 0; yy < 72; yy++) for (let xx = 0; xx < 66; xx++) {
+            const edge = Math.abs(xx - 33) + (72 - yy) * 0.2;
+            if (edge < 36 - (yy < 10 ? (10 - yy) * 2 : 0)) px(g, xx, yy, (xx * 7 + yy * 3) % 11 === 0 ? '#565049' : (xx + yy) % 5 === 0 ? '#3d3834' : '#24272e');
+          }
+          rect(g, 15, 14, 36, 58, '#05070c'); // the opening
+          for (const lx of [11, 50]) { rect(g, lx, 12, 5, 60, '#3b2a1e'); vline(g, lx, 12, 71, '#4e3826'); vline(g, lx + 4, 12, 71, '#1a120d'); }
+          rect(g, 8, 8, 50, 6, '#3b2a1e'); hline(g, 8, 57, 8, '#634832'); hline(g, 8, 57, 13, '#1a120d'); // the cap
+          for (let i = 0; i < 46; i++) if (i % 3) px(g, 10 + i, 7, '#e4e9f0'); // snow on the cap
+          for (const lx of [17, 48]) vline(g, lx, 14, 20, '#a3afc2'); // icicles
+          px(g, 30, 15, '#a3afc2'); px(g, 30, 16, '#a3afc2');
+        });
+      }
+      drawNative(ctx, img, x - 22, y - 48, camX);
+      // lamplight far back in the drift
+      const k = 0.55 + Math.sin(t * 3.1) * 0.08 + Math.sin(t * 7.7) * 0.05;
+      ctx.globalAlpha = k * 0.6; ctx.fillStyle = '#d97706'; ctx.fillRect(x + 1 - camX, y - 16, 2, 2);
+      ctx.globalAlpha = k; ctx.fillStyle = '#fcd34d'; ctx.fillRect(x + 1.5 - camX, y - 15.5, 2 / 3, 2 / 3);
+      ctx.globalAlpha = 1;
+    },
+  };
+}
+
+// The Pale Figure: a pole with a crosspiece and a bleached canvas duster hung on it, a lantern hook at the top. Seen
+// through snow from below, with a lantern behind it, it is a tall pale man with his arms out. (x, y): world base.
+export function paleFigureProp(x, y) {
+  let img = null, t = 0;
+  return {
+    z: -0.6,
+    update(dt) { t += dt; },
+    draw(ctx, camX) {
+      if (!img) {
+        img = nativePiece(30, 78, (g) => {
+          rect(g, 14, 4, 2, 74, '#3b2a1e'); vline(g, 14, 4, 77, '#4e3826'); // the pole
+          rect(g, 3, 14, 24, 2, '#3b2a1e'); // the crosspiece
+          line(g, 15, 2, 19, 0, '#3a3f4a'); px(g, 19, 1, '#3a3f4a'); // the lantern hook
+          // the duster: shoulders on the crosspiece, hanging in long folds
+          for (let yy = 15; yy < 56; yy++) {
+            const half = yy < 20 ? 12 : 9 + Math.round((yy - 20) * 0.08);
+            for (let xx = 15 - half; xx <= 15 + half; xx++) px(g, xx, yy, (xx + Math.floor(yy / 3)) % 6 === 0 ? '#c8bfa8' : xx < 10 ? '#b5ab92' : '#e4dcc4');
+          }
+          for (const fx of [9, 15, 21]) vline(g, fx, 22, 55, '#b5ab92');
+          rect(g, 11, 8, 8, 7, '#e4dcc4'); hline(g, 11, 18, 8, '#c8bfa8'); // a hood of the same canvas, stuffed with straw
+          px(g, 13, 11, '#8d8574'); px(g, 16, 11, '#8d8574');
+        });
+      }
+      const sway = Math.round(Math.sin(t * 1.7) * 1.2 + Math.sin(t * 4.3) * 0.5);
+      drawNative(ctx, img, x - 10 + sway / 3, y - 52, camX);
+    },
+  };
+}
+
+// Clara's mother's telescope on its tripod, by the window. (x, y): world base.
+export function telescopeProp(x, y) {
+  let img = null;
+  return {
+    z: 0.6,
+    draw(ctx, camX) {
+      if (!img) {
+        img = nativePiece(40, 46, (g) => {
+          line(g, 20, 22, 8, 45, '#3b2a1e'); line(g, 20, 22, 32, 45, '#3b2a1e'); line(g, 20, 22, 20, 45, '#4e3826'); // the tripod
+          rect(g, 17, 20, 6, 4, '#3a3f4a');
+          // the tube, tilted down toward the window: pointed at the mine mouth, not the sky
+          for (let i = 0; i < 30; i++) { const yy = 22 - Math.round(i * 0.18); rect(g, 4 + i, yy - 2, 1, 4, i < 4 ? '#5e461c' : i % 9 === 0 ? '#a07a3a' : '#8a6a2a'); px(g, 4 + i, yy - 2, '#a07a3a'); }
+          rect(g, 0, 20, 4, 5, '#5e461c');
+        });
+      }
+      drawNative(ctx, img, x - 14, y - 30, camX);
+    },
+  };
+}
+
+// The paymaster's chest by the fall: iron-bound, the lid prised up, canvas bags inside. (x, y): world base centre.
+export function chestProp(x, y) {
+  let img = null, t = 0;
+  return {
+    z: 0.5,
+    update(dt) { t += dt; },
+    draw(ctx, camX) {
+      if (!img) {
+        img = nativePiece(36, 26, (g) => {
+          rect(g, 2, 9, 32, 16, '#3b2a1e'); rect(g, 3, 10, 30, 14, '#4e3826');
+          for (const bx of [3, 16, 29]) rect(g, bx, 9, 3, 16, '#24272e'); // iron bands
+          hline(g, 2, 33, 24, '#1a120d');
+          // the lid, prised up and leaning back
+          for (let i = 0; i < 32; i++) { const yy = 8 - Math.round(i * 0.18); px(g, 2 + i, yy, '#634832'); px(g, 2 + i, yy - 1, '#3b2a1e'); }
+          rect(g, 6, 7, 24, 3, '#8d8574'); // the canvas bags
+          for (const cx of [9, 15, 22]) px(g, cx, 7, '#c8bfa8');
+          px(g, 12, 8, '#fcd34d'); px(g, 25, 8, '#a07a3a'); // coin
+          rect(g, 8, 14, 18, 1, '#5a4a38'); // the stencil under the rust
+        });
+      }
+      drawNative(ctx, img, x - 12, y - 17, camX);
+      if (Math.sin(t * 2.3) > 0.92) { ctx.fillStyle = '#fff1c8'; ctx.fillRect(x - 4 - camX, y - 12, 2 / 3, 2 / 3); }
+    },
+  };
+}
+
+// The charge at the foot of the fall: powder sticks bundled in a cavalry jacket, the fuse run back along the floor.
+// Lit (fuseLit): a spark eats along the fuse until the fuse is pulled (fuseOut) or the fall goes (workingsBlown).
+// (x, y): world base of the bundle.
+export function chargeProp(x, y) {
+  let img = null, t = 0;
+  const burning = (g) => g && g.state.flags.fuseLit && !g.state.flags.fuseOut && !g.state.flags.workingsBlown;
+  return {
+    z: 0.4,
+    update(dt) { t += dt; },
+    draw(ctx, camX, game) {
+      if (game && game.state.flags.workingsBlown) return;
+      if (!img) {
+        img = nativePiece(22, 14, (g) => {
+          rect(g, 2, 5, 18, 8, '#3a3f4a'); rect(g, 3, 6, 16, 6, '#565049'); // the grey jacket round it
+          for (const sx of [5, 9, 13]) { rect(g, sx, 2, 3, 5, '#991b1b'); px(g, sx, 2, '#4a1010'); } // the sticks
+          hline(g, 2, 19, 12, '#24272e');
+        });
+      }
+      drawNative(ctx, img, x - 7, y - 9, camX);
+      // the fuse along the floor, back toward the drift
+      ctx.fillStyle = '#2a2118'; ctx.fillRect(x - 46 - camX, y - 1, 40, 2 / 3);
+      if (burning(game)) {
+        const k = (t * 0.6) % 1;
+        const sx = x - 46 + 40 * (0.15 + k * 0.5);
+        ctx.fillStyle = '#fcd34d'; ctx.fillRect(sx - camX, y - 1.6, 1, 1);
+        ctx.globalAlpha = 0.6; ctx.fillStyle = '#d97706';
+        for (let i = 0; i < 3; i++) ctx.fillRect(sx - camX + Math.sin(t * 20 + i) * 1.4, y - 2.5 - i * 0.7, 2 / 3, 2 / 3);
+        ctx.globalAlpha = 1;
+      }
+    },
+    lights(game) {
+      if (!burning(game)) return [];
+      return [{ x: x - 30 + Math.sin(t * 9), y: y - 2, r: 14 + Math.sin(t * 17), warm: 0.8, strength: 0.9 }];
+    },
+  };
+}
+
+// The fall of 1872: rock to the roof, timbers snapped in it. After the blast, a new fall further out, and dust.
+// (x, y): world base of the old fall's near foot.
+export function fallProp(x, y) {
+  let img = null, big = null, t = 0;
+  const pile = (W, H, seed) => nativePiece(W, H, (g) => {
+    for (let xx = 0; xx < W; xx++) {
+      const top = Math.round(H * 0.08 + Math.max(0, (W * 0.35 - xx)) * (H / (W * 0.35)) * 0.9 + Math.sin(xx * 0.7 + seed) * 2);
+      for (let yy = Math.max(0, top); yy < H; yy++) px(g, xx, yy, (xx * 13 + yy * 7 + seed) % 9 === 0 ? '#635c55' : (xx + yy * 3) % 7 === 0 ? '#3d3834' : (xx * yy + seed) % 5 === 0 ? '#565049' : '#24272e');
+    }
+    line(g, Math.round(W * 0.4), Math.round(H * 0.3), Math.round(W * 0.75), Math.round(H * 0.15), '#3b2a1e'); // a snapped cap
+    line(g, Math.round(W * 0.55), Math.round(H * 0.55), Math.round(W * 0.6), Math.round(H * 0.2), '#4e3826');
+  });
+  return {
+    z: 0.3,
+    update(dt) { t += dt; },
+    draw(ctx, camX, game) {
+      if (!img) img = pile(90, 120, 3);
+      drawNative(ctx, img, x, y - 78, camX);
+      if (game && game.state.flags.workingsBlown) {
+        if (!big) big = pile(150, 110, 11);
+        drawNative(ctx, big, x - 70, y - 72, camX);
+        ctx.globalAlpha = 0.18 + Math.sin(t * 0.8) * 0.04; ctx.fillStyle = '#8d8574';
+        ctx.fillRect(x - 90 - camX, y - 80, 140, 80);
+        ctx.globalAlpha = 1;
+      }
+    },
+  };
+}
+
+Object.assign(PROP_FACTORIES, { mineMouth: mineMouthProp, paleFigure: paleFigureProp, telescope: telescopeProp, chest: chestProp, charge: chargeProp, fall: fallProp });

@@ -43,7 +43,7 @@ for (const size of SIZES) {
           }
         };
         g.newGame();
-        const runs = [T.fullRun(), T.fullRun2(), T.fullRun3(), T.fullRun4()];
+        const runs = [T.fullRun(), T.fullRun2(), T.fullRun3(), T.fullRun4(), T.fullRun5()];
         g.update = up; g.checkpoint = cp;
         // the notebook at sampled checkpoints (and the last)
         const errs = [];
@@ -65,6 +65,7 @@ for (const size of SIZES) {
           ['inventory', () => { const v = new Inventory(g); v.panelKind = 'inventory'; return v; }], ['map', () => new MapView(g)],
           ['telegram', () => new DocumentView(g, 'TELEGRAM')], ['end card 1', () => new EndCard(g, 1)], ['end card 2', () => new EndCard(g, 2)],
           ['end card 3', () => new EndCard(g, 3)], ['end card 4', () => new EndCard(g, 4)],
+          ...['EXPOSED', 'BURIED', 'FALL'].map((e) => [`last card ${e}`, () => { Object.assign(g.state.flags, { ending: e, claraTestifies: e === 'EXPOSED', letMercerGo: e === 'BURIED', cutlerShot: e !== 'EXPOSED' }); return new EndCard(g, 5); }]),
           ['unreadable save', () => new Confirm(g, 'This save could not be read. It is kept aside, not deleted. Start a new investigation?', 'x')],
         ];
         for (const [name, mk] of panels) {
@@ -79,7 +80,7 @@ for (const size of SIZES) {
         add(T.auditText('[title]'));
         return { issues: [...issues], errs, runs: runs.map((x) => x.errors) };
       }, !!size.touch);
-      expect(r.runs, 'the playthroughs themselves').toEqual([[], [], [], []]);
+      expect(r.runs, 'the playthroughs themselves').toEqual([[], [], [], [], []]);
       expect(r.errs, 'drawing errors').toEqual([]);
       expect(r.issues, 'text off screen, past its panel, or over other text').toEqual([]);
       await expectClean(page, errors);

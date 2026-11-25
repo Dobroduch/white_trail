@@ -27,14 +27,14 @@ async function continueWith(page, raw) {
 }
 
 test.describe('robustness', () => {
-  test('every checkpoint written in chapters 1–4 resumes into a playable state', async ({ page }) => {
+  test('every checkpoint written in chapters 1–5 resumes into a playable state', async ({ page }) => {
     test.setTimeout(600_000);
     const { errors } = await boot(page, { test: '1' });
     const snaps = await page.evaluate(() => {
       const g = TWT, out = [];
       const cp = g.checkpoint.bind(g);
       g.checkpoint = (...a) => { const r = cp(...a); if (g.mode === 'play') out.push(localStorage.getItem('thewhitetrail.save.v1')); return r; };
-      const runs = [T.fullRun({ conclusion: 'C_STAGED', pit: true }), T.fullRun2({ conclusion: 'C2_BLAST' }), T.fullRun3({ conclusion: 'C3_GUEST' }), T.fullRun4({ conclusion: 'C4_CUTLER' })];
+      const runs = [T.fullRun({ conclusion: 'C_STAGED', pit: true }), T.fullRun2({ conclusion: 'C2_BLAST' }), T.fullRun3({ conclusion: 'C3_GUEST' }), T.fullRun4({ conclusion: 'C4_CUTLER' }), T.fullRun5({ cutler: 'hold' })];
       g.checkpoint = cp;
       return { out: [...new Set(out)], errs: runs.flatMap((r) => r.errors) };
     });

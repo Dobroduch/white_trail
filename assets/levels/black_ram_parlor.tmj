@@ -72,6 +72,11 @@
    "name": "chapter4",
    "type": "bool",
    "value": true
+  },
+  {
+   "name": "chapter5",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -1573,6 +1578,11 @@
        "name": "blockedLines",
        "type": "string",
        "value": "Bolted for the night, and Mrs. Gable has the key upstairs."
+      },
+      {
+       "name": "scriptIf",
+       "type": "string",
+       "value": "[{\"if\":{\"all\":[{\"phase\":\"NIGHT\"},{\"flag\":\"chapter4Complete\"},{\"notFlag\":\"ch5Started\"}]},\"script\":\"NIGHT_GO\"}]"
       }
      ]
     },

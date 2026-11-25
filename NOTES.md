@@ -936,8 +936,8 @@ then 21:30, NIGHT, and the **fourth day's end card** ("Sit by the fire a while",
 
 **Not done / limits.**
 - Chapter 5 (the fourth night) does not exist. The end card says the story continues; Q8 (the evidence standard) and
-  Q9 (the endings) are still open and are needed before it.
-- At night after the fourth day the parlor is a dead end (front door bolted), as after the third.
+  Q9 (the endings) are still open and are needed before it. (Both settled, and the chapter built: §27.)
+- At night after the fourth day the parlor is a dead end (front door bolted), as after the third. (Now the way up the ridge: §27.)
 - Cutler is a recolour of the conductor's build; the loft is built from store and hotel tiles. No new audio.
 - The mobile touch playthrough (`mobile.spec.mjs`) was not extended to Chapter 4.
 
@@ -963,3 +963,82 @@ No new content. Issues found by an audit and new tests, and what was done:
   scripted beat); a touch-only Chapter 4 playthrough in `mobile.spec.mjs` (all three phone projects); the layout audit
   covers the new save message.
 - `docs/QUALITY_GATES.md`: the checklist to run after every chapter.
+
+## 27. Chapter 5, "The Fall": the fourth night, and the end of the story (2026-11-25)
+
+The design owner settled GDD Part IX Q8, Q9 and Cutler's fate on 2026-11-25 by accepting the Mystery Bible §8
+proposals unchanged; §9 there records exactly how the game applies them and what this chapter invented.
+
+**Continuation.**
+- The fourth day's end card now offers **"Go on: the fourth night"** first (`CH5_OPEN`), then "Sit by the fire a
+  while" and the title. After sitting a while, the parlor's front door at night asks "Go up the ridge now?"
+  (`NIGHT_GO`, a `scriptIf` on `pl_front`).
+- `CH5_OPEN`: the card **V · THE FALL**, 21:50, the telegraph tower in the storm (wind full). No way back down that
+  night (the tower's west edge is closed from `ch5Started`); Ada is not at the tower at night.
+
+**The night.**
+1. **The ridge** (`RIDGE`, new map `ridge_path.tmj`, east off the tower): the second cut in the wire (`EV5_WIRE`,
+   optional); a pale shape in the snow (`FIGURE_SEEN`) that is a canvas duster on a pole (`EV5_FIGURE`); Finch, hurt,
+   if he went up after "the woman" (`FINCH_RIDGE`, `T5_FINCH_RIDGE`); Vale's bell from below if he turned (`BELL`);
+   tracks; the mine mouth; the spur up to the cabin, open only if Silas knows of it (`knowsObservatory`). When Clara is
+   at the cabin, the mine mouth waits until she has been found.
+2. **The observatory cabin** (`OBSERVATORY`, `observatory_cabin.tmj`): Clara (`CABIN_IN`): her account
+   (`T5_CLARA`), and her question, "will you take it all the way? Even him?" (`claraTestifies`); she comes with Silas
+   (`claraWithSilas`). Her copy of her father's page (`EV5_PAPERS`), her mother's telescope (`EV5_TELESCOPE`). If Cutler
+   took her (`huntForGuest`) the cabin is empty and broken.
+3. **The Pale workings** (`WORKINGS`, `pale_workings.tmj`): Mercer by the paymaster's chest (`MERCER_WK`,
+   `EV5_PAYROLL`), the names in the timber (`EV5_TIMBER`), Cutler at the fall with the charge (`CUTLER_FALL`). The fuse
+   is already burning if Cutler was warned, Mercer was named, or Clara was taken; then the confrontation starts at once.
+4. **The choice**: "[Fire]" (Cutler dead, one cartridge gone; a lit fuse torn out) or "[Hold fire]" (Cutler taken
+   alive; a lit fuse brings the fall down: Clara survives beside Silas, is dug out by the town if Vale rang the bell, or
+   is lost).
+5. **The reckoning** (`RECKONING`): Clara's question if she was held; then Mercer's offer. Refused with a witness and a
+   document → **Exposed**; refused without a witness → **Known, but buried**; Mercer let go → **Known, but buried**;
+   Clara lost → **The fall**. Epilogue over black (`EPI_*`), then the last card (`EndCard(5)`: the ending, a line, what
+   became of Clara, Mercer and Cutler, and the counts; only "Return to the title"). "Continue" on a finished story
+   shows the last card again.
+
+**The notebook.** A fourth open question, "What is behind the fall?" (`Q_PAYROLL`): clues `S5_FIGURE`, `S5_PAPERS`,
+`S5_CHEST`, `S5_CLARA` (also on the killer's board), with the ledger and Vale's Figure joined in; deductions
+`D5_PAYROLL` (the Order's counting is a Union payroll) and `D5_FIGURE` (the Figure is a coat on a pole). Not a case:
+the ending settles it. Leads `L5_*`; Clara's People entry gains her portrait (`claraMet`) and notes; Cutler's notes say
+how he ended; hints `H5_RIDGE`, `H5_CABIN`, `H5_WORKINGS`, `H5_FALL`.
+
+**Engine and tools.**
+- `{ shoot: id }` effect: the revolver fired in an authored scene (shots, cartridges, `peopleKilled`, `alive`).
+- Cutscene steps may carry `ifNotFlag` as well as `ifFlag`.
+- Sounds: `shot`, `blast` (synthesised; no recorded samples).
+- `EndCard(4)` → `CH5_OPEN`; `EndCard(5)`; `chapterOf` knows chapter 5; `continueGame` resumes on the last card.
+- `tools/make-chapter5-art.mjs` (palette-exact, with `.pxo` sources): Clara (re-dressed from Ada's build), Silas's map
+  pieces (ridge, workings, observatory, the way up from the tower).
+- `tools/make-chapter5-levels.mjs`: the three maps (the ridge from the road's parallax and ground; the cabin from
+  store/hotel tiles; the workings from the wheel pit's stone and timber) and the patches to the tower and the parlor.
+- Props (`src/world/props.js`): `mineMouth`, `paleFigure`, `telescope`, `chest`, `charge` (the burning fuse, with its
+  light), `fall` (the old fall, and the new one after the blast).
+- Harness: `T.fullRun5({ cabin, clara, cutler, mercer, thorough })`; `T.snapshot()` / `T.resume(json, mutate)` branch
+  one played-through chapter many ways through the real "Continue".
+- `tools/perf.mjs` measures the ridge and the workings too.
+
+**Tests.**
+- `tests/e2e/chapter5.spec.mjs` (4): each test plays chapters 1–4 for real, then branches the night from that save:
+  the true account (Exposed held and fired; Mercer let go; no witness who will stand up; Clara's word alone; the cabin
+  not known); Finch up after "the woman" (the fall; the shot that saves her; Vale's bell and the town digging her out);
+  Mercer named and the revolver drawn on Rusk (the fall comes down on the chest with Clara safe; Mercer let go);
+  "Sit by the fire" then the front door, and saves on the ridge and in the workings resuming.
+- `mobile.spec.mjs`: a touch-only Chapter 5 playthrough on all three phone projects (no touch misses).
+- `robustness.spec.mjs`: every checkpoint of chapters 1–5 resumes playable (or on the last card).
+- `layout.spec.mjs`: plays through Chapter 5 and audits the last card for all three endings.
+- `chapter4.spec.mjs`: "Sit by the fire a while" is now the second item on the fourth end card.
+- Results 2026-11-25: `node tools/validate.mjs` 0 errors (5698 checks); `npx playwright test` 187 passed;
+  `node tools/palette.mjs --check` 0 off-palette pixels in the new art; `node tools/perf.mjs --label ch5`
+  (`test-results/perf/ch5.json`, one run): median frame gap 9.7 ms in every scenario including the ridge and the
+  workings; at 4× throttling at most 0.1% of frames over 33 ms on the new scenes.
+
+**Not done / limits.**
+- The workings are built from the wheel pit's masonry tiles: they read as a stone-lined adit rather than raw rock.
+- Clara is a recolour of Ada's build; no new animation for the shot or the blast beyond the sound, a fade and the
+  props. No new audio samples.
+- The fuse burns only in the text and the prop: there is no real-time pressure (the choice is a dialogue choice).
+- In practice the "document" half of the evidence standard is always met (Chapter 4 cannot end without the tally book
+  and Ada's book); what decides Exposed is the witness.
+- The last card names Clara, Mercer and Cutler only; Vale, Rusk, Mrs. Gable, Finch and Ada appear only in the epilogues.

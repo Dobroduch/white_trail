@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 10,
- "nextobjectid": 11,
+ "nextobjectid": 12,
  "properties": [
   {
    "name": "name",
@@ -60,6 +60,11 @@
   },
   {
    "name": "chapter4",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "chapter5",
    "type": "bool",
    "value": true
   }
@@ -3105,6 +3110,16 @@
        "name": "spawn",
        "type": "string",
        "value": "fromTower"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notFlag\":\"ch5Started\"}"
+      },
+      {
+       "name": "blockedLines",
+       "type": "string",
+       "value": "Not back down. Not tonight."
       }
      ]
     },
@@ -3126,24 +3141,24 @@
        "value": "right"
       },
       {
+       "name": "blockedLines",
+       "type": "string",
+       "value": "The path runs on along the ridge, toward the old workings. Not today, and not without knowing what is up there."
+      },
+      {
        "name": "to",
        "type": "string",
-       "value": "TELEGRAPH"
+       "value": "RIDGE"
       },
       {
        "name": "spawn",
        "type": "string",
-       "value": "fromChapel"
+       "value": "fromTower"
       },
       {
        "name": "if",
        "type": "string",
-       "value": "{\"flag\":\"never\"}"
-      },
-      {
-       "name": "blockedLines",
-       "type": "string",
-       "value": "The path runs on along the ridge, toward the old workings. Not today, and not without knowing what is up there."
+       "value": "{\"flag\":\"ch5Started\"}"
       }
      ]
     },
@@ -3206,7 +3221,7 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"any\":[{\"notFlag\":\"ch4Started\"},{\"notFlag\":\"adaWarned\"}]}"
+       "value": "{\"all\":[{\"any\":[{\"notFlag\":\"ch4Started\"},{\"notFlag\":\"adaWarned\"}]},{\"notFlag\":\"ch5Started\"}]}"
       }
      ]
     },
@@ -3313,6 +3328,25 @@
        "name": "if",
        "type": "string",
        "value": "{\"notFlag\":\"towerEntered\"}"
+      }
+     ]
+    },
+    {
+     "id": 11,
+     "name": "fromRidge",
+     "type": "spawn",
+     "x": 650,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
       }
      ]
     }

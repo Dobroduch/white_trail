@@ -20,4 +20,9 @@ export const LEVELS = [
   { id: 'FINCH_OFFICE', url: 'assets/levels/constable_office.tmj' },
   // Chapter 4, the fourth day: Wade Cutler's loft over the woodshed, at the east end of Main Street.
   { id: 'CUTLER_LOFT', url: 'assets/levels/cutler_loft.tmj' },
+  // Chapter 5, the fourth night: the ridge in the storm, east of the telegraph tower; the Pale workings off it; the
+  // observatory cabin above them.
+  { id: 'RIDGE', url: 'assets/levels/ridge_path.tmj' },
+  { id: 'WORKINGS', url: 'assets/levels/pale_workings.tmj' },
+  { id: 'OBSERVATORY', url: 'assets/levels/observatory_cabin.tmj' },
 ];

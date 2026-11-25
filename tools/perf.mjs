@@ -27,6 +27,8 @@ const SCENES = [
   { scene: 'VILLAGE', phase: 'NIGHT' }, // exterior: parallax, snow, fog, lantern, lights
   { scene: 'SAWMILL', phase: 'NIGHT' }, // the heaviest exterior
   { scene: 'PARLOR', phase: 'EVENING' }, // interior: fire, lamps, patrons
+  { scene: 'RIDGE', phase: 'NIGHT' }, // Chapter 5: the storm at its thickest (snow 1, wind 1, fog), the Figure, the mine mouth
+  { scene: 'WORKINGS', phase: 'NIGHT' }, // Chapter 5: the drift, props with their own lights (the chest, the charge, the fall)
 ];
 const DEVICES = [
   { name: 'desktop 1280x720', viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 },

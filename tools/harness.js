@@ -718,6 +718,121 @@ export function install() {
       rep.passed = rep.errors.length === 0;
       return rep;
     },
+    // The story state as it is now (JSON), and a way back to it: written as the save, then "Continue" (as a player
+    // would), with an optional change to the state first. Lets one played-through chapter be branched many ways.
+    snapshot() { return JSON.stringify(G().state); },
+    resume(json, mutate = null) {
+      const st = JSON.parse(json);
+      if (mutate) mutate(st);
+      localStorage.setItem('thewhitetrail.save.v1', JSON.stringify({ savedAt: Date.now(), state: st }));
+      G().continueGame(); T.step(60);
+      return T.info();
+    },
+    // Chapter 5, the fourth night, from the fourth day's end card to the last card.
+    //   cabin:  go up to the observatory cabin when the way is known (true) or go straight to the workings (false)
+    //   clara:  'yes' (all the way, even him) | 'no' (only see her safe), when she asks
+    //   cutler: 'fire' | 'hold'          mercer: 'take' | 'let'          thorough: the optional looks
+    fullRun5({ cabin = true, clara = 'yes', cutler = 'hold', mercer = 'take', thorough = true } = {}) {
+      const g = G();
+      const s = g.state;
+      const rep = { steps: [], errors: [] };
+      T.lastRep = rep;
+      const check = (name, cond) => { rep.steps.push((cond ? 'PASS ' : 'FAIL ') + name); if (!cond) rep.errors.push(name); };
+      const look = (x, times = 2) => { T.walkTo(x); for (let k = 0; k < times; k++) { if (!g.prompt) break; T.press('KeyE'); T.talkThrough(); } };
+      // play on through dialogue and scripts, answering each choice with the first listed prefix that matches
+      const answer = (order, maxFrames = 9000) => {
+        for (let i = 0; i < maxFrames && (g.dialogue.active || g.cutsceneBlocking() || g.transition); i++) {
+          if (g.overlay && g.overlay.constructor.name === 'EndCard') break;
+          if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
+            const c = g.dialogue.choices.map((x) => x.text);
+            let idx = -1;
+            for (const o of order) { idx = c.findIndex((t) => t.startsWith(o)); if (idx >= 0) break; }
+            rep.chose = (rep.chose || []).concat(c[idx >= 0 ? idx : c.length - 1]);
+            T.key('Digit' + ((idx >= 0 ? idx : c.length - 1) + 1));
+          } else if (g.dialogue.active && i % 4 === 0) T.key('KeyE');
+          g.update(1 / 60);
+        }
+        for (let i = 0; i < 16; i++) g.update(1 / 60);
+      };
+      const ready = () => { answer(order); for (let i = 0; i < 900 && !g.canMove(); i++) g.update(1 / 60); }; // (a walk waits for any beat on screen)
+      const leave = (dir, frames = 30) => { ready(); T.hold(dir === 'right' ? 'KeyD' : 'KeyA', frames); T.step(90); T.talkThrough(); };
+      const door = (x) => { T.walkTo(x); T.press('KeyE'); T.step(60); answer(order); };
+      const claraWord = clara === 'yes' ? 'All the way' : 'I\'ll see you safe';
+      const order = ['Wade Cutler. On your', 'Not for certain', claraWord, cutler === 'fire' ? '[Fire]' : '[Hold fire]', mercer === 'take' ? 'No. You\'re coming' : 'Go. Take it'];
+      const before = { items: s.items.slice(), evidence: Object.keys(s.evidence).length, cases: JSON.stringify(s.cases), shots: s.consequences.shotsFired };
+      // ---- from the fourth day's end card straight on into the fourth night ----
+      check('the fourth day\'s end card offers the fourth night', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 4 && g.overlay.items[0].act === 'nextChapter');
+      for (let i = 0; i < 150; i++) g.update(1 / 60);
+      T.press('KeyE', 3);
+      for (let i = 0; i < 900 && !g.dialogue.active; i++) g.update(1 / 60);
+      T.talkThrough([], 3000);
+      check('the fourth night opens at the tower, in the storm', g.scene.id === 'TELEGRAPH' && s.phase === 'NIGHT' && s.flags.ch5Started && g.canMove() && !g.npcs.some((n) => n.id === 'ada'));
+      check('nothing carried or recorded was lost', before.items.every((i) => s.items.includes(i)) && Object.keys(s.evidence).length >= before.evidence);
+      T.walkTo(6); leave('left');
+      check('no way back down tonight', g.scene.id === 'TELEGRAPH');
+      // ---- the ridge ----
+      T.walkTo(700); leave('right');
+      check('out along the ridge', g.scene.id === 'RIDGE' && s.flags.ridgeEntered && s.map.visited.includes('ridge'));
+      if (thorough) { look(100, 2); check('the second cut in the wire', !!s.evidence.EV5_WIRE); }
+      T.walkTo(250); T.talkThrough();
+      check('a pale shape in the snow ahead', s.flags.figureSeen);
+      if (thorough) { look(288, 2); check('the Pale Figure: a coat on a pole', s.evidence.EV5_FIGURE && s.evidence.EV5_FIGURE.examined); }
+      if (s.flags.huntForGuest) {
+        T.walkTo(380); T.press('KeyE'); answer(['Can you walk', 'Keep your head']);
+        check('Finch, hurt in the snow: Cutler took her to the workings', !!s.evidence.T5_FINCH_RIDGE);
+      }
+      T.walkTo(500); T.talkThrough();
+      check('the bell rings only if Vale turned', !!s.flags.bellRang === !!s.flags.valeTurned);
+      // ---- the cabin ----
+      const atCabin = s.flags.knowsObservatory && !s.flags.huntForGuest;
+      if (s.flags.knowsObservatory && (cabin || atCabin)) {
+        if (atCabin && !cabin) { door(564); check('the mine mouth waits until Clara is found', g.scene.id === 'RIDGE'); }
+        T.walkTo(700); ready(); T.hold('KeyD', 30); T.step(90);
+        for (let i = 0; i < 300 && !s.flags.cabinVisited; i++) g.update(1 / 60);
+        answer(order);
+        check('up to the observatory cabin', g.scene.id === 'OBSERVATORY' && s.flags.cabinVisited && s.map.visited.includes('observatory'));
+        if (atCabin) check('Clara Mercer, found; she comes with me', s.flags.claraWithSilas && !!s.evidence.T5_CLARA && s.flags.claraAsked && !g.npcs.some((n) => n.id === 'clara'));
+        else check('the cabin is empty and broken', !s.flags.claraWithSilas && g.interactables().some((i) => i.ref && i.ref.id === 'ob_upset'));
+        look(200, 2);
+        check('Clara\'s copy of her father\'s page', s.evidence.EV5_PAPERS && s.evidence.EV5_PAPERS.examined);
+        if (thorough) { look(80, 1); check('her mother\'s glass, pointed at the workings', !!s.evidence.EV5_TELESCOPE); }
+        door(20);
+        check('back on the ridge', g.scene.id === 'RIDGE');
+      } else if (!s.flags.knowsObservatory) {
+        T.walkTo(700); T.hold('KeyD', 30); T.step(60); T.talkThrough();
+        check('without knowing the way, the path up is lost in the snow', g.scene.id === 'RIDGE');
+      }
+      // ---- the workings ----
+      door(564);
+      for (let i = 0; i < 300 && !s.flags.workingsEntered; i++) g.update(1 / 60);
+      answer(order);
+      check('into the Pale workings', g.scene.id === 'WORKINGS' && s.flags.workingsEntered && s.map.visited.includes('workings'));
+      rep.fuseLit = !!s.flags.fuseLit;
+      check('the fuse is lit only if they were warned (or Clara was taken)', rep.fuseLit === !!(s.flags.cutlerWarned || s.flags.mercerAccused || s.flags.huntForGuest));
+      if (!s.flags.climaxStarted) {
+        check('Mercer by the chest, Cutler at the fall', g.npcs.some((n) => n.id === 'mercer') && g.npcs.some((n) => n.id === 'cutler'));
+        if (thorough) {
+          T.walkTo(196); T.press('KeyE'); answer(['Who killed', 'Call Cutler', '[Leave him]']);
+          look(107, 1);
+          look(242, 2);
+          check('the paymaster\'s chest', s.evidence.EV5_PAYROLL && s.evidence.EV5_PAYROLL.examined);
+        }
+        T.walkTo(300);
+        answer(order);
+      } else answer(order);
+      for (let i = 0; i < 9000 && !(g.overlay && g.overlay.constructor.name === 'EndCard'); i++) { answer(order, 60); g.update(1 / 60); }
+      T.step(60);
+      rep.ending = s.flags.ending;
+      check('the last card', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 5 && s.flags.chapter5Complete);
+      check('the last card offers only the title', g.overlay && g.overlay.items.length === 1 && g.overlay.items[0].act === 'title');
+      check('Cutler shot only if I fired', !!s.flags.cutlerShot === (cutler === 'fire') && (s.consequences.shotsFired - before.shots) === (cutler === 'fire' ? 1 : 0)
+        && (s.chars.cutler.alive === (cutler !== 'fire')) && s.revolver.loaded === 3 - s.consequences.shotsFired);
+      check('Clara lost only in the fall', !!s.flags.claraLost === (rep.ending === 'FALL') && s.chars.clara.alive === !s.flags.claraLost);
+      check('the earlier cases are untouched', JSON.stringify(s.cases) === before.cases);
+      check('no runtime errors', g.errorsSeen.size === 0);
+      rep.passed = rep.errors.length === 0;
+      return rep;
+    },
     // Text layout audit of one frame: every string drawn on the output canvas is recorded as a box in device px.
     // Reports text that runs off the screen, crosses its panel's edge (the open panel's box, when it names one with
     // `textBox()` in UI units), or overlaps other text. Letter-spaced capitals (one glyph per call) are merged into

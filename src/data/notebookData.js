@@ -56,6 +56,19 @@ export const LEADS = [
     { if: { flag: 'ch4Started' }, text: 'Who handed in my telegram, on form 41? Ada Bell wrote it down.' },
   ] },
   { id: 'L4_CLARA', chapter: 4, variants: [{ if: { flag: 'knowsObservatory' }, text: 'Clara\'s mother had a cabin on the ridge, the old observatory, past the workings.' }] },
+  // Chapter 5 (the fourth night)
+  { id: 'L5_CLARA', chapter: 5, variants: [
+    { if: { flag: 'claraLost' }, text: 'Clara Mercer is behind the fall.' },
+    { if: { flag: 'claraWithSilas' }, text: 'Clara Mercer is with me. She saw Cutler on the stair.' },
+    { if: { flag: 'finchFound' }, text: 'Cutler took Clara from the cabin down to the workings.' },
+    { if: { flag: 'ch5Started' }, text: 'Where is Clara Mercer tonight?' },
+  ] },
+  { id: 'L5_FALL', chapter: 5, variants: [
+    { if: { flag: 'workingsBlown' }, text: 'The fall came down again. Whatever was behind it is under the mountain.' },
+    { if: { examined: 'EV5_PAYROLL' }, text: 'A Union paymaster\'s chest, behind the fall of \'72.' },
+    { if: { flag: 'ch5Started' }, text: 'What is Cutler opening up at the workings, and for whom?' },
+  ] },
+  { id: 'L5_FIGURE', chapter: 5, variants: [{ if: { examined: 'EV5_FIGURE' }, text: 'The Pale Figure is a coat on a pole above the workings.' }] },
   { id: 'L4_FINCH', chapter: 4, variants: [{ if: { all: [{ flag: 'ch4Started' }, { flag: 'huntForGuest' }] }, text: 'Finch went up the ridge after "the woman" and has not come back.' }] },
 ];
 
@@ -77,8 +90,12 @@ export const PEOPLE = [
       { if: { examined: 'SAWMILL_BODY' }, text: 'Wounded in the side. The blood froze long before he was found.' },
     ] },
   { id: 'CLARA', name: 'Clara Mercer', role: 'Missing',
-    portrait: { none: 'I have never seen her.' },
-    variants: [{ if: {}, text: 'Missing, per the telegram. Of a family people here are careful about.' }],
+    portrait: { sprite: 'clara_idle', crop: [3, 0, 18, 18], if: { flag: 'claraMet' }, none: 'I have never seen her.' },
+    variants: [
+      { if: { flag: 'claraLost' }, text: 'Behind the fall in the Pale workings. She sent for me.' },
+      { if: { flag: 'claraMet' }, text: 'Twenty-four. Red hair under a grey hood. She sent for me, and she has been watching the workings through her mother\'s glass.' },
+      { if: {}, text: 'Missing, per the telegram. Of a family people here are careful about.' },
+    ],
     notes: [
       { if: { evidence: 'T_FINCH_CLARA' }, text: 'Her father, Mr. Mercer, wants it kept out of the street.' },
       { if: { evidence: 'T3_MERCER' }, text: 'Her father: "She has a temper and a good horse. She will come home."' },
@@ -87,6 +104,8 @@ export const PEOPLE = [
       { if: { evidence: 'EV4_ADA_BOOK' }, text: 'She handed in my telegram herself at Blackwood, hooded, on form 41. She sent for me.' },
       { if: { evidence: 'T4_GABLE_CLARA' }, text: 'She was the guest in Room 4, off the book. She got out down the back stair the night Hale died.' },
       { if: { flag: 'knowsObservatory' }, text: 'Her mother\'s cabin, the old observatory, is up on the ridge past the workings.' },
+      { if: { evidence: 'T5_CLARA' }, text: 'She saw Cutler follow Hale up the back stair with his knife. Her father waited in the yard.' },
+      { if: { flag: 'claraTestifies' }, text: 'She will stand up and say it, if I take it all the way.' },
     ] },
   { id: 'FINCH', name: 'Constable Edgar Finch', role: 'Constable',
     portrait: { sprite: 'finch_idle', crop: [3, 0, 18, 18], if: { flag: 'metFinch' } },
@@ -101,6 +120,7 @@ export const PEOPLE = [
       { if: { evidence: 'T3_FINCH_FORMS' }, text: 'Signed a whole pad of telegraph forms in advance, for Hale.' },
       { if: { flag: 'finchForm41' }, text: 'Form 41 is gone from the pad. He knew, and did not let himself wonder who.' },
       { if: { evidence: 'T4_FINCH_CONFESS' }, text: 'Guessed Clara sent the telegram, the night I came, and kept quiet so her father would not hear.' },
+      { if: { evidence: 'T5_FINCH_RIDGE' }, text: 'Went up the ridge after "the woman" and led Cutler to her. Found hurt in the snow.' },
       { if: { all: [{ flag: 'ch4Started' }, { flag: 'huntForGuest' }] }, text: 'Went up the ridge after "the woman" on my word, and has not come back.' },
       { if: { evidence: 'T_FINCH_RIDGE' }, text: 'Laughed off the talk of lights on the ridge. The laugh didn\'t take.' },
       { if: { trust: { finch: 'STEADY' } }, text: 'He has begun to trust me, a little.' },
@@ -202,11 +222,15 @@ export const PEOPLE = [
       { if: { examined: 'EV4_KIT' }, text: 'His father\'s grey jacket under the bunk: A. CUTLER, MERCER\'S COMPANY.' },
       { if: { flag: 'cutlerWarned' }, text: 'I drew on him. He went on tightening the girth.' },
       { if: { flag: 'cutlerGone' }, text: 'Rode up the ridge on a grey, with full saddlebags.' },
+      { if: { flag: 'cutlerShot' }, text: 'I shot him at the foot of the fall.' },
+      { if: { flag: 'cutlerTaken' }, text: 'Taken alive.' },
     ] },
 ];
 
 // The Case page's opening lines: what the mystery is, as Silas would put it now. First matching variant is shown.
 export const CASE_SUMMARY = [
+  { if: { flag: 'chapter5Complete' }, text: 'It is over. What came down off the ridge is what there is.' },
+  { if: { flag: 'ch5Started' }, text: 'The fourth night. The storm is down on the ridge, and so are Cutler and his powder, and somewhere up there Clara Mercer.' },
   { if: { flag: 'chapter4Complete' }, text: 'Four days in. I know who came up the stair after Hale, or I think I do. The storm is down, and Cutler and Clara Mercer are both somewhere up on the ridge.' },
   { if: { flag: 'ch4Started' }, text: 'The fourth day. Somebody sold the laudanum and somebody came up the back stair for the note. Both of them lead back to the same man\'s money.' },
   { if: { flag: 'chapter3Complete' }, text: 'Three nights in. I think I know where Hale died. Somebody put me to sleep to take a note back, and a lantern is climbing to the old workings.' },

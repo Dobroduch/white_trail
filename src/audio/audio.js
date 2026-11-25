@@ -476,6 +476,21 @@ export class Audio {
         this.tone(fx, { type: 'square', freq: 1800, a: 0.001, d: 0.015, peak: 0.02 * vol });
         this.noise(fx, { type: 'lowpass', freq: 600, a: 0.01, d: 0.12, peak: 0.04 * vol, freqEnd: 200 });
         break;
+      case 'shot': {
+        // one revolver shot in a mine drift: a hard crack, a low thump, and a long ring off the rock
+        this.noise(fx, { type: 'highpass', freq: 1800, a: 0.001, d: 0.06, peak: 0.5 * vol });
+        this.noise(fx, { type: 'lowpass', freq: 320, a: 0.001, d: 0.35, peak: 0.6 * vol, buf: this.brown });
+        const send = this.ctx.createGain(); send.gain.value = 0.9; send.connect(this.reverb);
+        this.noise(send, { type: 'bandpass', freq: 900, q: 0.6, a: 0.002, d: 1.6, peak: 0.25 * vol });
+        break;
+      }
+      case 'blast': {
+        // the charge and the roof: a deep concussion, then rock coming down for seconds
+        this.noise(fx, { type: 'lowpass', freq: 140, a: 0.005, d: 2.8, peak: 0.9 * vol, buf: this.brown });
+        this.noise(fx, { type: 'lowpass', freq: 600, a: 0.002, d: 0.5, peak: 0.6 * vol });
+        for (let i = 0; i < 9; i++) this.noise(fx, { type: 'bandpass', freq: 300 + Math.random() * 500, q: 1, a: 0.01, d: 0.25, peak: 0.18 * vol, when: 0.4 + i * 0.28 + Math.random() * 0.2, buf: this.brown });
+        break;
+      }
       case 'refuse':
         this.tone(fx, { type: 'sine', freq: 220, a: 0.01, d: 0.18, peak: 0.05 * vol });
         break;

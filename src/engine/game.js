@@ -136,7 +136,8 @@ export class Game {
     if (s.flags.sliceComplete && !s.flags.ch2Started) { this.fade.v = 1; this.openEndCard(1); }
     else if (s.flags.chapter2Complete && !s.flags.ch2EndCardSeen) { this.fade.v = 1; this.openEndCard(2); }
     else if (s.flags.chapter3Complete && !s.flags.ch3EndCardSeen && !s.flags.ch4Started) { this.fade.v = 1; this.openEndCard(3); }
-    else if (s.flags.chapter4Complete && !s.flags.ch4EndCardSeen) { this.fade.v = 1; this.openEndCard(4); }
+    else if (s.flags.chapter4Complete && !s.flags.ch4EndCardSeen && !s.flags.ch5Started) { this.fade.v = 1; this.openEndCard(4); }
+    else if (s.flags.chapter5Complete) { this.fade.v = 1; this.openEndCard(5); } // the story is over: the last card, every time
   }
   startPlay(sceneId, spawn, x, facing) {
     this.mode = 'play';
@@ -372,9 +373,12 @@ export class Game {
       if (act === 'nextChapter') {
         if (o.chapter === 2) this.state.flags.ch2EndCardSeen = true;
         if (o.chapter === 3) this.state.flags.ch3EndCardSeen = true;
-        this.popOverlay(); this.cutscene = null; this.scriptQueue = []; this.runScript(o.chapter === 3 ? 'CH4_OPEN' : o.chapter === 2 ? 'CH3_OPEN' : 'CH2_OPEN');
+        if (o.chapter === 4) this.state.flags.ch4EndCardSeen = true;
+        this.popOverlay(); this.cutscene = null; this.scriptQueue = []; this.runScript(o.chapter === 4 ? 'CH5_OPEN' : o.chapter === 3 ? 'CH4_OPEN' : o.chapter === 2 ? 'CH3_OPEN' : 'CH2_OPEN');
         return;
       }
+      // the end of the story: back to the title (the save stays on the last card)
+      if (o.chapter === 5) { if (act === 'title') { this.checkpoint(); this.toTitle(); } return; }
       // after Chapter 3 or 4: stay in the parlor, at night, where the chapter ended
       if (o.chapter === 3 && (act === 'stay' || act === 'title')) this.state.flags.ch3EndCardSeen = true;
       if (o.chapter === 4 && (act === 'stay' || act === 'title')) this.state.flags.ch4EndCardSeen = true;

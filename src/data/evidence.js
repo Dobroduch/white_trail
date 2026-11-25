@@ -548,6 +548,63 @@ export const EVIDENCE = {
     interpretation: 'Vale made the ghost for Mercer, to guard the workings. He knew about the powder. He says he did not know about the murder, and I believe him.',
     related: { people: ['VALE', 'MERCER'], places: ['GRAVEYARD'], evidence: ['T_VALE_FIGURE', 'GRAVE_DISTURBED'] },
   },
+  // ======================= Chapter 5: the fourth night =======================
+  // ---------------- The ridge ----------------
+  EV5_WIRE: {
+    title: 'The second cut', category: 'PHYSICAL', location: 'RIDGE', importance: 'OPTIONAL', chapter: 5,
+    observed: 'A mile along the ridge from the tower, the wire hangs down off its pole into the snow. Cut, not snapped: both ends bright, and the same clean slant as the cut at the tower.',
+    interpretation: 'One man cut the line twice the night I came, so it could not be mended from one end. He came this way, toward the workings.',
+    related: { people: ['CUTLER', 'ADA'], places: ['RIDGE', 'TELEGRAPH'], evidence: ['TOWER_WIRE'] },
+  },
+  EV5_FIGURE: {
+    title: 'The Pale Figure', category: 'PHYSICAL', location: 'RIDGE', importance: 'KEY', chapter: 5,
+    observed: 'A tall pale shape in the snow off the path, ten feet high, arms held out, a hood on it. It sways when the wind does, and not otherwise.',
+    detail: 'A pole and a crosspiece, and a bleached canvas duster hung on them, the hood stuffed with straw. At the top, a lantern hook, black with soot. From the valley on a winter night, with a lamp hung behind it, it would be a man walking the ridge.',
+    interpretation: 'The Pale Figure is a coat on a pole. Somebody lights a lamp behind it when the town needs reminding to keep off the ridge.',
+    related: { people: ['VALE', 'CUTLER'], places: ['RIDGE'], evidence: ['T_VALE_FIGURE', 'TOWER_SOOT'] },
+  },
+  T5_FINCH_RIDGE: {
+    title: 'Finch, on the ridge', category: 'TESTIMONY', speaker: 'Constable Finch', location: 'RIDGE', chapter: 5,
+    observed: '"I found her. Up at the old cabin. I\'d hardly said her name when Cutler came in behind me. He took her down to the workings. I went looking for a murderess, and I led him straight to her."',
+    interpretation: 'Finch went after "the woman" because of what I told him. Cutler followed him to Clara and took her.',
+    related: { people: ['FINCH', 'CUTLER', 'CLARA'], places: ['RIDGE', 'OBSERVATORY'], evidence: [] },
+  },
+  // ---------------- The observatory cabin ----------------
+  EV5_TELESCOPE: {
+    title: 'Her mother\'s glass', category: 'ENVIRONMENT', location: 'OBSERVATORY', importance: 'OPTIONAL', chapter: 5,
+    observed: 'A brass telescope on a tripod by the window. It is not pointed at the sky. It is pointed down the ridge at the mine mouth, and the focus ring is rubbed bright.',
+    interpretation: 'Clara has been watching the workings for days, through her mother\'s glass.',
+    related: { people: ['CLARA'], places: ['OBSERVATORY', 'WORKINGS'], evidence: [] },
+  },
+  EV5_PAPERS: {
+    title: 'Clara\'s copy', category: 'DOCUMENT', location: 'OBSERVATORY', importance: 'KEY', chapter: 5,
+    observed: 'Papers on the table under a stone, copied out in a woman\'s hand. The hand on form 41.',
+    detail: 'A page copied from her father\'s papers: "Paymaster\'s chest, Second Division, taken on the Gap road, October 1864. $41,600 in gold coin. Six shares." Six sets of initials, G.M. at the head. Under it, in pencil: "Pale workings, east drift, behind the fall of \'72. W.C. has the powder."',
+    interpretation: 'What the Pale Order counts in fives is a Union payroll, taken in the war by six men under Gideon Mercer. Clara found it in her father\'s own papers.',
+    related: { people: ['CLARA', 'MERCER', 'CUTLER'], places: ['OBSERVATORY', 'WORKINGS'], evidence: ['SAWMILL_LEDGER', 'EV4_TALLY'] },
+    tags: ['TALLY', 'WAR'],
+  },
+  T5_CLARA: {
+    title: 'Clara Mercer, on Room 4', category: 'TESTIMONY', speaker: 'Clara Mercer', location: 'OBSERVATORY', chapter: 5,
+    observed: '"I was in Room 4. Nathaniel came up the back stair with one of Rusk\'s freight bills. Wade came up after him. My father waited in the yard; I heard him. I saw Wade\'s knife, and then I was on the stair, and then I was running."',
+    interpretation: 'An eyewitness: Cutler killed Hale in Room 4, and Gideon Mercer was in the yard below.',
+    related: { people: ['CLARA', 'CUTLER', 'MERCER', 'HALE'], places: ['ROOM4', 'OBSERVATORY'], evidence: ['T3_GABLE_STAIR', 'EV3_GLOVE'] },
+  },
+  // ---------------- The workings ----------------
+  EV5_TIMBER: {
+    title: 'Names in the timber', category: 'ENVIRONMENT', location: 'WORKINGS', importance: 'OPTIONAL', chapter: 5,
+    observed: 'Cut into a timber cap with a knife, a long time ago: A. PELL, and four more names, and 1872. Somebody has rubbed the letters dark with lamp soot to keep them readable.',
+    interpretation: 'The men the Pale Order buried when it dug into the wrong drift. Somebody still comes in here to remember them.',
+    related: { people: ['MERCER'], places: ['WORKINGS', 'GRAVEYARD'], evidence: ['GRAVE_DISTURBED'] },
+  },
+  EV5_PAYROLL: {
+    title: 'The paymaster\'s chest', category: 'PHYSICAL', location: 'WORKINGS', importance: 'KEY', chapter: 5,
+    observed: 'An iron-bound chest by the foot of the fall, the lid prised up. Canvas bags inside, too heavy for their size.',
+    detail: 'Under the rust on the lid, a stencil: U.S. PAYMASTER, 2ND DIV. In the bags, gold eagles. None is dated later than 1864.',
+    interpretation: 'The Order\'s money is a Union army payroll, stolen in the war and walled up behind the fall of \'72.',
+    related: { people: ['MERCER', 'CUTLER'], places: ['WORKINGS'], evidence: ['SAWMILL_LEDGER', 'EV4_TALLY', 'EV5_PAPERS'] },
+    tags: ['TALLY', 'WAR'],
+  },
 };
 
 export const PLACE_NAMES = {
@@ -555,6 +612,7 @@ export const PLACE_NAMES = {
   ROOM4: 'Room 4', CREEK: 'The creek path', SAWMILL: 'The old sawmill', WHEEL_PIT: 'The wheel pit', RIDGE: 'The ridge',
   RUSK_STORE: 'Rusk\'s store', GRAVEYARD: 'The chapel and the graves', TELEGRAPH: 'The telegraph tower',
   FINCH_OFFICE: 'The constable\'s office', CUTLER_LOFT: 'Cutler\'s loft',
+  WORKINGS: 'The Pale workings', OBSERVATORY: 'The observatory cabin',
 };
 export const PEOPLE_NAMES = {
   HALE: 'Sheriff Nathaniel Hale', FINCH: 'Constable Edgar Finch', GABLE: 'Mrs. Gable', CLARA: 'Clara Mercer',

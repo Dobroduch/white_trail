@@ -33,6 +33,10 @@ export const LOCATIONS = [
   { id: 'office', name: 'Finch\'s office', scenes: ['FINCH_OFFICE'], art: 'office', label: [128, 72], minor: true },
   // Chapter 4: Cutler's loft over the woodshed, at the east end of Main Street (noted once Silas has been up)
   { id: 'loft', name: 'Cutler\'s loft', scenes: ['CUTLER_LOFT'], art: 'loft', label: [194, 113], minor: true },
+  // Chapter 5: the ridge east of the tower, the workings at its end, the observatory cabin above them
+  { id: 'ridge', name: 'the ridge', scenes: ['RIDGE'], art: 'ridge', label: [112, 34], minor: true },
+  { id: 'workings', name: 'Pale workings', scenes: ['WORKINGS'], art: 'workings', label: [165, 33] },
+  { id: 'observatory', name: 'observatory', scenes: ['OBSERVATORY'], art: 'observatory', label: [222, 22], minor: true },
 ];
 
 export const PATHS = [
@@ -42,6 +46,7 @@ export const PATHS = [
   { id: 'path_creek_sawmill', between: ['CREEK', 'SAWMILL'], art: 'path_creek_sawmill' },
   { id: 'path_village_chapel', between: ['VILLAGE', 'GRAVEYARD'], art: 'path_village_chapel' },
   { id: 'path_chapel_tower', between: ['GRAVEYARD', 'TELEGRAPH'], art: 'path_chapel_tower' },
+  { id: 'path_tower_ridge', between: ['TELEGRAPH', 'RIDGE'], art: 'path_tower_ridge' },
 ];
 
 // Where Silas's pencil mark goes, per scene: a fixed point, or a line interpolated by his x
@@ -61,4 +66,7 @@ export const POSITION = {
   TELEGRAPH: { from: [52, 66], to: [70, 64] },
   FINCH_OFFICE: { at: [146, 80] },
   CUTLER_LOFT: { at: [194, 88] },
+  RIDGE: { from: [70, 42], to: [158, 24] },
+  WORKINGS: { at: [165, 22] },
+  OBSERVATORY: { at: [198, 18] },
 };

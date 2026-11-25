@@ -154,6 +154,23 @@ export const HINT_STEPS = [
     objective: 'Get back to the Black Ram before the storm.',
     nudge: 'The storm is coming down. The Black Ram.',
     specific: 'Go back to the Black Ram and go in at the front door.' },
+  // ---- Chapter 5: the fourth night ----
+  { id: 'H5_RIDGE', done: { flag: 'ridgeEntered' }, if: { flag: 'ch5Started' },
+    objective: 'Go up onto the ridge.',
+    nudge: 'The path runs on along the ridge past the tower.',
+    specific: 'At the telegraph tower, walk east off the end of the path.' },
+  { id: 'H5_CABIN', done: { flag: 'cabinVisited' }, if: { all: [{ flag: 'ch5Started' }, { flag: 'knowsObservatory' }, { notFlag: 'huntForGuest' }] },
+    objective: 'Find Clara at her mother\'s cabin.',
+    nudge: 'The old observatory is past the workings, at the top of the ridge.',
+    specific: 'On the ridge, go past the mine mouth and walk east off the end of the path.' },
+  { id: 'H5_WORKINGS', done: { flag: 'workingsEntered' }, if: { flag: 'ch5Started' },
+    objective: 'Get into the workings before Cutler opens the fall.',
+    nudge: 'Lamplight in the mine mouth at the east end of the ridge.',
+    specific: 'On the ridge, go in at the mine mouth by the old ore car.' },
+  { id: 'H5_FALL', done: { flag: 'climaxStarted' }, if: { flag: 'workingsEntered' },
+    objective: 'Stop Cutler at the fall.',
+    nudge: 'Cutler is at the far end of the drift, with the powder.',
+    specific: 'Walk on into the drift, past Mercer and the chest, to Cutler at the fall.' },
 ];
 
 // When no step is current (the story so far is done), the Case page says so plainly.
