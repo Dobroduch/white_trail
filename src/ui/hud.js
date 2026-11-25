@@ -97,14 +97,24 @@ export class HUD {
     ctx.globalAlpha = 1;
   }
 
+  // Where toast i sits (UI units): a slip of notebook paper for a discovery, a small dark card otherwise.
+  toastRect(ctx, t, i, touch) {
+    if (t.ink) {
+      font(ctx, t.small ? 4.9 : 5.4, { italic: true });
+      const w = Math.max(64, ctx.measureText(t.text).width + 14);
+      return { x: UI_RIGHT - 8 - w, y: touch ? 30 + i * 18 : 144 - (this.toasts.length - 1 - i) * 18, w, h: 16 };
+    }
+    font(ctx, 5.2);
+    const w = Math.max(60, ctx.measureText(t.text).width + 12 + (t.icon ? 14 : 0));
+    // touch: top-right under the panel buttons, clear of the act button in the bottom-right corner
+    return { x: UI_RIGHT - 8 - w, y: touch ? 30 + i * 17 : 146 - (this.toasts.length - 1 - i) * 17, w, h: 15 };
+  }
+
   // A slip of notebook paper; the line writes itself in, then the pen underlines it.
   drawInk(ctx, t, i, touch, fadeIO) {
     const a = fadeIO(t.t, 0.3, 3.4, 0.9);
     ctx.globalAlpha = a;
-    font(ctx, t.small ? 4.9 : 5.4, { italic: true });
-    const w = Math.max(64, ctx.measureText(t.text).width + 14);
-    const y = touch ? 30 + i * 18 : 144 - (this.toasts.length - 1 - i) * 18;
-    const x = UI_RIGHT - 8 - w;
+    const { x, y, w } = this.toastRect(ctx, t, i, touch);
     panel(ctx, x, y, w, 16, UI.paper, '#3b2f22');
     font(ctx, 4.1, { bold: true });
     spaced(ctx, t.head.toUpperCase(), x + 5, y + 6, UI.inkRed, 0.5);
@@ -137,9 +147,23 @@ export class HUD {
       ctx.fillRect(12, 19, 24, 0.6);
       ctx.globalAlpha = 1;
     }
+    // ---- layout first: the fixed pieces (toasts, the hint card) are placed, then the interaction prompt keeps clear of
+    // them (it slides up past them, or below if there is no room above), then a passing thought keeps clear of all
+    const touch = g.touchUI();
+    const hit = (a, b) => a.x < b.x + b.w + 1 && b.x < a.x + a.w + 1 && a.y < b.y + b.h + 1 && b.y < a.y + a.h + 1;
+    const taken = this.toasts.map((t, i) => this.toastRect(ctx, t, i, touch));
+    let hintBox = null, hintLines = null;
+    if (this.hintMsg && !g.dialogue.active) {
+      font(ctx, 4.9);
+      hintLines = wrap(ctx, this.hintMsg.text, 180);
+      const h = hintLines.length * 6.5 + 4;
+      const bottom = touch ? 134 : 170;
+      hintBox = { x: touch ? Math.max(8, UI_LEFT + 10) : 8, y: bottom - h, w: 188, h };
+      taken.push(hintBox);
+    }
     // interaction prompt near the target
     const p = g.prompt;
-    const touch = g.touchUI();
+    let promptBox = null;
     if (p && g.canInteractUI()) {
       font(ctx, 5);
       const label = p.label;
@@ -148,23 +172,27 @@ export class HUD {
       const w = tw + 10 + kw, h = 9;
       let x = Math.round(p.sx - w / 2), y = Math.round(p.sy - h - 3);
       x = Math.max(UI_LEFT + 4, Math.min(UI_RIGHT - 4 - w, x)); y = Math.max(22, Math.min(118, y));
+      const want = y;
+      for (let k = 0; k < 6; k++) { const o = taken.find((r) => hit({ x, y, w, h }, r)); if (!o) break; y = o.y - h - 2; }
+      if (y < 22 || taken.some((r) => hit({ x, y, w, h }, r))) { // no room above: below the target instead
+        y = want;
+        for (let k = 0; k < 6; k++) { const o = taken.find((r) => hit({ x, y, w, h }, r)); if (!o) break; y = o.y + o.h + 2; }
+      }
+      promptBox = { x, y, w, h };
       panel(ctx, x, y, w, h, 'rgba(9,13,22,0.82)', touch ? UI.amberDim : UI.edgeHi);
       if (!touch) keycap(ctx, 'E', x + 3, y + 7, UI.amber);
       text(ctx, label, x + 3 + kw, y + 6.6, UI.bone);
     }
     // hint (tutorial-style, bottom-left; above the walk buttons in touch mode)
-    if (this.hintMsg && !g.dialogue.active) {
+    if (hintBox) {
       const a = fadeIO(this.hintMsg.t, 0.5, this.hintMsg.dur - 1.5, 1);
       ctx.globalAlpha = a * 0.95;
+      panel(ctx, hintBox.x, hintBox.y, hintBox.w, hintBox.h, 'rgba(9,13,22,0.7)', null);
       font(ctx, 4.9);
-      const lines = wrap(ctx, this.hintMsg.text, 180);
-      const h = lines.length * 6.5 + 4;
-      const bottom = touch ? 134 : 170;
-      const x0 = touch ? Math.max(8, UI_LEFT + 10) : 8;
-      panel(ctx, x0, bottom - h, 188, h, 'rgba(9,13,22,0.7)', null);
-      lines.forEach((l, i) => text(ctx, l, x0 + 4, bottom - h + 7 + i * 6.5, UI.dim));
+      hintLines.forEach((l, i) => text(ctx, l, hintBox.x + 4, hintBox.y + 7 + i * 6.5, UI.dim));
       ctx.globalAlpha = 1;
     }
+    if (promptBox) taken.push(promptBox);
     // what Silas is after now, when it changes: one quiet line under the place name
     if (this.objMsg && !g.dialogue.active) {
       const a = fadeIO(this.objMsg.t, 0.8, 5, 1.6);
@@ -180,8 +208,15 @@ export class HUD {
       const a = fadeIO(this.barkMsg.t, 0.4, this.barkMsg.dur - 1.2, 0.8);
       ctx.globalAlpha = a;
       font(ctx, 5.6, { italic: true });
+      // one line, or two if it is long; mid-screen, moved up (or down) out of the prompt's and the toasts' way
+      const lines = wrap(ctx, this.barkMsg.text, Math.min(260, UI_RIGHT - UI_LEFT - 24));
+      const bw = Math.max(...lines.map((l) => ctx.measureText(l).width)), bh = lines.length * 7;
+      const box = (y) => ({ x: UI_CX - bw / 2, y: y - 5.5, w: bw, h: bh });
+      let by = 104;
+      for (let k = 0; k < 8; k++) { const o = taken.find((r) => hit(box(by), r)); if (!o) break; by = o.y - bh - 1; }
+      if (by < 30) { by = 104; for (let k = 0; k < 8; k++) { const o = taken.find((r) => hit(box(by), r)); if (!o) break; by = o.y + o.h + 7; } }
       ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 2;
-      text(ctx, this.barkMsg.text, UI_CX, 104, UI.bone, 'center');
+      lines.forEach((l, i) => text(ctx, l, UI_CX, by + i * 7, UI.bone, 'center'));
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     }
@@ -190,13 +225,9 @@ export class HUD {
       if (t.ink) { this.drawInk(ctx, t, i, touch, fadeIO); return; }
       const a = fadeIO(t.t, 0.3, 2.5, 0.8);
       ctx.globalAlpha = a;
-      font(ctx, 4.5, { italic: true });
       const head = t.head;
-      font(ctx, 5.2);
       const iw = t.icon ? 14 : 0; // a taken item shows its own illustration
-      const w = Math.max(60, ctx.measureText(t.text).width + 12 + iw);
-      // touch: top-right under the panel buttons, clear of the act button in the bottom-right corner
-      const y = touch ? 30 + i * 17 : 146 - (this.toasts.length - 1 - i) * 17;
+      const { y, w } = this.toastRect(ctx, t, i, touch);
       panel(ctx, UI_RIGHT - 8 - w, y, w, 15, 'rgba(9,13,22,0.78)', UI.edge);
       if (t.icon) drawItemIcon(ctx, t.icon, UI_RIGHT - 8 - w + 10, y + 7.5, 13);
       font(ctx, 4.3, { italic: true });

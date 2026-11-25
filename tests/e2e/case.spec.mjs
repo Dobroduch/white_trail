@@ -174,7 +174,7 @@ test.describe('journal pages', () => {
     await expectClean(page, errors);
   });
 
-  test('Clues are filed by question and open onto their notes; the board shows one question\'s threads at a time', async ({ page }) => {
+  test('Clues and the board show one question at a time; clues open onto their notes; the board lists what is open, then what is established', async ({ page }) => {
     const { errors } = await boot(page, { test: '1', scene: 'SAWMILL', phase: 'NIGHT' });
     const r = await page.evaluate(() => {
       const g = TWT, s = g.state, nb = g.notebook;
@@ -185,9 +185,11 @@ test.describe('journal pages', () => {
       s.evidence.T_GABLE_VOICE = { observed: true, examined: true, n: 4 };
       g.openPanel('notebook');
       const out = { opened: nb.tabName() }; // something new: the notebook opens on it
-      // Clues: one list, a header per question, Room 4's clues under their own question
+      // Clues: the current question's only, under its header; Q turns to Room 4's
       for (let k = 0; k < 4 && nb.tabName() !== 'CLUES'; k++) T.press('ArrowLeft', 1);
       out.clues = nb.listFor(nb.tab);
+      T.press('KeyQ', 1); out.clues2 = nb.listFor(nb.tab);
+      for (let k = 0; k < 3 && nb.q !== 'Q_HALE'; k++) T.press('KeyQ', 1);
       // read the notes behind the scream (its own record and Mrs. Gable on the voice, filed with it)
       nb.sel = out.clues.indexOf('S:S_SCREAM'); T.press('KeyE', 1);
       out.inspect = nb.inspect && nb.inspect.sid; T.press('ArrowRight', 1); out.page = nb.inspect && nb.inspect.i;
@@ -201,15 +203,16 @@ test.describe('journal pages', () => {
       out.nodes = nb.boardNodes();
       T.press('KeyQ', 1); out.q2 = nb.q; out.nodes2 = nb.boardNodes();
       T.press('KeyQ', 1);
-      nb.sel = nb.boardNodes().indexOf('S:S_HOISTED'); TWT_TEST.render();
-      out.selected = nb.boardNodes()[nb.sel];
+      out.rows = nb.listFor(nb.tab); TWT_TEST.render();
       return out;
     });
     expect(r.opened).toBe('CLUES');
     expect(r.clues[0]).toBe('H:Q_HALE');
-    expect(r.clues.indexOf('H:Q_ROOM4')).toBeGreaterThan(r.clues.indexOf('S:S_SCREAM'));
-    expect(r.clues.indexOf('S:S_BOARDS')).toBeGreaterThan(r.clues.indexOf('H:Q_ROOM4'));
-    expect(r.clues.filter((x) => x.startsWith('S:')).length).toBeLessThanOrEqual(14);
+    expect(r.clues).toContain('S:S_SCREAM');
+    expect(r.clues).not.toContain('S:S_BOARDS');
+    expect(r.clues.filter((x) => x.startsWith('H:'))).toEqual(['H:Q_HALE']);
+    expect(r.clues2[0]).toBe('H:Q_ROOM4');
+    expect(r.clues2).toContain('S:S_BOARDS');
     expect([r.inspect, r.page, r.back]).toEqual(['S_SCREAM', 1, true]);
     expect(r.q).toBe('Q_HALE');
     expect(r.counts).toEqual([{ open: 4, formed: 0 }, { open: 3, formed: 1 }, { open: 2, formed: 2 }, { open: 1, formed: 3 }]);
@@ -217,7 +220,9 @@ test.describe('journal pages', () => {
     expect(r.nodes.some((x) => x.includes('S_BOARDS') || x.includes('UNWRITTEN'))).toBe(false);
     expect(r.q2).toBe('Q_ROOM4');
     expect(r.nodes2).toContain('T:D_UNWRITTEN_GUEST');
-    expect(r.selected).toBe('S:S_HOISTED');
+    // open questions first, then what is established; no clue cards on the board
+    expect(r.rows.indexOf('H:open')).toBeLessThan(r.rows.indexOf('H:known'));
+    expect(r.rows.some((x) => x.startsWith('S:'))).toBe(false);
     await page.screenshot({ path: 'test-results/review/board.png' });
     await expectClean(page, errors);
   });

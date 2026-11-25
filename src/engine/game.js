@@ -375,7 +375,7 @@ export class Game {
   }
   notebookOverlay() {
     const nb = this.notebook;
-    return { update: (input) => nb.update(input), draw: (ctx) => nb.draw(ctx), isNotebook: true, panelKind: 'notebook' };
+    return { update: (input) => nb.update(input), draw: (ctx) => nb.draw(ctx), textBox: () => nb.textBox(), isNotebook: true, panelKind: 'notebook' };
   }
 
   // Notebook / Inventory / Map: three separate panels with their own buttons and keys. Only one is
@@ -836,17 +836,25 @@ export class Game {
     // centred horizontally; HUD pieces anchor to the real screen edges via UI_LEFT / UI_RIGHT.
     const S = UI_DEV;
     out.save();
-    out.setTransform(S, 0, 0, S, UI_OX * S, UI_OY * S);
-    out.imageSmoothingEnabled = true;
-    if (this.card) this.drawCard(out);
-    if (this.mode === 'play') {
-      this.hud.draw(out);
-      this.dialogueView.draw(out);
+    // try/finally: a UI draw that throws must never leave the UI scale on the output context, or every later frame
+    // presents the world through it (the whole game drawn ~4x, "zoomed in and unplayable")
+    try {
+      out.setTransform(S, 0, 0, S, UI_OX * S, UI_OY * S);
+      out.imageSmoothingEnabled = true;
+      if (this.card) this.drawCard(out);
+      if (this.mode === 'play') {
+        this.hud.draw(out);
+        this.dialogueView.draw(out);
+      }
+      for (const o of this.overlays) o.draw(out);
+      // the panel buttons stay on top of an open panel, so one click switches Notebook / Inventory / Map
+      if (this.mode === 'play' && this.overlay && this.overlay.panelKind && !this.touchUI()) this.hud.drawButtons(out);
+    } finally {
+      out.restore();
+      out.setTransform(1, 0, 0, 1, 0, 0);
+      out.globalAlpha = 1;
+      out.globalCompositeOperation = 'source-over';
     }
-    for (const o of this.overlays) o.draw(out);
-    // the panel buttons stay on top of an open panel, so one click switches Notebook / Inventory / Map
-    if (this.mode === 'play' && this.overlay && this.overlay.panelKind && !this.touchUI()) this.hud.drawButtons(out);
-    out.restore();
     out.imageSmoothingEnabled = false;
     if (this.touch) this.touch.sync(); // show the touch buttons that fit what is happening now
   }

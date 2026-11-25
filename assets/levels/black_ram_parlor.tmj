@@ -51,7 +51,7 @@
   {
    "name": "day",
    "type": "string",
-   "value": "{\"darkness\":0.24,\"ambience\":\"parlor\"}"
+   "value": "{\"darkness\":0.16,\"ambience\":\"parlor\"}"
   },
   {
    "name": "chapter2",
@@ -2036,7 +2036,7 @@
       {
        "name": "args",
        "type": "string",
-       "value": "[10,99,14,16]"
+       "value": "[10,99,14,16,{\"glass\":[15,148,21,24],\"v\":[25,25],\"h\":[159,159]}]"
       }
      ]
     },

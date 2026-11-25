@@ -96,20 +96,21 @@ export class CaseReview {
       const on = sel === r;
       if (on) { ctx.fillStyle = 'rgba(127,29,29,0.12)'; ctx.fillRect(14, y - 6, 140, 16.5); }
       font(ctx, 5.2, { bold: true }); text(ctx, d.title, 18, y, UI.ink);
+      // the current reading only, between the arrows that change it (with how many readings have come to mind)
       const cur = readingOf(s, r.id);
+      const keys = Object.keys(d.readings).filter((key) => readingUnlocked(s, r.id, key));
+      const arrows = on && !this.locked && keys.length > 0;
       let x = 22;
-      font(ctx, 4.9);
-      for (const [key, rd] of Object.entries(d.readings)) {
-        if (!readingUnlocked(s, r.id, key)) { font(ctx, 4.9, { italic: true }); text(ctx, '…', x, y + 7.2, UI.inkDim); x += 9; continue; }
-        const chosen = key === cur;
-        font(ctx, 4.9, { bold: chosen, italic: !chosen });
-        const w = ctx.measureText(rd.label).width;
-        text(ctx, rd.label, x, y + 7.2, chosen ? UI.inkRed : UI.inkDim);
-        if (chosen) { ctx.fillStyle = UI.inkRed; ctx.fillRect(x, y + 8.4, w, 0.6); }
-        x += w + 9;
-      }
-      if (!cur) { font(ctx, 4.4, { italic: true }); text(ctx, 'undecided', x, y + 7.2, UI.inkDim); }
-      if (on && !this.locked) { font(ctx, 4.4); text(ctx, '◂ ▸', 150, y + 7.2, UI.inkRed, 'right'); }
+      if (arrows) { font(ctx, 4.6); text(ctx, '◂', x, y + 7.2, UI.inkRed); x += 6; }
+      font(ctx, 4.9, { bold: !!cur, italic: !cur });
+      let lab = cur ? d.readings[cur].label : 'undecided';
+      const room = 150 - x - (arrows ? 8 : 0) - (keys.length > 1 ? 16 : 0);
+      while (ctx.measureText(lab).width > room && lab.length > 4) lab = lab.slice(0, -2).trimEnd() + '…';
+      const w = ctx.measureText(lab).width;
+      text(ctx, lab, x, y + 7.2, cur ? UI.inkRed : UI.inkDim);
+      if (cur) { ctx.fillStyle = UI.inkRed; ctx.fillRect(x, y + 8.4, w, 0.6); }
+      if (arrows) { font(ctx, 4.6); text(ctx, '▸', x + w + 3, y + 7.2, UI.inkRed); }
+      if (keys.length > 1) { font(ctx, 4.2, { italic: true }); text(ctx, `${cur ? keys.indexOf(cur) + 1 : '–'} of ${keys.length}`, 150, y + 7.2, UI.inkDim, 'right'); }
       y += 18;
     }
     const settled = deductionsFor(s, this.qid).filter((d) => !hasReadings(d));

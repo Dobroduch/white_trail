@@ -134,7 +134,7 @@ function build() {
     c.r(14, 20, 30, 76, 'wood2'); c.hl(14, 43, 20, 'wood3'); c.vl(14, 20, 95, 'wood3'); c.vl(43, 20, 95, 'wood0');
     c.r(18, 26, 22, 28, 'wood1'); c.hl(18, 39, 26, 'wood3'); c.vl(18, 26, 53, 'wood3'); c.vl(39, 26, 53, 'wood0'); c.r(18, 60, 22, 30, 'wood1'); c.hl(18, 39, 60, 'wood3'); c.vl(18, 60, 89, 'wood3'); c.vl(39, 60, 89, 'wood0');
     c.r(36, 58, 2, 3, 'brass1'); c.p(36, 58, 'brass2');
-    c.r(22, 4, 7, 9, 'wood0'); c.hl(23, 27, 5, 'brass2'); c.vl(23, 5, 8, 'brass2'); c.hl(23, 27, 8, 'brass2'); c.vl(27, 5, 12, 'brass2'); // the number 4
+    c.r(22, 4, 7, 9, 'wood0'); c.vl(23, 5, 8, 'brass2'); c.hl(23, 27, 8, 'brass2'); c.vl(27, 5, 12, 'brass2'); // the number 4
   });
   addBlock('wardrobe', 4, 7, (c) => { // tall two-door wardrobe (64×112; origin x 64, y 112): empty, smelling of lye and cedar
     wood(c, 2, 7, 60, 105, 'wood2', 'wood4', 'wood0'); c.r(0, 2, 64, 6, 'wood1'); c.hl(0, 63, 2, 'wood4'); c.hl(0, 63, 7, 'wood0'); // cornice

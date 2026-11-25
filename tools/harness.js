@@ -7,9 +7,9 @@
 // pointerdown / pointerup events (pointerType 'touch') on it; dialogue choices and dialogue advancing are taps
 // on the canvas at the choice / text. A key with no visible touch equivalent is recorded in T.touchMisses, so a
 // touch-only playthrough proves every action it needed has a touch control. Walking holds the walk pads.
-import { UI_OX, UI_OY, UI_DEV } from '/src/engine/display.js';
+import { UI_OX, UI_OY, UI_DEV } from '/src/engine/display.js'; // live bindings: current after every resize
 import { DEDUCTIONS } from '/src/data/caseData.js';
-import { threadsFor, threadClues } from '/src/systems/caseSystem.js';
+import { threadsFor, threadClues, questions } from '/src/systems/caseSystem.js';
 
 export function install() {
   const G = () => window.TWT;
@@ -574,6 +574,132 @@ export function install() {
       check('no runtime errors', g.errorsSeen.size === 0);
       rep.passed = rep.errors.length === 0;
       return rep;
+    },
+    // Text layout audit of one frame: every string drawn on the output canvas is recorded as a box in device px.
+    // Reports text that runs off the screen, crosses its panel's edge (the open panel's box, when it names one with
+    // `textBox()` in UI units), or overlaps other text. Letter-spaced capitals (one glyph per call) are merged into
+    // words first; a string drawn twice at nearly the same place (a shadow) is not an overlap.
+    auditText(where = '') {
+      const g = G(), out = g.display.ctx, C = out.canvas;
+      const boxes = [];
+      const orig = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (str, x, y, ...rest) {
+        if (this === out && String(str).trim() && this.globalAlpha > 0.05) {
+          const m = this.measureText(str), t = this.getTransform();
+          const al = this.textAlign;
+          const w = m.width, x0 = al === 'center' ? x - w / 2 : (al === 'right' || al === 'end') ? x - w : x;
+          const asc = m.actualBoundingBoxAscent || 0, desc = m.actualBoundingBoxDescent || 0;
+          const p0 = t.transformPoint(new DOMPoint(x0, y - asc)), p1 = t.transformPoint(new DOMPoint(x0 + w, y + desc));
+          boxes.push({ s: String(str), x0: Math.min(p0.x, p1.x), y0: Math.min(p0.y, p1.y), x1: Math.max(p0.x, p1.x), y1: Math.max(p0.y, p1.y), k: t.a });
+        }
+        return orig.call(this, str, x, y, ...rest);
+      };
+      // an opaque fill drawn later hides the text under it (a panel opened over another)
+      const origRect = CanvasRenderingContext2D.prototype.fillRect;
+      const opaque = (c) => { const st = String(c.fillStyle); if (c.globalAlpha < 0.95 || typeof c.fillStyle !== 'string') return false; const m = /rgba?\(([^)]+)\)/.exec(st); return !m || m[1].split(',').length < 4 || parseFloat(m[1].split(',')[3]) >= 0.9; };
+      CanvasRenderingContext2D.prototype.fillRect = function (x, y, w, h) {
+        if (this === out && w * h > 0 && opaque(this)) {
+          const t = this.getTransform();
+          const p0 = t.transformPoint(new DOMPoint(x, y)), p1 = t.transformPoint(new DOMPoint(x + w, y + h));
+          const R = { x0: Math.min(p0.x, p1.x), y0: Math.min(p0.y, p1.y), x1: Math.max(p0.x, p1.x), y1: Math.max(p0.y, p1.y) };
+          if ((R.x1 - R.x0) * (R.y1 - R.y0) > 400) for (const b of boxes) if (!b.hidden && b.x0 >= R.x0 - 1 && b.x1 <= R.x1 + 1 && b.y0 >= R.y0 - 1 && b.y1 <= R.y1 + 1) b.hidden = true;
+        }
+        return origRect.call(this, x, y, w, h);
+      };
+      try { g.draw(); } finally { CanvasRenderingContext2D.prototype.fillText = orig; CanvasRenderingContext2D.prototype.fillRect = origRect; }
+      for (let i = boxes.length - 1; i >= 0; i--) if (boxes[i].hidden) boxes.splice(i, 1);
+      // merge letter-spaced glyphs (single characters on one baseline, close together) into words
+      const merged = [];
+      for (const b of boxes) {
+        const prev = merged[merged.length - 1];
+        if (prev && b.s.length === 1 && prev.glyphs && Math.abs(prev.y1 - b.y1) < 1 && b.x0 - prev.x1 < b.k * 2.5 && b.x0 >= prev.x0) {
+          prev.s += b.s; prev.x1 = Math.max(prev.x1, b.x1); prev.y0 = Math.min(prev.y0, b.y0); continue;
+        }
+        merged.push(Object.assign({}, b, { glyphs: b.s.length === 1 }));
+      }
+      const issues = [];
+      const tag = (b) => JSON.stringify(b.s.length > 40 ? b.s.slice(0, 40) + '…' : b.s);
+      const tol = 1.5; // device px
+      for (const b of merged) {
+        if (b.x0 < -tol || b.y0 < -tol || b.x1 > C.width + tol || b.y1 > C.height + tol) issues.push(`${where} off screen: ${tag(b)}`);
+      }
+      const ov = g.overlay;
+      const tb = ov && ov.textBox && ov.textBox();
+      if (tb) {
+        const S = UI_DEV, ox = UI_OX * S, oy = UI_OY * S;
+        for (const r of [].concat(tb)) {
+          const R = { x0: ox + r.x * S, y0: oy + r.y * S, x1: ox + (r.x + r.w) * S, y1: oy + (r.y + r.h) * S };
+          for (const b of merged) {
+            const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+            if (cx < R.x0 || cx > R.x1 || cy < R.y0 || cy > R.y1) continue; // text belonging to this box
+            if (b.x0 < R.x0 - tol || b.x1 > R.x1 + tol || b.y1 > R.y1 + tol) issues.push(`${where} runs past ${r.name || 'its panel'}: ${tag(b)}`);
+          }
+        }
+      }
+      for (let i = 0; i < merged.length; i++) for (let j = i + 1; j < merged.length; j++) {
+        const a = merged[i], b = merged[j];
+        const ix = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), iy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+        if (ix <= tol || iy <= tol) continue;
+        if (a.s === b.s && Math.abs(a.x0 - b.x0) < 4 && Math.abs(a.y0 - b.y0) < 4) continue; // shadowed text
+        issues.push(`${where} overlap: ${tag(a)} × ${tag(b)}`);
+      }
+      return issues;
+    },
+    // Draw every notebook page in the current state: each tab, each question, each row selected, each clue's notes
+    // (every page of them), each open question's clue picker, and the case review. Returns the errors thrown or
+    // logged while drawing, and whether the output context was left with a transform (which would zoom the world).
+    sweepNotebook() {
+      const g = G(), nb = g.notebook, out = { errors: [], text: [], frames: 0, leftScaled: false };
+      const origErr = console.error;
+      console.error = (...a) => { out.errors.push(a.map((x) => (x && x.stack) || String(x)).join(' ').slice(0, 300)); origErr.apply(console, a); };
+      const draw = (where) => {
+        try { for (const t of T.auditText(where)) if (!out.text.includes(t)) out.text.push(t); } catch (e) { out.errors.push(where + ': ' + ((e && e.stack) || e)); }
+        out.frames++;
+        const m = g.display.ctx.getTransform();
+        if (m.a !== 1 || m.d !== 1 || m.e !== 0 || m.f !== 0) { out.leftScaled = true; out.errors.push(where + ': output transform left at ' + [m.a, m.d, m.e, m.f].join(',')); }
+      };
+      try {
+        g.errorsSeen && g.errorsSeen.clear();
+        while (g.overlay) g.popOverlay();
+        if (!g.canOpenPanel()) { out.skipped = 'cannot open a panel now'; return out; }
+        g.openPanel('notebook');
+        for (let t = 0; t < 4; t++) {
+          nb.tab = t;
+          const qs = ['CLUES', 'DEDUCTIONS'].includes(nb.tabName()) ? Math.max(1, questions(g.state).length) : 1;
+          for (let qi = 0; qi < qs; qi++) {
+            const list = nb.listFor(t);
+            for (let i = 0; i < list.length; i++) {
+              nb.sel = i; nb.inspect = null; nb.pick = null; nb.result = null;
+              draw(`tab ${nb.tabName()} q ${nb.q} row ${list[i]}`);
+              const id = list[i];
+              if (typeof id !== 'string') continue;
+              if (id.startsWith('S:')) { // every page of the notes behind the clue
+                for (let p = 0; p < 8; p++) { nb.inspect = { sid: id.slice(2), i: p }; draw(`notes ${id} p${p}`); }
+                nb.inspect = null;
+              }
+              if (id.startsWith('T:')) { // the picker, and a wrong answer
+                nb.pick = id.slice(2); nb.pickFrom = nb.pick; nb.sel = 0; draw(`pick ${id}`);
+                nb.result = { ok: false, text: 'That does not answer it.' }; draw(`pick refused ${id}`);
+                nb.pick = null; nb.result = null;
+              }
+              if (id.startsWith('D:')) { nb.result = { ok: true, text: 'I read it as: something.' }; draw(`reading ${id}`); nb.result = null; }
+            }
+            if (nb.cycleQuestion) nb.cycleQuestion();
+          }
+        }
+        // the case review for each question that can be decided
+        for (const q of (nb.caseRows ? nb.caseRows() : []).filter((x) => String(x).startsWith('Q:'))) {
+          nb.openReview(q.slice(2));
+          if (g.overlay && g.overlay.constructor.name === 'CaseReview' && g.overlay.rows) {
+            const rows = g.overlay.rows();
+            for (let i = 0; i < rows.length; i++) { g.overlay.sel = i; draw(`review ${q} row ${i}`); }
+            g.popOverlay();
+          }
+        }
+        while (g.overlay) g.popOverlay();
+        draw('closed');
+      } finally { console.error = origErr; }
+      return out;
     },
     info() {
       const g = G();

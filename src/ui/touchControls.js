@@ -297,7 +297,7 @@ export class TouchControls {
     });
     if (this.ctx === 'panel-notebook') {
       const tab = g.notebook.tabName ? g.notebook.tabName() : '';
-      this.set('nbTab', tab, (v) => { this.btnQuestion.style.display = v === 'DEDUCTIONS' ? '' : 'none'; });
+      this.set('nbTab', tab, (v) => { this.btnQuestion.style.display = (v === 'DEDUCTIONS' || v === 'CLUES') ? '' : 'none'; });
     }
   }
 

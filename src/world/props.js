@@ -389,12 +389,12 @@ export function hotelWindowsProp(...wins) {
           const flick = Math.floor(t * 6) % 5 === 0;
           emit(ctx, camX, ox, oy, flick ? CANDLE.slice(1) : CANDLE, false);
         } else if (st === 'dayFire') {
-          // the parlor fire, low behind the glass: a few warm pixels along the bottom of the lower panes
+          // the parlor fire behind the glass: firelight filling the bottom of the lower panes, flickering
           const f = Math.floor(t * 5);
           for (const px0 of PANES_X) for (let c = 0; c < 10; c++) {
-            if ((f + c) % 5 === 0) continue;
-            box(ctx, camX, ox + px0 + c, oy + 22, 1, 1, (f + c) % 3 ? '#b56e22' : '#a65c2c');
-            if ((f * 3 + c) % 4 === 1) box(ctx, camX, ox + px0 + c, oy + 21, 1, 1, '#d68a3f');
+            box(ctx, camX, ox + px0 + c, oy + 23, 1, 2, (f + c) % 4 ? '#a65c2c' : '#b56e22');
+            if ((f + c) % 5 !== 0) box(ctx, camX, ox + px0 + c, oy + 22, 1, 1, (f + c) % 3 ? '#d68a3f' : '#b56e22');
+            if ((f * 3 + c) % 4 === 1) box(ctx, camX, ox + px0 + c, oy + 21, 1, 1, '#e0a04a');
           }
         }
       }
@@ -566,18 +566,59 @@ export function watcherProp(wx = 60, wy = 114) {
 }
 
 // ---------------- Snow seen through a window (interiors) ----------------
-export function windowSnowProp(x, y, w, h) {
+// The glass itself is painted dark in the tile art (the night). By daylight the prop paints the panes over it
+// with the grey snow-light (fading toward dusk) and lets that light into the room, so an interior window reads
+// as day when it is day. `pane` (native px, optional): { glass: [x, y, w, h], v: [x0, x1], h: [y0, y1] }, the
+// glass rectangle and the mullion columns / rows to leave as the art drew them.
+export function daylightLevel(s) {
+  const min = s.time.h * 60 + s.time.m;
+  if (s.phase === 'DAY') return min < 16 * 60 ? 1 : Math.max(0.3, 1 - (min - 16 * 60) / 100 * 0.7);
+  if (s.phase === 'EVENING' && min < 17 * 60 + 15) return 0.3;
+  return 0;
+}
+const DAY_ROWS = ['#7d8aa0', '#7d8aa0', '#5d6a80', '#5d6a80', '#4d5d7f'];
+const DUSK_ROWS = ['#4d5d7f', '#4d5d7f', '#39466a', '#39466a', '#39466a'];
+export function windowSnowProp(x, y, w, h, pane = null) {
   const flakes = [];
   const rng = mulberry32(x * 31 + y);
   for (let i = 0; i < Math.floor((w * h) / 30); i++) flakes.push({ x: rng() * w, y: rng() * h, s: 8 + rng() * 14 });
+  const g = pane && pane.glass ? pane.glass : [Math.round(x * 1.5), Math.round(y * 1.5), Math.round(w * 1.5), Math.round(h * 1.5)];
+  const inMull = (nx, ny) => (pane && pane.v && nx >= pane.v[0] && nx <= pane.v[1]) || (pane && pane.h && ny >= pane.h[0] && ny <= pane.h[1]);
+  const box = (ctx, camX, nx, ny, nw, col) => { ctx.fillStyle = col; ctx.fillRect(nx * N - camX, ny * N, nw * N, N); };
   return {
     z: 0.5,
     update(dt) { for (const f of flakes) { f.x += f.s * 1.4 * dt; f.y += f.s * dt; if (f.x > w) f.x -= w; if (f.y > h) f.y -= h; } },
-    draw(ctx, camX) {
+    draw(ctx, camX, game) {
+      const day = game ? daylightLevel(game.state) : 0;
+      if (day > 0) {
+        const rows = day > 0.6 ? DAY_ROWS : DUSK_ROWS;
+        for (let r = 0; r < g[3]; r++) {
+          const ny = g[1] + r;
+          if (pane && pane.h && ny >= pane.h[0] && ny <= pane.h[1]) continue;
+          const col = rows[Math.min(rows.length - 1, Math.floor((r / g[3]) * rows.length))];
+          let run = null; // horizontal runs of glass between the mullions
+          for (let c = 0; c <= g[2]; c++) {
+            const nx = g[0] + c;
+            const glass = c < g[2] && !inMull(nx, ny);
+            if (glass && run == null) run = nx;
+            if (!glass && run != null) { box(ctx, camX, run, ny, nx - run, col); run = null; }
+          }
+        }
+      }
+      const flake = day > 0.6 ? '#c8d1de' : '#8e9bb0';
       for (const f of flakes) {
         const fx = Math.round(x + f.x - camX), fy = Math.round(y + f.y);
-        px(ctx, fx, fy, '#8e9bb0');
+        px(ctx, fx, fy, flake);
       }
+    },
+    lights(game) {
+      const day = daylightLevel(game.state);
+      if (!day) return [];
+      const cx = (g[0] + g[2] / 2) * N, cy = (g[1] + g[3] / 2) * N;
+      return [
+        { x: cx, y: cy, r: Math.round(Math.max(g[2], g[3]) * N * 0.9), strength: day, world: true }, // the glass itself
+        { x: cx, y: cy + 40, r: 96, strength: 0.3 * day, world: true }, // grey daylight into the room
+      ];
     },
   };
 }

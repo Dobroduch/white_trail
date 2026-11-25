@@ -143,31 +143,45 @@ export class Display {
     this.canvas.style.height = out.h / dpr + 'px';
     this.ctx.imageSmoothingEnabled = false;
     setUIFrame(out.w, out.h, this.scale);
-    // Upscale factor for the composite buffer: at least the output factor (times max zoom) so the
-    // single bilinear step mostly downsamples, which keeps pixel edges crisp.
-    const mk = Math.max(2, Math.ceil(this.fbFactor * 1.35));
-    if (!this.mid || this.midK !== mk || this.mid.width !== FB_W * mk) {
-      this.midK = mk;
-      this.mid = makeCanvas(FB_W * mk, FB_H * mk);
-      this.midCtx = this.mid.getContext('2d');
-      this.midCtx.imageSmoothingEnabled = false;
+    this.mids = new Map(); // composite buffers by upscale factor, made when first needed (see present)
+    this.useMid(Math.max(2, Math.ceil(this.fbFactor)));
+  }
+
+  // The integer-upscaled composite buffer for factor k. Its size is the GPU cost of every non-integer frame, so the
+  // factor follows what the frame needs: just above the output scale at the current zoom (the single bilinear step
+  // then only downsamples a little, which keeps pixel edges crisp), not the largest zoom any frame might use.
+  useMid(k) {
+    let m = this.mids.get(k);
+    if (!m || m.width !== FB_W * k) {
+      const c = makeCanvas(FB_W * k, FB_H * k);
+      const cx = c.getContext('2d');
+      cx.imageSmoothingEnabled = false;
+      m = c; m.cx = cx;
+      this.mids.set(k, m);
     }
+    this.mid = m; this.midCtx = m.cx; this.midK = k;
+    return m;
   }
 
   // Composite the framebuffer to the output. zoom >= 1; (fx, fy) is the focus point in NATIVE px.
   present(zoom, fx, fy) {
     const ctx = this.ctx;
     const ow = this.canvas.width, oh = this.canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // whatever the last frame left behind, the world fills the output exactly
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
     if (zoom <= 1.001 && this.integer) {
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(this.fb, 0, 0, ow, oh);
       return;
     }
     const c = Display.crop(zoom, fx, fy);
+    this.useMid(Math.max(2, Math.ceil(this.fbFactor * Math.max(1, zoom) - 0.05)));
     const k = this.midK * FB_SCALE; // mid px per native px
     this.midCtx.drawImage(this.fb, 0, 0, this.mid.width, this.mid.height);
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    // the step is a small downsample (under 2:1), where plain bilinear looks the same as the costly 'high' filter
+    ctx.imageSmoothingQuality = 'low';
     ctx.drawImage(this.mid, c.x * k, c.y * k, c.w * k, c.h * k, 0, 0, ow, oh);
     ctx.imageSmoothingEnabled = false;
   }
