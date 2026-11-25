@@ -57,6 +57,11 @@
    "name": "day",
    "type": "string",
    "value": "{\"darkness\":0.3}"
+  },
+  {
+   "name": "chapter4",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -3197,6 +3202,11 @@
        "name": "facing",
        "type": "float",
        "value": 1
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"any\":[{\"notFlag\":\"ch4Started\"},{\"notFlag\":\"adaWarned\"}]}"
       }
      ]
     },

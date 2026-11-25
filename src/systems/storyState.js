@@ -40,6 +40,8 @@ export function newState() {
       ada: { alive: true, trust: 'WARY' },
       // Chapter 3
       mercer: { alive: true },
+      // Chapter 4
+      cutler: { alive: true },
     },
     eventsDone: [],
     map: { visited: [], paths: [] }, // Silas's own map: places he has been, ways he has walked
@@ -98,6 +100,7 @@ export function apply(effects, s) {
     if (e.removeItem) s.items = s.items.filter((i) => i !== e.removeItem);
     if (e.char) for (const [c, patch] of Object.entries(e.char)) Object.assign(s.chars[c], patch);
     if (e.script) out.push({ script: e.script });
+    if (e.threat && !s.consequences.threatsMade.includes(e.threat)) s.consequences.threatsMade.push(e.threat); // the revolver drawn on someone
     if (e.log && !s.timeline.some((t) => t.text === e.log)) s.timeline.push({ t: timeString(s.time), text: e.log });
   }
   return out;

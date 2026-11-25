@@ -24,6 +24,9 @@ export const QUESTIONS = [
   { id: 'Q_ORDER', case: 'ORDER', title: 'What is the Pale Order doing now?', short: 'The Order, now', if: { flag: 'ch2Started' } },
   // Chapter 3, the third night (open: carried into the next chapter)
   { id: 'Q_COFFEE', title: 'Who put me to sleep, and why?', short: 'The coffee', if: { flag: 'woke3' } },
+  // Chapter 4, the fourth day
+  { id: 'Q_KILLER', case: 'KILLER', title: 'Who came up the stair after Hale?', short: 'The killer', if: { flag: 'ch4Started' } },
+  { id: 'Q_TELEGRAM', title: 'Who sent for me?', short: 'The telegram', if: { flag: 'ch4Started' } },
 ];
 
 // ---------------- key statements ----------------
@@ -71,8 +74,8 @@ export const STATEMENTS = {
     { if: { examined: 'EV3_PANEL' }, text: 'Behind the wardrobe a servants\' stair goes down to the kitchen yard. The rail is rope-scored and the treads are heel-dragged.' },
     { if: {}, text: 'The back of the wardrobe in Room 4 lets in a draught and a smell of cold stone.' },
   ] },
-  S3_HEARD: { q: 'Q_ROOM4', label: 'What Mrs. Gable heard', text: 'Mrs. Gable heard Hale come up the back stair to her guest, a heavier tread after him, and then nothing for a long while.', sources: ['T3_GABLE_STAIR'] },
-  S3_NOTE: { q: 'Q_ROOM4', label: 'A note under her door', text: 'In the morning a note under Mrs. Gable\'s door: clean it, say a guest took ill, or the Ram burns. Five strokes under it, the last struck through.', sources: ['EV3_NOTE'] },
+  S3_HEARD: { q: 'Q_ROOM4', qs: ['Q_ROOM4', 'Q_KILLER'], label: 'What Mrs. Gable heard', text: 'Mrs. Gable heard Hale come up the back stair to her guest, a heavier tread after him, and then nothing for a long while.', sources: ['T3_GABLE_STAIR'] },
+  S3_NOTE: { q: 'Q_ROOM4', qs: ['Q_ROOM4', 'Q_KILLER'], label: 'A note under her door', text: 'In the morning a note under Mrs. Gable\'s door: clean it, say a guest took ill, or the Ram burns. Five strokes under it, the last struck through.', sources: ['EV3_NOTE'] },
   // --- Q_COFFEE (the third night) ---
   S3_DRUGGED: { q: 'Q_COFFEE', label: 'Laudanum in my cup', sources: ['EV3_CUP'], variants: [
     { if: { examined: 'EV3_CUP' }, text: 'Laudanum in the coffee: enough to put me under for an hour or two, not to kill me.' },
@@ -80,6 +83,37 @@ export const STATEMENTS = {
   ] },
   S3_SEARCHED: { q: 'Q_COFFEE', label: 'The note taken from my coat', text: 'While I was under, someone turned out my pockets and took the note Mrs. Gable gave me. Nothing else.', sources: [], if: { flag: 'woke3' } },
   S3_TIN: { q: 'Q_COFFEE', label: 'A new tin from Rusk\'s', text: 'The coffee was from a new tin, opened today, with Rusk\'s label on the lid.', sources: ['EV3_TIN'] },
+  // --- Chapter 4: the coffee, closed ---
+  S4_REGISTER: { q: 'Q_COFFEE', label: 'A page cut from his register', text: 'A page cut from Rusk\'s poison register. Pressed into the leaf under it: "Laud", and the date my coffee came up.', sources: ['EV4_REGISTER'], if: { examined: 'EV4_REGISTER' } },
+  S4_RUSK: { q: 'Q_COFFEE', label: 'Rusk\'s own word', text: 'Rusk put laudanum in the grounds on Mr. Mercer\'s order. He was told it would only make me sleep.', sources: ['T4_RUSK_CONFESS'] },
+  // --- Q_KILLER (Chapter 4) ---
+  S4_NAME: { q: 'Q_KILLER', label: 'Rusk names Cutler', sources: ['T4_RUSK_CONFESS', 'T4_RUSK_CUTLER'], variants: [
+    { if: { evidence: 'T4_RUSK_CONFESS' }, text: 'Rusk: Wade Cutler, Mercer\'s foreman, scraped the freight book and fetched the powder after dark.' },
+    { if: {}, text: 'Rusk, cornered, gave me a name: Wade Cutler, Mr. Mercer\'s foreman.' },
+  ] },
+  S4_KNIFE: { q: 'Q_KILLER', label: 'Cutler\'s knife', text: 'Wade Cutler wears a long knife: narrow, single-edged, the sheath worn pale. He took me for a Pinkerton.', sources: ['T4_CUTLER'] },
+  S4_ASHES: { q: 'Q_KILLER', label: 'The note in his stove', sources: ['EV4_ASHES'], variants: [
+    { if: { examined: 'EV4_ASHES' }, text: 'Mrs. Gable\'s note, half-burned in Cutler\'s stove, folded the way she kept it. The note taken from my coat.' },
+    { if: {}, text: 'A half-burned paper on the ash in Cutler\'s stove.' },
+  ] },
+  S4_HAND: { q: 'Q_KILLER', label: 'Block capitals in his book', sources: ['EV4_TALLY'], also: ['EV4_KIT'], variants: [
+    { if: { examined: 'EV4_TALLY' }, text: 'Cutler writes in block capitals, and keeps six men\'s shares in five strokes at the back of his book. A new line: N.H., struck.' },
+    { if: {}, text: 'Cutler\'s tally book: hours, feed and powder, every entry in block capitals.' },
+  ] },
+  S4_ORDER: { q: 'Q_KILLER', label: 'On Mr. Mercer\'s word', sources: ['T4_RUSK_CONFESS', 'T4_VALE_MONEY'], variants: [
+    { if: { evidence: 'T4_RUSK_CONFESS' }, text: 'Rusk drugged me because Mr. Mercer told him to, and Cutler is Mercer\'s man.' },
+    { if: {}, text: 'Vale: Mercer told him the Order\'s money lies behind the fall, and asked him to keep the town off the ridge.' },
+  ] },
+  S4_HEEL: { q: 'Q_KILLER', label: 'Mercer\'s riding boots', text: 'Mercer stood at Hale\'s grave in cavalry boots: the heel that stood under the mill roof and by the opened grave.', sources: ['EV3_HEEL'] },
+  S4_WATCH: { q: 'Q_KILLER', label: 'The watch, set by hand', text: 'Hale\'s watch ran down days before the mill. Somebody pushed the hands to twenty past two and broke the glass.', sources: ['EV4_WATCH'] },
+  // --- Q_TELEGRAM (Chapter 4) ---
+  S4_BOOK: { q: 'Q_TELEGRAM', label: 'Ada\'s book', sources: ['EV4_ADA_BOOK'], variants: [
+    { if: { examined: 'EV4_ADA_BOOK' }, text: 'Ada Bell\'s book: form 41, "handed in by Miss C. Mercer. Hooded." Two days before I came.' },
+    { if: {}, text: 'My telegram is in Ada Bell\'s receiving book, on form 41.' },
+  ] },
+  S4_PAD: { q: 'Q_TELEGRAM', label: 'Form 41, torn out', text: 'Finch\'s pad of telegraph forms, every one signed in advance. Number 41 is torn out.', sources: ['EV3_PAD'], also: ['T3_FINCH_FORMS'], if: { examined: 'EV3_PAD' } },
+  S4_FINCH: { q: 'Q_TELEGRAM', label: 'Finch guessed', text: 'Finch knew the telegram for Clara\'s the night I came, and kept quiet so her father would not hear it.', sources: ['T4_FINCH_CONFESS'] },
+  S4_CLARA: { q: 'Q_TELEGRAM', label: 'Mrs. Gable\'s guest', text: 'Mrs. Gable: Clara Mercer was the guest in Room 4. She got out down the back stair and went to her mother\'s cabin on the ridge.', sources: ['T4_GABLE_CLARA'], also: ['EV3_GLOVE'] },
   S_REGISTER: { q: 'Q_ROOM4', label: 'No one in the register', text: 'The register shows no guest in Room 4 for a fortnight.', sources: ['HOTEL_REGISTER'] },
   // --- Q_ORDER (Chapter 2) ---
   S2_FREIGHT: { q: 'Q_ORDER', label: 'The scraped freight entry', sources: ['STORE_LEDGER'], also: ['STORE_OIL'], variants: [
@@ -352,6 +386,72 @@ Object.assign(DEDUCTIONS, {
   },
 });
 
+// --- Chapter 4: the killer, the telegram, the coffee closed ---
+Object.assign(DEDUCTIONS, {
+  D4_POISONER: {
+    q: 'Q_COFFEE', title: 'Rusk\'s laudanum',
+    ask: 'Where did the laudanum come from?',
+    raisedBy: ['S4_REGISTER', 'S4_RUSK'], // (the tin is known from the third night: the thread opens with the fourth day's finds)
+    pairs: [['S4_REGISTER', 'S3_TIN'], ['S4_RUSK', 'S3_TIN']],
+    text: 'The laudanum came from Rusk\'s own shelf, the same day as the new tin with his label on it, and the page that would say so was cut out of his register.',
+    limits: 'Whose hand went through my coat while I slept, the tin cannot say.',
+    details: ['EV4_REGISTER', 'EV3_TIN', 'T4_RUSK_CONFESS'],
+    links: ['D3_DRUGGED'],
+    map: { x: 0.5, y: 0.85 },
+  },
+  D4_SAME_HAND: {
+    q: 'Q_KILLER', title: 'The same hand',
+    ask: 'Whose hand wrote the note under Mrs. Gable\'s door?',
+    raisedBy: ['S4_ASHES', 'S4_HAND'],
+    pairs: [['S4_HAND', 'S4_ASHES'], ['S4_HAND', 'S3_NOTE']],
+    text: 'The note under Mrs. Gable\'s door is in Cutler\'s block capitals, signed with his count, and it ended in his stove the night it was taken from my coat.',
+    limits: 'A man can write a threat and not strike the blow. The book does not say who held the knife.',
+    details: ['EV4_TALLY', 'EV4_ASHES', 'EV3_NOTE'],
+    links: ['D4_TREAD'],
+    map: { x: 0.5, y: 0.1 },
+  },
+  D4_TREAD: {
+    q: 'Q_KILLER', title: 'The heavier tread',
+    ask: 'Who came up the back stair after Hale?',
+    raisedBy: ['S4_KNIFE', 'S4_NAME'],
+    pairs: [['S3_HEARD', 'S4_KNIFE'], ['S3_HEARD', 'S4_NAME']],
+    text: 'A heavier man came up the back stair after Hale, and the man who does the Order\'s work in this town is Wade Cutler.',
+    limits: 'Mrs. Gable heard a tread, not a face.',
+    readings: {
+      CUTLER: { label: 'Cutler, with that knife', text: 'Cutler went up after him, and the narrow knife at his belt did the rest.', if: { evidence: 'T4_CUTLER' } },
+      MERCER: { label: 'Mercer, himself', text: 'Mercer went up the stair himself. A foreman fetches powder; a man like Mercer settles his own debts.' },
+    },
+    details: ['T3_GABLE_STAIR', 'T4_CUTLER', 'EV4_WATCH', 'EV3_BUTTON'],
+    links: ['D4_WORD'],
+    map: { x: 0.15, y: 0.6 },
+  },
+  D4_WORD: {
+    q: 'Q_KILLER', title: 'On whose word',
+    ask: 'Who gives Cutler his orders?',
+    raisedBy: ['S4_NAME', 'S4_ORDER', 'S4_HAND'],
+    pairs: [['S4_NAME', 'S4_ORDER'], ['S4_HAND', 'S4_ORDER'], ['S4_HAND', 'S4_HEEL'], ['S4_HAND', 'S4_NAME']],
+    text: 'Cutler keeps the Pale Order\'s shares in his own book, with G.M. at the head of them, and the men he leans on are Mercer\'s debtors.',
+    limits: 'Whether Mercer gave the word for Hale, or only for the powder, a tally book cannot swear to.',
+    readings: {
+      MERCER: { label: 'Mercer\'s order', text: 'Cutler is the hands. Mercer gave the word, for the powder, the coffee and the sheriff.', if: { any: [{ evidence: 'T4_RUSK_CONFESS' }, { evidence: 'T4_VALE_MONEY' }, { examined: 'EV4_TALLY' }] } },
+      ALONE: { label: 'His own work', text: 'Cutler keeps his dead father\'s share and his own counsel. Mercer pays the wages and looks away.' },
+    },
+    details: ['EV4_TALLY', 'T4_RUSK_CONFESS', 'T4_VALE_MONEY', 'EV3_HEEL', 'EV4_KIT'],
+    links: [],
+    map: { x: 0.85, y: 0.6 },
+  },
+  D4_SENDER: {
+    q: 'Q_TELEGRAM', title: 'Clara sent for me',
+    ask: 'Who handed in form 41?',
+    pairs: [['S4_BOOK', 'S4_PAD'], ['S4_BOOK', 'S4_FINCH'], ['S4_BOOK', 'S4_CLARA']],
+    text: 'Clara Mercer tore form 41 from the pad Finch had signed for Hale, wrote my telegram on it, and handed it in at Blackwood herself, hooded, two days after Hale died.',
+    limits: 'Where she is now, the book cannot tell me.',
+    details: ['EV4_ADA_BOOK', 'EV3_PAD', 'T4_FINCH_CONFESS', 'T4_GABLE_CLARA'],
+    links: [],
+    map: { x: 0.5, y: 0.45 },
+  },
+});
+
 export const DEDUCTION_REFUSAL = 'The evidence does not establish that.';
 
 // ---------------- conclusions ----------------
@@ -460,6 +560,40 @@ Object.assign(CONCLUSIONS, {
   },
 });
 
+// Chapter 4: who came up the stair after Hale, and on whose word. Exactly one is true; the readings exclude each other.
+Object.assign(CONCLUSIONS, {
+  C4_CUTLER: {
+    q: 'Q_KILLER', title: 'Cutler\'s knife, Mercer\'s word', truth: true,
+    requires: { D4_TREAD: 'CUTLER', D4_WORD: 'MERCER' },
+    text: 'Wade Cutler followed Hale up the back stair and killed him on the floor of Room 4 with that narrow knife. He wrote Mrs. Gable\'s note, took it back from my coat and burned it. He does the work; Gideon Mercer gives the word.',
+    outcome: {
+      aftermath: 'AFTER4_CUTLER',
+      do: [{ set: { killerKnown: true } }, { log: 'Settled it: Cutler killed Hale, on Mercer\'s word.' }],
+      epilogue: 'I know who, and I know on whose word. Knowing is not proof. The proof is up on the ridge with Cutler and his powder, and with a girl who saw it happen.',
+    },
+  },
+  C4_ALONE: {
+    q: 'Q_KILLER', title: 'Cutler, on his own account',
+    requires: { D4_TREAD: 'CUTLER', D4_WORD: 'ALONE' },
+    text: 'Wade Cutler killed Hale, for his dead father\'s share of whatever the Order buried. Mercer pays his wages and has not asked what he does with his nights.',
+    outcome: {
+      aftermath: 'AFTER4_ALONE',
+      do: [{ set: { cutlerAlone: true } }, { log: 'Settled it: Cutler killed Hale on his own account.' }],
+      epilogue: 'Word went up the street that the foreman did it alone. Gideon Mercer sent his regrets to the Black Ram, and a bottle, and a man to ask whether I would be leaving when the pass opens.',
+    },
+  },
+  C4_MERCER: {
+    q: 'Q_KILLER', title: 'Mercer\'s own hand',
+    requires: { D4_TREAD: 'MERCER' },
+    text: 'Gideon Mercer climbed the back stair himself and killed the sheriff who would not leave old things alone. His foreman only cleaned up after him.',
+    outcome: {
+      aftermath: 'AFTER4_MERCER',
+      do: [{ set: { mercerAccused: true } }, { log: 'Settled it: Mercer killed Hale with his own hand.' }],
+      epilogue: 'I named Gideon Mercer. By dusk the whole street had it, and so had Mercer, and so had the man who actually holds his knife.',
+    },
+  },
+});
+
 // The aftermath when Silas leaves a case without committing to anything (per case).
 export const OPEN_OUTCOMES = {
   HALE: {
@@ -477,6 +611,11 @@ export const OPEN_OUTCOMES = {
     do: [{ log: 'Kept what I found today to myself.' }],
     epilogue: 'I kept what I had found to myself: a scraped ledger, a dead wire, a grave somebody visits. Tomorrow I will know more, or someone will make sure I don\'t.',
   },
+  KILLER: {
+    aftermath: 'AFTER4_OPEN',
+    do: [{ log: 'Kept to myself who came up the stair after Hale.' }],
+    epilogue: 'I said no name at supper. Whoever came up that stair is still a step ahead of me, and tonight the step goes up the ridge.',
+  },
 };
 export const OPEN_OUTCOME = OPEN_OUTCOMES.HALE; // (the first chapter's name for it)
 
@@ -493,6 +632,10 @@ export const STATEMENT_MAP = {
   S3_COAT: { x: 0.0, y: 0.38 }, S3_BUTTON: { x: 0.0, y: 0.9 }, S3_LYE: { x: 0.2, y: 1.0 }, S3_STAIR: { x: 1.0, y: 0.38 }, S3_HEARD: { x: 1.0, y: 0.92 },
   S3_NOTE: { x: 0.62, y: 0.0 }, S_MARKS: { x: 0.67, y: 0.0, Q_ROOM4: { x: 1.0, y: 0.0 } },
   S3_DRUGGED: { x: 0.5, y: 0.0 }, S3_SEARCHED: { x: 0.0, y: 0.9 }, S3_TIN: { x: 1.0, y: 0.9 },
+  S4_REGISTER: { x: 0.2, y: 1.0 }, S4_RUSK: { x: 0.8, y: 1.0 },
+  S4_NAME: { x: 0.5, y: 0.75 }, S4_KNIFE: { x: 0.0, y: 1.0 }, S4_ASHES: { x: 0.2, y: 0.0 }, S4_HAND: { x: 0.8, y: 0.0 },
+  S4_ORDER: { x: 1.0, y: 1.0 }, S4_HEEL: { x: 1.0, y: 0.3 }, S4_WATCH: { x: 0.0, y: 0.3 },
+  S4_BOOK: { x: 0.5, y: 0.0 }, S4_PAD: { x: 0.0, y: 0.9 }, S4_FINCH: { x: 0.5, y: 1.0 }, S4_CLARA: { x: 1.0, y: 0.9 },
   S2_FREIGHT: { x: 0.0, y: 0.0 }, S2_CRATE: { x: 0.3, y: 0.0 }, S2_CACHE: { x: 0.58, y: 0.0 }, S2_HEELS: { x: 1.0, y: 0.0 },
   S2_COIN: { x: 0.0, y: 0.46 }, S2_HALE_ASKED: { x: 0.3, y: 0.6 }, S2_MILL_HEELS: { x: 1.0, y: 0.48 },  S2_FIGURE: { x: 1.0, y: 0.66 },
   S2_WIRE: { x: 0.0, y: 1.0 }, S2_LINE_DEAD: { x: 0.33, y: 1.0 }, S2_SOOT: { x: 0.64, y: 1.0 },

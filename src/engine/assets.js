@@ -147,6 +147,8 @@ export const NATIVE_SHEETS = [
   { url: 'assets/export/characters/vale.png', fw: 26, fh: 42, anchor: 10.5, sprites: { vale_idle: [0, 1] } },
   { url: 'assets/export/characters/ada.png', fw: 26, fh: 42, anchor: 11, sprites: { ada_idle: [0, 1] } },
   { url: 'assets/export/characters/mercer.png', fw: 26, fh: 42, anchor: 10.5, sprites: { mercer_idle: [0, 1] } },
+  // Chapter 4 (tools/make-chapter4-art.mjs): Wade Cutler, re-dressed from the conductor's build
+  { url: 'assets/export/characters/cutler.png', fw: 26, fh: 42, anchor: 11, sprites: { cutler_idle: [0, 1] } },
 ];
 
 function loadImage(url) {

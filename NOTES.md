@@ -848,3 +848,95 @@ end card**:
 - Mercer is a recolour of Finch's build. He reads as a different man but shares the silhouette.
 - Not played on a physical phone (as §21).
 - The Bible's Part IX answers are proposals for the design owner to confirm.
+
+## 25. Chapter 4, "Struck Through": the fourth day (2026-11-25)
+
+Act IV of the GDD is split in two (decided 2026-11-25): this chapter is the fourth **day**, where each person hiding
+something gives it up; the next is the fourth **night** (the storm, the ridge, the observatory cabin, the workings and
+the endings). The story's truth is in `docs/private/MYSTERY_BIBLE.md`; §7 there lists what this chapter adds.
+
+**Continuation.**
+- The third night's end card now offers **"Go on: the fourth day"** first (`CH4_OPEN`), then "Sit by the dead fire a
+  while" and the title.
+- A player who sat by the fire starts the day from the **armchair** in the parlor (`pl_wait`, dialogue `DAWN_WAIT`).
+- `CH4_OPEN`: the card **IV · STRUCK THROUGH**, day 4, 07:40, grey morning on the parlor floor where Silas woke. The
+  opening line varies with Room 4's outcome (a blanket over him if Mrs. Gable confides; stepped round if accused).
+- `ch3Night` / `ch3Supper` are cleared so the house is a day house again; the third night's cup, tin and passage door
+  are hidden from the fourth day on. Nothing else is reset.
+- The hotel door's `CH3_EVENING` trigger now also requires `notFlag ch4Started` (it would otherwise have replayed).
+
+**The day.**
+1. **Rusk's store.** Under the counter, the **poison register** (`EV4_REGISTER`): a page cut out, "Laud" and
+   yesterday's date pressed into the leaf beneath. Asked about it, Rusk:
+   - **confesses** (`T4_RUSK_CONFESS`: Mercer ordered it, "only make you sleep", Cutler scraped the book and fetched the
+     powder) if he was won over on the second day (`ruskWarmed`), or if Silas tells him he knows the dose was only
+     enough to put him under (needs the cup examined; sets `ruskWarmed`);
+   - **gives a name only** for a deal (`T4_RUSK_CUTLER`);
+   - **bolts** out the back if Silas draws the revolver (`ruskFled`, `threatsMade: rusk`). He is gone from the store
+     after that, and his testimony is lost for the next chapter.
+   - Optional: once he has talked, he opens **Hale's watch** (`EV4_WATCH`): it ran down days before; the hands were
+     pushed to 02:20 by hand.
+2. **Wade Cutler** (new character), saddling a grey by the woodshed at the east end of Main Street, once his name is
+   known. A narrow single-edged knife at his belt; takes Silas for a Pinkerton (`T4_CUTLER`). Drawing on him
+   (`cutlerWarned`) gets "Three in that, I'd guess". He rides up the chapel lane (`CUTLER_RIDES`, `cutlerGone`).
+3. **Cutler's loft** (`CUTLER_LOFT`, new map `cutler_loft.tmj`, over the woodshed; padlocked until he rides out):
+   - the stove: **Mrs. Gable's note, half-burned** (`EV4_ASHES`), the note taken from Silas's coat;
+   - the shelf: his **tally book** (`EV4_TALLY`, item `TALLY_BOOK`): block capitals; six shares in fives at the back,
+     G.M. at the head; a fresh line, N.H., struck;
+   - optional, the bunk: his father's grey jacket, "A. CUTLER, MERCER'S COMPANY" (`EV4_KIT`).
+4. **The telegram.** Ada Bell shows her receiving book (`EV4_ADA_BOOK`: form 41, "handed in by Miss C. Mercer.
+   Hooded.") once Silas tells her the telegram was on form 41 (the pad examined) or shows her the glove.
+   - She is at the tower, or at Finch's stove in the office if Silas told her to go home on the second day (`adaWarned`).
+   - Shown the book, **Finch confesses** he guessed it was Clara and kept quiet (`T4_FINCH_CONFESS`), and names her
+     mother's cabin on the ridge.
+5. **Mrs. Gable** names Clara and the observatory cabin (`T4_GABLE_CLARA`, `knowsObservatory`) if she confides
+   (`gableConfides`), or once Silas has Ada's book, or the glove and her account of the stair. If her keys were taken
+   (`gableAccused`) she says nothing.
+6. Optional, **Vale** (shown the tally book): Mercer told him the Order's money lies behind the fall; he preached the
+   Figure to keep the town off the ridge; he did not know about Hale (`T4_VALE_MONEY`). Silas's answer decides
+   `valeTurned` ("I can ring the bell") or `valeHardened`. If Silas gave him his text on the second day
+   (`valeEmboldened`) he hardens at once.
+7. With the tally book read and Ada's book seen, the storm comes on (`CH4_DUSK`).
+
+**How Chapter 3's outcome changes the day.** `huntForGuest`: Finch is not at his office (a card on the desk: "GONE UP
+THE RIDGE AFTER THE WOMAN"), there is no confession from him, and supper is with Mrs. Gable. `gableAccused`: Mrs. Gable
+gives nothing. `gableConfides`: she names Clara at once.
+
+**The case.** "Who came up the stair after Hale?" (`Q_KILLER`, case `KILLER`). Threads:
+- *Whose hand wrote the note?* → **The same hand** (settled);
+- *Who came up the back stair after Hale?* → **The heavier tread**: Cutler, with that knife (needs Cutler met) / Mercer,
+  himself;
+- *Who gives Cutler his orders?* → **On whose word**: Mercer's order (needs Rusk's confession, Vale, or the tally book
+  read) / his own work.
+
+Three accounts, each excluding the others: **Cutler's knife, Mercer's word** (true, `killerKnown`), **Cutler, on his own
+account** (`cutlerAlone`), **Mercer's own hand** (`mercerAccused`); keeping it to yourself is the fourth outcome.
+Also: *Who sent for me?* (`Q_TELEGRAM`, open) → **Clara sent for me**; and the third night's coffee question gains
+**Rusk's laudanum**.
+
+**Ending.** At the hotel door at dusk: settle the case or not; the "Dusk." card; supper (with Finch, or with Mrs. Gable
+under `huntForGuest`), seen in the parlor; the storm comes down (`CH4_STORM`: Silas means to go up the ridge tonight);
+then 21:30, NIGHT, and the **fourth day's end card** ("Sit by the fire a while", or the title).
+
+**Engine and tools.**
+- `{ threat: id }` effect (records a drawn revolver in `consequences.threatsMade`).
+- HUD: a passing thought waits while a title card is up (one was drawn over the chapter card).
+- `EndCard(4)`; `chapterOf` knows chapter 4; `continueGame` resumes on the fourth day's end card.
+- `tools/make-chapter4-art.mjs` (palette-exact, with `.pxo` sources): Cutler (re-dressed from the conductor's build), the
+  tally book's inventory art, the loft on Silas's map.
+- `tools/make-chapter4-levels.mjs`: the loft and the patches to six maps.
+- Harness `T.fullRun4({ conclusion, thorough, gun })`; `T.toBoard` now presses Q up to ten times (six questions).
+
+**Tests.**
+- `tests/e2e/chapter4.spec.mjs` (6): four full runs from the first night through the fourth day (each killer outcome;
+  optional finds included or skipped; Finch gone up the ridge; Mrs. Gable's keys taken; the revolver drawn on Rusk);
+  the armchair and saves mid-day; the killer's readings unlocking only with their evidence and Ada keeping her book.
+- `tests/e2e/layout.spec.mjs` now plays through Chapter 4 and audits the fourth end card.
+- `tests/e2e/chapter3.spec.mjs`: "Sit by the dead fire" is now the second item on its end card.
+
+**Not done / limits.**
+- Chapter 5 (the fourth night) does not exist. The end card says the story continues; Q8 (the evidence standard) and
+  Q9 (the endings) are still open and are needed before it.
+- At night after the fourth day the parlor is a dead end (front door bolted), as after the third.
+- Cutler is a recolour of the conductor's build; the loft is built from store and hotel tiles. No new audio.
+- The mobile touch playthrough (`mobile.spec.mjs`) was not extended to Chapter 4.

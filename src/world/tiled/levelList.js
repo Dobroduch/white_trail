@@ -18,4 +18,6 @@ export const LEVELS = [
   { id: 'TELEGRAPH', url: 'assets/levels/telegraph_tower.tmj' },
   // Chapter 3, the third day: the constable's office and jail, the west cabin on Main Street.
   { id: 'FINCH_OFFICE', url: 'assets/levels/constable_office.tmj' },
+  // Chapter 4, the fourth day: Wade Cutler's loft over the woodshed, at the east end of Main Street.
+  { id: 'CUTLER_LOFT', url: 'assets/levels/cutler_loft.tmj' },
 ];

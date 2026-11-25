@@ -39,7 +39,7 @@ test.describe('chapter 3 — the third day and night', () => {
       await page.evaluate(() => { for (let i = 0; i < 150; i++) TWT.update(1 / 60); TWT_TEST.render(); });
       await page.screenshot({ path: `test-results/review/ch3-endcard-${r.aftermath}.png` });
       // "Sit by the dead fire a while": still in the parlor at night, free to move; the card not shown again on reload
-      await page.evaluate(() => { T.press('KeyE', 60); });
+      await page.evaluate(() => { T.press('ArrowDown', 2); T.press('KeyE', 60); });
       const after = await page.evaluate(() => ({ scene: TWT.scene.id, move: TWT.canMove(), seen: TWT.state.flags.ch3EndCardSeen, phase: TWT.state.phase }));
       expect(after).toEqual({ scene: 'PARLOR', move: true, seen: true, phase: 'NIGHT' });
       await expectClean(page, errors);

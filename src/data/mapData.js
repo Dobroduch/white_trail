@@ -31,6 +31,8 @@ export const LOCATIONS = [
   { id: 'tower', name: 'the wire', scenes: ['TELEGRAPH'], art: 'tower', label: [64, 74], minor: true },
   // Chapter 3: the constable's office, the west cabin on Main Street (noted once Silas has been inside)
   { id: 'office', name: 'Finch\'s office', scenes: ['FINCH_OFFICE'], art: 'office', label: [128, 72], minor: true },
+  // Chapter 4: Cutler's loft over the woodshed, at the east end of Main Street (noted once Silas has been up)
+  { id: 'loft', name: 'Cutler\'s loft', scenes: ['CUTLER_LOFT'], art: 'loft', label: [194, 113], minor: true },
 ];
 
 export const PATHS = [
@@ -58,4 +60,5 @@ export const POSITION = {
   GRAVEYARD: { from: [98, 60], to: [128, 62] },
   TELEGRAPH: { from: [52, 66], to: [70, 64] },
   FINCH_OFFICE: { at: [146, 80] },
+  CUTLER_LOFT: { at: [194, 88] },
 };

@@ -44,6 +44,19 @@ export const LEADS = [
   ] },
   { id: 'L3_FORM', chapter: 3, variants: [{ if: { examined: 'EV3_PAD' }, text: 'Who tore form 41 from Finch\'s signed pad?' }] },
   { id: 'L3_COFFEE', chapter: 3, variants: [{ if: { flag: 'woke3' }, text: 'Who put me to sleep, and who came for the note?' }] },
+  // Chapter 4 (the fourth day)
+  { id: 'L4_CUTLER', chapter: 4, variants: [
+    { if: { flag: 'chapter4Complete' }, text: 'What is Wade Cutler opening up at the old workings tonight?' },
+    { if: { flag: 'cutlerGone' }, text: 'Wade Cutler rode up the ridge with full saddlebags. His loft is open behind him.' },
+    { if: { any: [{ evidence: 'T4_RUSK_CONFESS' }, { evidence: 'T4_RUSK_CUTLER' }] }, text: 'Who is Wade Cutler, who leans on Rusk\'s counter?' },
+  ] },
+  { id: 'L4_RUSK', chapter: 4, variants: [{ if: { all: [{ flag: 'ch4Started' }, { noEvidence: 'T4_RUSK_CONFESS' }, { noEvidence: 'T4_RUSK_CUTLER' }] }, text: 'Rusk sold the Black Ram that coffee. What else did he sell?' }] },
+  { id: 'L4_SENDER', chapter: 4, variants: [
+    { if: { evidence: 'EV4_ADA_BOOK' }, text: 'Clara Mercer sent for me. Where is she now?' },
+    { if: { flag: 'ch4Started' }, text: 'Who handed in my telegram, on form 41? Ada Bell wrote it down.' },
+  ] },
+  { id: 'L4_CLARA', chapter: 4, variants: [{ if: { flag: 'knowsObservatory' }, text: 'Clara\'s mother had a cabin on the ridge, the old observatory, past the workings.' }] },
+  { id: 'L4_FINCH', chapter: 4, variants: [{ if: { all: [{ flag: 'ch4Started' }, { flag: 'huntForGuest' }] }, text: 'Finch went up the ridge after "the woman" and has not come back.' }] },
 ];
 
 // The People page. An entry appears once its `if` holds; `variants` give Silas's current summary, and each of
@@ -71,6 +84,9 @@ export const PEOPLE = [
       { if: { evidence: 'T3_MERCER' }, text: 'Her father: "She has a temper and a good horse. She will come home."' },
       { if: { evidence: 'EV3_GLOVE' }, text: 'A grey kid glove on the service stair behind Room 4, a "C" on the back. Not proof of anything. Not nothing.' },
       { if: { evidence: 'T_GABLE_CLARA' }, text: '"Miss Mercer is a Mercer." Mrs. Gable will not discuss the family.' },
+      { if: { evidence: 'EV4_ADA_BOOK' }, text: 'She handed in my telegram herself at Blackwood, hooded, on form 41. She sent for me.' },
+      { if: { evidence: 'T4_GABLE_CLARA' }, text: 'She was the guest in Room 4, off the book. She got out down the back stair the night Hale died.' },
+      { if: { flag: 'knowsObservatory' }, text: 'Her mother\'s cabin, the old observatory, is up on the ridge past the workings.' },
     ] },
   { id: 'FINCH', name: 'Constable Edgar Finch', role: 'Constable',
     portrait: { sprite: 'finch_idle', crop: [3, 0, 18, 18], if: { flag: 'metFinch' } },
@@ -84,6 +100,8 @@ export const PEOPLE = [
       { if: { seen: 'FINCH_OFFICE.watch' }, text: 'It was him at the cabin window, the night I came. His office.' },
       { if: { evidence: 'T3_FINCH_FORMS' }, text: 'Signed a whole pad of telegraph forms in advance, for Hale.' },
       { if: { flag: 'finchForm41' }, text: 'Form 41 is gone from the pad. He knew, and did not let himself wonder who.' },
+      { if: { evidence: 'T4_FINCH_CONFESS' }, text: 'Guessed Clara sent the telegram, the night I came, and kept quiet so her father would not hear.' },
+      { if: { all: [{ flag: 'ch4Started' }, { flag: 'huntForGuest' }] }, text: 'Went up the ridge after "the woman" on my word, and has not come back.' },
       { if: { evidence: 'T_FINCH_RIDGE' }, text: 'Laughed off the talk of lights on the ridge. The laugh didn\'t take.' },
       { if: { trust: { finch: 'STEADY' } }, text: 'He has begun to trust me, a little.' },
       { if: { any: [{ trust: { finch: 'GUARDED' } }, { trust: { finch: 'COLD' } }] }, text: 'He has stopped telling me things.' },
@@ -125,6 +143,9 @@ export const PEOPLE = [
       { if: { evidence: 'T_RUSK_HALE' }, text: 'Hale read his freight book a fortnight before he died.' },
       { if: { flag: 'townFrightened' }, text: 'Blames me for the town bolting its doors.' },
       { if: { evidence: 'EV3_TIN' }, text: 'Sold the Black Ram a new tin of coffee the afternoon I was put to sleep.' },
+      { if: { evidence: 'T4_RUSK_CONFESS' }, text: 'Put laudanum in it on Mercer\'s order. Mercer holds the note on his store.' },
+      { if: { evidence: 'T4_RUSK_CUTLER' }, text: 'Gave me Cutler\'s name to be rid of me.' },
+      { if: { flag: 'ruskFled' }, text: 'I drew on him. He ran out the back into the snow.' },
     ] },
   { id: 'VALE', name: 'Reverend Elias Vale', role: 'Keeps the chapel', if: { flag: 'graveyardEntered' },
     portrait: { sprite: 'vale_idle', crop: [3, 0, 18, 18] },
@@ -138,6 +159,9 @@ export const PEOPLE = [
       { if: { evidence: 'T_VALE_ORDER' }, text: 'Says the Order paid for Amos Pell\'s stone, "and for a great many things, then".' },
       { if: { evidence: 'T_VALE_PELL' }, text: 'Blamed the opened grave on dogs. Never once looked at it.' },
       { if: { flag: 'burialDone' }, text: 'Lost his place at Hale\'s graveside, and found it again, lower.' },
+      { if: { evidence: 'T4_VALE_MONEY' }, text: 'Preached the Figure for Mercer, to keep the town off the ridge. Knew of the powder; swears he did not know of Hale.' },
+      { if: { flag: 'valeTurned' }, text: '"If you need the town, I can ring the bell."' },
+      { if: { flag: 'valeHardened' }, text: 'Will let God judge which of us brought the valley more fear.' },
     ] },
   { id: 'ADA', name: 'Ada Bell', role: 'Telegraph operator, Blackwood Station', if: { any: [{ flag: 'towerEntered' }, { flag: 'knowsAda' }] },
     portrait: { sprite: 'ada_idle', crop: [3, 0, 18, 18], if: { flag: 'towerEntered' } },
@@ -163,11 +187,28 @@ export const PEOPLE = [
       { if: { seen: 'MERCER.order' }, text: 'The Order was "a mining company. I lost money in it like everyone else."' },
       { if: { seen: 'MERCER.bye' }, text: '"Find anything else, and you\'ll find this a small town."' },
       { if: { evidence: 'EV3_HEEL' }, text: 'Wears riding boots: a narrow heel, a long straight sole.' },
+      { if: { evidence: 'T4_RUSK_CONFESS' }, text: 'Told Rusk to put me to sleep.' },
+      { if: { examined: 'EV4_TALLY' }, text: 'G.M., at the head of the six shares in Cutler\'s book.' },
+    ] },
+  // Chapter 4
+  { id: 'CUTLER', name: 'Wade Cutler', role: 'Mercer\'s foreman', if: { flag: 'cutlerMet' },
+    portrait: { sprite: 'cutler_idle', crop: [2, 0, 18, 18] },
+    variants: [{ if: {}, text: 'Mercer\'s foreman. A trooper\'s seat on a horse, a long narrow knife at his belt. Took me for a Pinkerton.' }],
+    notes: [
+      { if: { evidence: 'T4_RUSK_CONFESS' }, text: 'Scraped Rusk\'s freight book on the counter, and fetched the powder after dark.' },
+      { if: { seen: 'CUTLER.knife' }, text: 'The knife was his father\'s, who rode with Mercer in the war.' },
+      { if: { examined: 'EV4_ASHES' }, text: 'Burned Mrs. Gable\'s note in his stove: the note taken from my coat.' },
+      { if: { examined: 'EV4_TALLY' }, text: 'Writes in block capitals. Keeps six men\'s shares in fives, and struck off N.H.' },
+      { if: { examined: 'EV4_KIT' }, text: 'His father\'s grey jacket under the bunk: A. CUTLER, MERCER\'S COMPANY.' },
+      { if: { flag: 'cutlerWarned' }, text: 'I drew on him. He went on tightening the girth.' },
+      { if: { flag: 'cutlerGone' }, text: 'Rode up the ridge on a grey, with full saddlebags.' },
     ] },
 ];
 
 // The Case page's opening lines: what the mystery is, as Silas would put it now. First matching variant is shown.
 export const CASE_SUMMARY = [
+  { if: { flag: 'chapter4Complete' }, text: 'Four days in. I know who came up the stair after Hale, or I think I do. The storm is down, and Cutler and Clara Mercer are both somewhere up on the ridge.' },
+  { if: { flag: 'ch4Started' }, text: 'The fourth day. Somebody sold the laudanum and somebody came up the back stair for the note. Both of them lead back to the same man\'s money.' },
   { if: { flag: 'chapter3Complete' }, text: 'Three nights in. I think I know where Hale died. Somebody put me to sleep to take a note back, and a lantern is climbing to the old workings.' },
   { if: { flag: 'ch3Night' }, text: 'The third night. The note is in my coat, the fire is down, and I am sitting up with the stair behind Room 4.' },
   { if: { flag: 'ch3Started' }, text: 'The third day. Hale is buried at noon. Whatever happened in Room 4 happened under this roof, and somebody here knows exactly what.' },
@@ -197,6 +238,7 @@ export const ITEMS = {
   WATCH: { name: "Hale's pocket watch", text: 'Crystal smashed, hands bent. Engraved N. HALE. The works may not be ruined.', icon: 'assets/export/items/inventory/pocket_watch_inventory.png' },
   BUTTON: { name: 'Brass button', text: 'A sheriff\'s-pattern coat button, a star struck in the brass. Threads torn, not cut, still in the shank. It was under the bed in Room 4.', icon: 'assets/export/items/inventory/brass_button_inventory.png' },
   GABLE_NOTE: { name: 'Note in block capitals', text: '"CLEAN IT. A GUEST TOOK ILL. OR THE RAM BURNS." Under it, five strokes struck through. Pushed under Mrs. Gable\'s door the morning after.', icon: 'assets/export/items/inventory/gable_note_inventory.png' },
+  TALLY_BOOK: { name: 'Cutler\'s tally book', text: 'A foreman\'s book in block capitals: hours, feed, powder by the stick. At the back, six men\'s shares in fives, and N.H. struck off.', icon: 'assets/export/items/inventory/tally_book_inventory.png' },
   GLOVE: { name: 'Grey kid glove', text: 'A woman\'s glove, soft grey kid, a small hand. A "C" worked on the back in grey silk. It was on the service stair behind Room 4.', icon: 'assets/export/items/inventory/grey_glove_inventory.png' },
   LEDGER: { name: 'Half-burned ledger', text: '"THE PALE ORDER — ACCTS." Old figures, initials, tally strokes in fives.', icon: 'assets/export/items/inventory/ledger_inventory.png' },
 };

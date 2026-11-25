@@ -126,7 +126,8 @@ export class Game {
     // into the second day exactly as it would have without the reload.
     if (s.flags.sliceComplete && !s.flags.ch2Started) { this.fade.v = 1; this.openEndCard(1); }
     else if (s.flags.chapter2Complete && !s.flags.ch2EndCardSeen) { this.fade.v = 1; this.openEndCard(2); }
-    else if (s.flags.chapter3Complete && !s.flags.ch3EndCardSeen) { this.fade.v = 1; this.openEndCard(3); }
+    else if (s.flags.chapter3Complete && !s.flags.ch3EndCardSeen && !s.flags.ch4Started) { this.fade.v = 1; this.openEndCard(3); }
+    else if (s.flags.chapter4Complete && !s.flags.ch4EndCardSeen) { this.fade.v = 1; this.openEndCard(4); }
   }
   startPlay(sceneId, spawn, x, facing) {
     this.mode = 'play';
@@ -361,12 +362,14 @@ export class Game {
       // Chapter 1 -> Chapter 2: the end of the first night leads straight on into the second day (no menu, no new game).
       if (act === 'nextChapter') {
         if (o.chapter === 2) this.state.flags.ch2EndCardSeen = true;
-        this.popOverlay(); this.cutscene = null; this.scriptQueue = []; this.runScript(o.chapter === 2 ? 'CH3_OPEN' : 'CH2_OPEN');
+        if (o.chapter === 3) this.state.flags.ch3EndCardSeen = true;
+        this.popOverlay(); this.cutscene = null; this.scriptQueue = []; this.runScript(o.chapter === 3 ? 'CH4_OPEN' : o.chapter === 2 ? 'CH3_OPEN' : 'CH2_OPEN');
         return;
       }
-      // after Chapter 3: stay in the parlor, at night, where the chapter ended
+      // after Chapter 3 or 4: stay in the parlor, at night, where the chapter ended
       if (o.chapter === 3 && (act === 'stay' || act === 'title')) this.state.flags.ch3EndCardSeen = true;
-      if (o.chapter === 3 && act === 'stay') { this.popOverlay(); this.cutscene = null; this.playerControl = true; this.fadeTo(0, 0.8); this.checkpoint(); return; }
+      if (o.chapter === 4 && (act === 'stay' || act === 'title')) this.state.flags.ch4EndCardSeen = true;
+      if ((o.chapter === 3 || o.chapter === 4) && act === 'stay') { this.popOverlay(); this.cutscene = null; this.playerControl = true; this.fadeTo(0, 0.8); this.checkpoint(); return; }
       // after Chapter 2: stay in the town at the end of the second day
       if (o.chapter === 2 && (act === 'stay' || act === 'title')) this.state.flags.ch2EndCardSeen = true;
       if (act === 'stay') { this.popOverlay(); this.cutscene = null; this.loadScene('BLACK_RAM_EXTERIOR', 'fromHotel'); this.fade.v = 1; this.fadeTo(0, 1.2); this.playerControl = true; this.checkpoint(); }

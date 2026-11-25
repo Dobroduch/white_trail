@@ -67,7 +67,9 @@ export class HUD {
     const talking = g.dialogue && g.dialogue.active;
     for (const t of this.toasts) t.t += dt;
     this.toasts = this.toasts.filter((t) => t.t < (t.ink ? 4.6 : 3.6));
-    if (this.pendingThought && !talking && !this.barkMsg && !(g.cutsceneBlocking && g.cutsceneBlocking())) { this.bark(this.pendingThought + '', 4.4); this.barkMsg.thought = true; this.pendingThought = null; }
+    // a title card owns the screen: a passing thought waits until it has gone
+    if (this.barkMsg && this.barkMsg.thought && g.card) { this.pendingThought = this.barkMsg.text; this.barkMsg = null; }
+    if (this.pendingThought && !talking && !this.barkMsg && !g.card && !(g.cutsceneBlocking && g.cutsceneBlocking())) { this.bark(this.pendingThought + '', 4.4); this.barkMsg.thought = true; this.pendingThought = null; }
     if (this.objMsg && !talking) { this.objMsg.t += dt; if (this.objMsg.t > 7.5) this.objMsg = null; }
     if (this.titleT != null) { this.titleT += dt; if (this.titleT > 7) this.titleT = null; }
   }

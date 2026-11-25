@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 6,
- "nextobjectid": 31,
+ "nextobjectid": 32,
  "properties": [
   {
    "name": "name",
@@ -46,7 +46,7 @@
   {
    "name": "night",
    "type": "string",
-   "value": "{\"npcs\":[{\"id\":\"gable\",\"sprite\":\"gable_idle\",\"x\":300,\"facing\":-1,\"if\":{\"notFlag\":\"ch3Night\"},\"dialogue\":\"GABLE_NIGHT_AGAIN\",\"name\":\"Mrs. Gable\",\"candle\":true}],\"lights\":[],\"darkness\":0.8,\"ambience\":\"parlor_night\"}"
+   "value": "{\"npcs\":[{\"id\":\"gable\",\"sprite\":\"gable_idle\",\"x\":300,\"facing\":-1,\"if\":{\"all\":[{\"notFlag\":\"ch3Night\"},{\"notFlag\":\"chapter4Complete\"}]},\"dialogue\":\"GABLE_NIGHT_AGAIN\",\"name\":\"Mrs. Gable\",\"candle\":true}],\"lights\":[],\"darkness\":0.8,\"ambience\":\"parlor_night\"}"
   },
   {
    "name": "day",
@@ -65,6 +65,11 @@
   },
   {
    "name": "chapter3",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "chapter4",
    "type": "bool",
    "value": true
   }
@@ -1777,6 +1782,11 @@
        "name": "variants",
        "type": "string",
        "value": "[{\"if\":{\"phase\":\"NIGHT\"},\"lines\":[\"Embers. The room has gone cold around them.\"]},{\"if\":{\"phase\":\"DAY\"},\"lines\":[\"Built up again since the small hours, and burning hard. Whatever else Mrs. Gable lets go, she does not let the fire go.\"]},{\"if\":{},\"lines\":[\"Pine logs, burning well. The first warm air I've breathed since the train.\"]}]"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"any\":[{\"notFlag\":\"chapter3Complete\"},{\"flag\":\"ch4Started\"},{\"phase\":\"DAY\"}]}"
       }
      ]
     },
@@ -2172,7 +2182,7 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"any\":[{\"flag\":\"ch2Supper\"},{\"flag\":\"ch3Supper\"}]}"
+       "value": "{\"any\":[{\"flag\":\"ch2Supper\"},{\"flag\":\"ch3Supper\"},{\"all\":[{\"flag\":\"ch4Supper\"},{\"notFlag\":\"huntForGuest\"}]}]}"
       }
      ]
     },
@@ -2269,7 +2279,7 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"flag\":\"woke3\"}"
+       "value": "{\"all\":[{\"flag\":\"woke3\"},{\"notFlag\":\"ch4Started\"}]}"
       }
      ]
     },
@@ -2303,7 +2313,7 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"flag\":\"woke3\"}"
+       "value": "{\"all\":[{\"flag\":\"woke3\"},{\"notFlag\":\"ch4Started\"}]}"
       }
      ]
     },
@@ -2332,7 +2342,46 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"flag\":\"woke3\"}"
+       "value": "{\"all\":[{\"flag\":\"woke3\"},{\"notFlag\":\"ch4Started\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 31,
+     "name": "pl_wait",
+     "type": "interactable",
+     "x": 216,
+     "y": 195,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Armchair"
+      },
+      {
+       "name": "verb",
+       "type": "string",
+       "value": "Sit"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "DAWN_WAIT"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "NIGHT"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"chapter3Complete\"},{\"notFlag\":\"ch4Started\"}]}"
       }
      ]
     }

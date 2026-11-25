@@ -2,7 +2,7 @@
 //
 // The text audit (tools/harness.js T.auditText) records every string one frame draws and reports text that runs off
 // the screen, past its panel or column (panels that name their boxes with textBox()), or over other text. It is run
-//   - every ~40 steps through whole playthroughs of chapters 1–3 (HUD, barks, dialogue, choices, cards),
+//   - every ~40 steps through whole playthroughs of chapters 1–4 (HUD, barks, dialogue, choices, cards),
 //   - on every page, question, row, clue-notes page, picker and case review of the notebook, at checkpoints sampled
 //     from those playthroughs (T.sweepNotebook), which also fails on any draw that throws,
 //   - on each menu and panel (pause, settings, controls, inventory, map, telegram, end cards).
@@ -22,7 +22,7 @@ for (const size of SIZES) {
   test.describe(`text layout: ${size.name}`, () => {
     test.use(size.use);
 
-    test('no text overflows or overlaps anywhere in chapters 1–3, the notebook or the menus', async ({ page }) => {
+    test('no text overflows or overlaps anywhere in chapters 1–4, the notebook or the menus', async ({ page }) => {
       test.setTimeout(420_000);
       const { errors } = await boot(page, { test: '1', ...(size.touch ? { dpr: '0' } : {}) });
       const r = await page.evaluate(async (touch) => {
@@ -43,7 +43,7 @@ for (const size of SIZES) {
           }
         };
         g.newGame();
-        const runs = [T.fullRun(), T.fullRun2(), T.fullRun3()];
+        const runs = [T.fullRun(), T.fullRun2(), T.fullRun3(), T.fullRun4()];
         g.update = up; g.checkpoint = cp;
         // the notebook at sampled checkpoints (and the last)
         const errs = [];
@@ -64,7 +64,7 @@ for (const size of SIZES) {
           ['pause', () => new PauseMenu(g)], ['settings', () => new SettingsMenu(g)], ['controls', () => new ControlsHelp(g)],
           ['inventory', () => { const v = new Inventory(g); v.panelKind = 'inventory'; return v; }], ['map', () => new MapView(g)],
           ['telegram', () => new DocumentView(g, 'TELEGRAM')], ['end card 1', () => new EndCard(g, 1)], ['end card 2', () => new EndCard(g, 2)],
-          ['end card 3', () => new EndCard(g, 3)],
+          ['end card 3', () => new EndCard(g, 3)], ['end card 4', () => new EndCard(g, 4)],
         ];
         for (const [name, mk] of panels) {
           let o;
@@ -78,7 +78,7 @@ for (const size of SIZES) {
         add(T.auditText('[title]'));
         return { issues: [...issues], errs, runs: runs.map((x) => x.errors) };
       }, !!size.touch);
-      expect(r.runs, 'the playthroughs themselves').toEqual([[], [], []]);
+      expect(r.runs, 'the playthroughs themselves').toEqual([[], [], [], []]);
       expect(r.errs, 'drawing errors').toEqual([]);
       expect(r.issues, 'text off screen, past its panel, or over other text').toEqual([]);
       await expectClean(page, errors);

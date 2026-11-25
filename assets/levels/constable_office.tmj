@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 4,
- "nextobjectid": 17,
+ "nextobjectid": 19,
  "properties": [
   {
    "name": "name",
@@ -52,6 +52,11 @@
    "name": "day",
    "type": "string",
    "value": "{\"darkness\":0.26}"
+  },
+  {
+   "name": "chapter4",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -1310,6 +1315,11 @@
        "name": "phase",
        "type": "string",
        "value": "DAY"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"any\":[{\"notFlag\":\"ch4Started\"},{\"notFlag\":\"huntForGuest\"}]}"
       }
      ]
     },
@@ -1546,6 +1556,74 @@
        "name": "if",
        "type": "string",
        "value": "{\"notFlag\":\"officeEntered\"}"
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "ada",
+     "type": "npc",
+     "x": 96,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Ada Bell"
+      },
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "ada_idle"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "ADA"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": 1
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch4Started\"},{\"flag\":\"adaWarned\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 18,
+     "name": "of_card",
+     "type": "interactable",
+     "x": 200,
+     "y": 190,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "A card on the desk"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch4Started\"},{\"flag\":\"huntForGuest\"}]}"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "In Finch's careful hand: GONE UP THE RIDGE AFTER THE WOMAN. BACK BY DARK. E.F. The ink is a day old, and the stove is out."
       }
      ]
     }

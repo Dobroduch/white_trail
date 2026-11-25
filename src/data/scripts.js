@@ -386,4 +386,86 @@ export const SCRIPTS = {
     { checkpoint: true },
     { endCard: 3 },
   ],
+
+  // ======================= Chapter 4: the fourth day =======================
+  // Straight on from the third night's end card (or from the dead fire, if Silas sat up a while): the chapter title over
+  // black, then grey morning on the parlor floor where he woke.
+  CH4_OPEN: [
+    { control: false },
+    { fade: { to: 1, dur: 0 } },
+    { card: { lines: ['IV', 'STRUCK THROUGH'], dur: 3.6 } },
+    { phase: 'DAY', time: [7, 40], day: 4 },
+    { set: { ch4Started: true, ch3Night: false, ch3Supper: false } },
+    { scene: { id: 'PARLOR', spawn: 'fromStairs' } },
+    { player: { x: 160, face: 1 } },
+    { fade: { to: 0, dur: 2.0 } },
+    { label: true },
+    { say: 'CH4_OPEN' },
+    { log: 'The fourth day. Another storm coming over the ridge.' },
+    { checkpoint: true },
+    { control: true },
+    { hint: 'The fourth day. Rusk\'s store is west along Main Street.', dur: 8 },
+  ],
+
+  // Rusk, with a revolver in his face: out the back door into the snow
+  RUSK_FLEES: [
+    { control: false },
+    { npc: { id: 'rusk', walkTo: 470, speed: 70 } },
+    { npc: { id: 'rusk', hide: true } },
+    { sfx: 'door' },
+    { wait: 0.6 },
+    { control: true },
+    { bark: 'The back door bangs in the wind. He won\'t stand up in any court now, not for me.' },
+  ],
+
+  // Cutler rides out, up the chapel lane toward the ridge, and leaves his loft open behind him
+  CUTLER_RIDES: [
+    { control: false },
+    { npc: { id: 'cutler', walkTo: 700, speed: 44 } },
+    { npc: { id: 'cutler', hide: true } },
+    { set: { cutlerGone: true } },
+    { log: 'Met Wade Cutler, Mercer\'s foreman. He rode up toward the ridge with full saddlebags.' },
+    { checkpoint: true },
+    { control: true },
+    { bark: 'Up the chapel lane and away toward the ridge. He left the loft door with the padlock hanging open.' },
+  ],
+
+  LOFT_ENTER: [
+    { ambient: true },
+    { set: { loftEntered: true } },
+    { wait: 0.6 },
+    { bark: 'A bunk, a stove burned low, a shelf. A soldier\'s room: everything squared away, nothing kept that isn\'t used.' },
+  ],
+
+  // the fourth day's work done (Cutler's book, Ada's): the storm comes on (global event)
+  CH4_DUSK: [
+    { ambient: true },
+    { set: { ch4DuskReady: true } },
+    { clock: [16, 10] },
+    { wind: 0.7 },
+    { wait: 1.2 },
+    { bark: 'The light is going, and the wind with it. The storm is coming down off the ridge.' },
+    { hint: 'Go back to the Black Ram. Going in ends the day.', dur: 8 },
+  ],
+
+  // at the hotel door at dusk: settle (or not) who killed Hale, supper, and the storm
+  CH4_EVENING: [
+    { control: false },
+    { casePrompt: 'KILLER', prompt: 'CASE_PROMPT_KILLER' },
+    { fade: { to: 1, dur: 1.6 } },
+    { wind: null },
+    { clock: [17, 40] },
+    { set: { ch4Supper: true } },
+    { scene: { id: 'PARLOR', spawn: 'fromStreet' } },
+    { player: { x: 152, face: -1 } },
+    { aftermath: 'KILLER', cardText: ['Dusk.'], reveal: true },
+    { say: 'CH4_STORM' },
+    { fade: { to: 1, dur: 1.6 } },
+    { set: { ch4Supper: false, chapter4Complete: true } },
+    { phase: 'NIGHT', time: [21, 30] },
+    { player: { x: 160, face: -1 } },
+    { log: 'The storm came down at dark. Clara Mercer and Wade Cutler are both somewhere up on the ridge.' },
+    { checkpoint: true },
+    { endCard: 4 },
+  ],
 };

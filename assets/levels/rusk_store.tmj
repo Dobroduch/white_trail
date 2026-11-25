@@ -11,7 +11,7 @@
  "infinite": false,
  "compressionlevel": -1,
  "nextlayerid": 4,
- "nextobjectid": 16,
+ "nextobjectid": 18,
  "properties": [
   {
    "name": "name",
@@ -52,6 +52,11 @@
    "name": "day",
    "type": "string",
    "value": "{\"darkness\":0.22}"
+  },
+  {
+   "name": "chapter4",
+   "type": "bool",
+   "value": true
   }
  ],
  "tilesets": [
@@ -1357,6 +1362,11 @@
        "name": "facing",
        "type": "float",
        "value": -1
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notFlag\":\"ruskFled\"}"
       }
      ]
     },
@@ -1516,6 +1526,69 @@
        "name": "if",
        "type": "string",
        "value": "{\"notFlag\":\"storeEntered\"}"
+      }
+     ]
+    },
+    {
+     "id": 16,
+     "name": "st_register",
+     "type": "interactable",
+     "x": 272,
+     "y": 196,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Under the counter"
+      },
+      {
+       "name": "evidence",
+       "type": "string",
+       "value": "EV4_REGISTER"
+      },
+      {
+       "name": "important",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"ch4Started\"}"
+      }
+     ]
+    },
+    {
+     "id": 17,
+     "name": "st_backdoor",
+     "type": "interactable",
+     "x": 470,
+     "y": 200,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Back door"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "Banging on its latch in the wind. His coat is still on the peg. Tracks go out across the yard, fast, toward nowhere in particular."
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"flag\":\"ruskFled\"}"
       }
      ]
     }

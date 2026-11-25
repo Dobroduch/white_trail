@@ -152,7 +152,7 @@ export function install() {
       if (!(g.overlay && g.overlay.panelKind === 'notebook')) T.press('Tab');
       const nb = g.notebook;
       for (let k = 0; k < 6 && nb.tabName() !== 'DEDUCTIONS'; k++) T.press(nb.tab < 2 ? 'ArrowRight' : 'ArrowLeft', 1);
-      for (let k = 0; k < 4 && qid && nb.q !== qid; k++) T.press('KeyQ', 1);
+      for (let k = 0; k < 10 && qid && nb.q !== qid; k++) T.press('KeyQ', 1);
       return nb.tabName() === 'DEDUCTIONS' && (!qid || nb.q === qid);
     },
     // Full scripted playthrough of the vertical slice using real inputs. Returns a report.
@@ -570,6 +570,149 @@ export function install() {
       check('laudanum in the cup', s.evidence.EV3_CUP && s.evidence.EV3_CUP.examined);
       check('the third night\'s end card', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 3 && s.flags.chapter3Complete);
       check('the earlier cases are untouched', (s.cases.HALE ? s.cases.HALE.conclusion : null) === before.hale && (s.cases.ORDER ? s.cases.ORDER.conclusion : null) === before.order);
+      check('no shots, no deaths', s.consequences.shotsFired === 0 && s.consequences.peopleKilled.length === 0);
+      check('no runtime errors', g.errorsSeen.size === 0);
+      rep.passed = rep.errors.length === 0;
+      return rep;
+    },
+    // Chapter 4, the fourth day, played on from the third night's end card with real inputs.
+    //   conclusion: 'C4_CUTLER' | 'C4_ALONE' | 'C4_MERCER' | null (keep it to myself)
+    //   thorough: also the optional finds and talks   gun: draw the revolver on Rusk (he runs) instead of dealing
+    fullRun4({ conclusion = 'C4_CUTLER', thorough = true, gun = false } = {}) {
+      const g = G();
+      const rep = { steps: [], errors: [] };
+      T.lastRep = rep;
+      const check = (name, cond) => { rep.steps.push((cond ? 'PASS ' : 'FAIL ') + name); if (!cond) rep.errors.push(name); };
+      const look = (x, times = 2) => { T.walkTo(x); for (let k = 0; k < times; k++) { if (!g.prompt) break; T.press('KeyE'); T.talkThrough(); } };
+      const talk = (x, order) => {
+        T.walkTo(x); if (!g.prompt) return false;
+        T.press('KeyE');
+        for (let i = 0; i < 6000 && (g.dialogue.active || g.cutsceneBlocking()); i++) {
+          if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
+            const c = g.dialogue.choices.map((x) => x.text);
+            let idx = -1;
+            for (const o of order) { idx = c.findIndex((t) => t.startsWith(o)); if (idx >= 0) break; }
+            T.key('Digit' + ((idx >= 0 ? idx : c.length - 1) + 1));
+          } else if (g.dialogue.active && i % 5 === 0) T.key('KeyE');
+          g.update(1 / 60);
+        }
+        for (let i = 0; i < 16; i++) g.update(1 / 60);
+        return true;
+      };
+      const leave = (dir, frames = 20) => { T.hold(dir === 'right' ? 'KeyD' : 'KeyA', frames); T.step(80); T.talkThrough(); };
+      const door = (x) => { T.walkTo(x); T.press('KeyE'); T.step(80); T.talkThrough(); };
+      const s = g.state;
+      const before = { items: s.items.slice(), evidence: Object.keys(s.evidence).length, cases: JSON.stringify(s.cases) };
+      // ---- from the third night's end card straight on into the fourth day ----
+      check('the third night\'s end card offers the fourth day', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 3 && g.overlay.items[0].act === 'nextChapter');
+      for (let i = 0; i < 150; i++) g.update(1 / 60);
+      T.press('KeyE', 3);
+      for (let i = 0; i < 900 && !g.dialogue.active; i++) g.update(1 / 60);
+      T.talkThrough([], 3000);
+      check('day four opens in the parlor, by daylight', g.scene.id === 'PARLOR' && s.phase === 'DAY' && s.time.day === 4 && g.canMove() && s.flags.ch4Started && !s.flags.ch3Night);
+      check('nothing carried or recorded was lost', before.items.every((i) => s.items.includes(i)) && Object.keys(s.evidence).length >= before.evidence);
+      check('the third night is cleared away (no cup, no pot)', !g.interactables().some((i) => i.ref && ['pl_cup', 'pl_tin', 'pl_pot'].includes(i.ref.id)) && !g.props.some((p) => p.id === 'coffeePot'));
+      check('Mrs. Gable is downstairs again', g.npcs.some((n) => n.id === 'gable'));
+      if (thorough && !s.flags.gableAccused) talk(276, ['Somebody came up', 'Clara Mercer was', 'Nothing']);
+      // ---- out, west to Rusk's ----
+      door(18);
+      T.walkTo(6); leave('left');
+      check('Main Street; nobody by the woodshed yet', g.scene.id === 'VILLAGE' && !g.npcs.some((n) => n.id === 'cutler' && !n.hidden));
+      door(197);
+      check('into Rusk\'s store', g.scene.id === 'RUSK_STORE');
+      look(181, 2);
+      check('the poison register: a page cut out', s.evidence.EV4_REGISTER && s.evidence.EV4_REGISTER.examined);
+      const ruskOrder = gun ? ['Mrs. Gable bought', 'Your poison register', '[Draw the revolver]', 'That\'s all']
+        : thorough ? ['Mrs. Gable bought', 'Your poison register', 'It was enough', 'Can you open', 'That\'s all']
+          : ['Your poison register', 'Tell me who', 'That\'s all'];
+      talk(229, ruskOrder);
+      T.talkThrough(); T.step(60);
+      check('Rusk gives up Cutler\'s name', !!(s.evidence.T4_RUSK_CONFESS || s.evidence.T4_RUSK_CUTLER));
+      rep.rusk = s.evidence.T4_RUSK_CONFESS ? 'confessed' : s.flags.ruskFled ? 'fled' : 'named';
+      if (gun) check('Rusk ran out the back, and the threat is remembered', s.flags.ruskFled && !g.npcs.some((n) => n.id === 'rusk' && !n.hidden) && s.consequences.threatsMade.includes('rusk'));
+      if (thorough && !gun) { talk(229, ['Can you open', 'That\'s all']); check('Hale\'s watch, opened', !!s.evidence.EV4_WATCH); }
+      door(21);
+      // ---- Wade Cutler, by the woodshed ----
+      check('Cutler is saddling up by the woodshed', g.scene.id === 'VILLAGE' && g.npcs.some((n) => n.id === 'cutler' && !n.hidden));
+      T.walkTo(440); T.press('KeyE'); T.talkThrough(); // the loft door: padlocked while he's there
+      check('the loft is padlocked while he is about', g.scene.id === 'VILLAGE');
+      talk(419, thorough ? ['I\'m not', 'You lean', 'That\'s a cavalry', 'Where were you', 'Ride careful'] : ['Ride careful']);
+      for (let i = 0; i < 900 && (g.cutsceneBlocking() || !s.flags.cutlerGone); i++) { if (g.dialogue.active && i % 5 === 0) T.key('KeyE'); g.update(1 / 60); }
+      T.talkThrough();
+      check('Cutler met, and gone up the ridge', !!s.evidence.T4_CUTLER && s.flags.cutlerGone && !g.npcs.some((n) => n.id === 'cutler' && !n.hidden) && g.canMove());
+      check('Cutler is on the People page', g.notebook.people().includes('CUTLER'));
+      // ---- his loft ----
+      door(445);
+      check('up into Cutler\'s loft', g.scene.id === 'CUTLER_LOFT' && s.flags.loftEntered);
+      check('the loft is drawn on my map', s.map.visited.includes('loft'));
+      look(91, 2);
+      check('Mrs. Gable\'s note, half-burned in his stove', s.evidence.EV4_ASHES && s.evidence.EV4_ASHES.examined);
+      look(245, 2);
+      check('his tally book: block capitals, N.H. struck; taken', s.evidence.EV4_TALLY && s.evidence.EV4_TALLY.examined && s.items.includes('TALLY_BOOK'));
+      if (thorough) { look(160, 2); check('a trooper\'s kit under the bunk', s.evidence.EV4_KIT && s.evidence.EV4_KIT.examined); }
+      door(21);
+      // ---- the constable's office: the pad (if not looked at on the third day) ----
+      door(43);
+      check('into the constable\'s office', g.scene.id === 'FINCH_OFFICE');
+      check('Finch is here unless he went up after the woman', g.npcs.some((n) => n.id === 'finch') === !s.flags.huntForGuest);
+      if (!(s.evidence.EV3_PAD && s.evidence.EV3_PAD.examined)) look(153, 2);
+      check('the pad: form 41 torn out', s.evidence.EV3_PAD && s.evidence.EV3_PAD.examined);
+      const adaHere = g.npcs.some((n) => n.id === 'ada');
+      check('Ada Bell is at Finch\'s stove only if I sent her home', adaHere === !!s.flags.adaWarned);
+      if (adaHere) talk(64, ['My telegram was', 'Did you see', 'That\'s all']);
+      if (thorough && g.npcs.some((n) => n.id === 'finch')) talk(100, ['Who is Wade', 'Clara Mercer sent', 'That\'ll do']);
+      door(21);
+      // ---- up to the tower for Ada, if she is there; the Reverend on the way ----
+      if (!adaHere) {
+        door(373);
+        check('up the chapel lane', g.scene.id === 'GRAVEYARD');
+        T.walkTo(506); leave('right');
+        check('up to the tower', g.scene.id === 'TELEGRAPH' && g.npcs.some((n) => n.id === 'ada'));
+        talk(235, ['My telegram was', 'Did you see', 'That\'s all']);
+        T.walkTo(6); leave('left');
+        if (thorough) talk(139, ['Mercer\'s foreman struck', 'You didn\'t know', 'Good day']);
+        T.walkTo(6); leave('left');
+      } else if (thorough) { door(373); talk(139, ['Mercer\'s foreman struck', 'You didn\'t know', 'Good day']); T.walkTo(6); leave('left'); }
+      check('Ada\'s book: handed in by Miss C. Mercer', !!s.evidence.EV4_ADA_BOOK);
+      if (thorough && !s.flags.valeEmboldened) check('Vale on the Order\'s money, and turned', !!s.evidence.T4_VALE_MONEY && s.flags.valeTurned);
+      for (let i = 0; i < 400 && !s.flags.ch4DuskReady; i++) g.update(1 / 60);
+      T.talkThrough();
+      check('the storm comes on once the day\'s work is done', s.flags.ch4DuskReady && s.time.h >= 16);
+      if (thorough && g.scene.id === 'VILLAGE' && !s.flags.huntForGuest) { door(43); talk(100, ['Clara Mercer sent', 'Who is Wade', 'That\'ll do']); check('Finch owns up about the telegram', !!s.evidence.T4_FINCH_CONFESS && s.flags.knowsObservatory); door(21); }
+      // ---- the notebook ----
+      if (conclusion) {
+        T.toBoard('Q_KILLER');
+        for (const [a, b] of [['S4_HAND', 'S4_ASHES'], ['S3_HEARD', 'S4_KNIFE'], ['S4_NAME', 'S4_ORDER'], ['S4_HAND', 'S4_NAME']]) T.deduce(a, b);
+        check('the killer deductions formed', ['D4_SAME_HAND', 'D4_TREAD', 'D4_WORD'].every((d) => s.deductions.includes(d)));
+        T.press('Escape');
+        T.toBoard('Q_TELEGRAM'); T.deduce('S4_BOOK', 'S4_PAD'); T.press('Escape');
+        T.toBoard('Q_COFFEE'); T.deduce('S4_REGISTER', 'S3_TIN'); T.press('Escape');
+        check('Clara sent for me; Rusk\'s laudanum', s.deductions.includes('D4_SENDER') && s.deductions.includes('D4_POISONER'));
+      }
+      // ---- home through the storm ----
+      T.walkTo(470); leave('right');
+      check('back on the forecourt', g.scene.id === 'BLACK_RAM_EXTERIOR');
+      T.walkTo(320); T.press('KeyE'); T.step(20);
+      check('at the door: asked who came up the stair', g.dialogue.active && g.dialogue.id === 'CASE_PROMPT_KILLER');
+      if (conclusion) {
+        T.talkThrough([0]);
+        check('the case review opens', g.overlay && g.overlay.constructor.name === 'CaseReview');
+        T.decide(conclusion);
+      } else {
+        for (let i = 0; i < 600 && !(g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length); i++) { if (i % 5 === 0) T.key('KeyE'); g.update(1 / 60); }
+        T.key('Digit' + g.dialogue.choices.length); T.step(5);
+      }
+      check(conclusion ? `committed to ${conclusion}` : 'kept it to myself', conclusion ? s.cases.KILLER && s.cases.KILLER.conclusion === conclusion : !s.cases.KILLER);
+      if (g.overlay && g.overlay.constructor.name === 'CaseReview') T.press('Escape', 2);
+      for (let i = 0; i < 600 && !g.dialogue.active; i++) g.update(1 / 60);
+      rep.aftermath = g.dialogue.id;
+      T.step(100);
+      check('supper is seen in the parlor', g.scene.id === 'PARLOR' && !g.card && g.fade.v < 0.05 && g.npcs.some((n) => n.id === 'finch') === !s.flags.huntForGuest);
+      for (let i = 0; i < 6000 && !(g.overlay && g.overlay.constructor.name === 'EndCard'); i++) { if (g.dialogue.active && i % 5 === 0) T.key('KeyE'); g.update(1 / 60); }
+      T.step(60);
+      check('aftermath played once', !!s.flags.aftermath_KILLER);
+      check('the fourth day\'s end card', g.overlay && g.overlay.constructor.name === 'EndCard' && g.overlay.chapter === 4 && s.flags.chapter4Complete && s.phase === 'NIGHT');
+      check('the earlier cases are untouched', JSON.stringify(Object.fromEntries(Object.entries(s.cases).filter(([k]) => k !== 'KILLER'))) === before.cases);
       check('no shots, no deaths', s.consequences.shotsFired === 0 && s.consequences.peopleKilled.length === 0);
       check('no runtime errors', g.errorsSeen.size === 0);
       rep.passed = rep.errors.length === 0;

@@ -363,14 +363,17 @@ export class DocumentView {
 export class EndCard {
   // chapter 1: the close of the first night, leading straight on into the second day.
   // chapter 2: the close of the second day, leading on into the third (or a last walk through the town at dusk).
-  // chapter 3: the close of the third night (the story so far ends here).
+  // chapter 3: the close of the third night, leading on into the fourth day (or a while longer by the dead fire).
+  // chapter 4: the close of the fourth day, the storm down (the story so far ends here).
   constructor(game, chapter = 1) {
     this.game = game; this.chapter = chapter; this.t = 0; this.sel = 0;
     this.items = chapter === 1
       ? [{ label: 'Go on: the second day', act: 'nextChapter' }, { label: 'Save and return to the title', act: 'title' }]
       : chapter === 2
         ? [{ label: 'Go on: the third day', act: 'nextChapter' }, { label: 'Walk the town a while longer', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }]
-        : [{ label: 'Sit by the dead fire a while', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }];
+        : chapter === 3
+          ? [{ label: 'Go on: the fourth day', act: 'nextChapter' }, { label: 'Sit by the dead fire a while', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }]
+          : [{ label: 'Sit by the fire a while', act: 'stay' }, { label: 'Save and return to the title', act: 'title' }];
   }
   update(input) {
     this.t += 1 / 60;
@@ -384,7 +387,7 @@ export class EndCard {
     const a = Math.min(1, this.t / 1.5);
     ctx.globalAlpha = a;
     font(ctx, 13); spaced(ctx, 'THE WHITE TRAIL', UI_CX, 34, UI.bone, 3, 'center');
-    if (this.chapter >= 2) { if (this.chapter === 3) this.drawChapter3(ctx, s); else this.drawChapter2(ctx, s); ctx.globalAlpha = 1; if (this.t >= 2) this.rects = drawMenu(ctx, this.items, this.sel, UI_CX, this.items.length > 2 ? 150 : 156, { align: 'center', size: 5.6, gap: 8.5 }); return; }
+    if (this.chapter >= 2) { if (this.chapter === 4) this.drawChapter4(ctx, s); else if (this.chapter === 3) this.drawChapter3(ctx, s); else this.drawChapter2(ctx, s); ctx.globalAlpha = 1; if (this.t >= 2) this.rects = drawMenu(ctx, this.items, this.sel, UI_CX, this.items.length > 2 ? 150 : 156, { align: 'center', size: 5.6, gap: 8.5 }); return; }
     font(ctx, 5.2, { italic: true });
     text(ctx, 'The first night ends here. The storm does not.', UI_CX, 45, UI.dim, 'center');
     const total = Object.keys(EVIDENCE).filter((id) => EVIDENCE[id].location === 'SAWMILL').length;
@@ -454,5 +457,27 @@ export class EndCard {
     for (const v of all.slice(0, 5)) { text(ctx, v.text, UI_CX, y, UI.dim, 'center'); y += 6.1; }
     font(ctx, 4.6, { italic: true });
     if (y < 141) text(ctx, 'The story continues in the next chapter.', UI_CX, 141, UI.faint, 'center');
+  }
+  drawChapter4(ctx, s) {
+    font(ctx, 5.2, { italic: true });
+    text(ctx, 'The fourth day ends here. The storm has come down off the ridge.', UI_CX, 45, UI.dim, 'center');
+    const ch4 = Object.keys(s.evidence).filter((id) => EVIDENCE[id] && EVIDENCE[id].chapter === 4);
+    const total = Object.keys(EVIDENCE).filter((id) => EVIDENCE[id].chapter === 4).length;
+    font(ctx, 5.4);
+    let y = 56;
+    text(ctx, `Recorded today: ${ch4.length} of ${total}     Deductions: ${s.deductions.length}     Places on my map: ${(s.map && s.map.visited.length) || 0}`, UI_CX, y, UI.dim, 'center'); y += 7;
+    const k = s.cases && s.cases.KILLER;
+    font(ctx, 4.8, { bold: true }); spaced(ctx, 'THE STAIR', UI_CX, y + 2, UI.amber, 1.2, 'center'); y += 9;
+    font(ctx, 5.6, { bold: true });
+    text(ctx, k ? CONCLUSIONS[k.conclusion].title : 'Kept to myself', UI_CX, y, UI.bone, 'center'); y += 7;
+    font(ctx, 5, { italic: true });
+    for (const ln of wrap(ctx, (k ? CONCLUSIONS[k.conclusion].outcome : OPEN_OUTCOMES.KILLER).epilogue, 262)) { text(ctx, ln, UI_CX, y, UI.bone, 'center'); y += 6.2; }
+    y += 3;
+    font(ctx, 4.8, { bold: true }); spaced(ctx, 'STILL OPEN', UI_CX, y, UI.amber, 1.2, 'center'); y += 7;
+    font(ctx, 5, { italic: true });
+    const all = LEADS.filter((l) => l.chapter === 4).map((l) => l.variants.find((v) => test(v.if, s))).filter(Boolean);
+    for (const v of all.slice(0, 4)) { for (const ln of wrap(ctx, v.text, 262)) { text(ctx, ln, UI_CX, y, UI.dim, 'center'); y += 6.1; } }
+    font(ctx, 4.6, { italic: true });
+    if (y < 145) text(ctx, 'The story continues in the next chapter.', UI_CX, 145, UI.faint, 'center');
   }
 }

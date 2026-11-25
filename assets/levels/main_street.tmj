@@ -12,7 +12,7 @@
  "compressionlevel": -1,
  "backgroundcolor": "#000000",
  "nextlayerid": 17,
- "nextobjectid": 24,
+ "nextobjectid": 28,
  "properties": [
   {
    "name": "name",
@@ -71,6 +71,11 @@
   },
   {
    "name": "chapter3",
+   "type": "bool",
+   "value": true
+  },
+  {
+   "name": "chapter4",
    "type": "bool",
    "value": true
   }
@@ -4424,6 +4429,11 @@
        "name": "lines",
        "type": "string",
        "value": "A woodshed, the door barred from outside. Snow lies over the step, unbroken. Nobody has fetched fuel from here today."
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"notFlag\":\"ch4Started\"}"
       }
      ]
     },
@@ -4839,6 +4849,152 @@
        "name": "facing",
        "type": "float",
        "value": 1
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "name": "cutler",
+     "type": "npc",
+     "x": 628,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Wade Cutler"
+      },
+      {
+       "name": "sprite",
+       "type": "string",
+       "value": "cutler_idle"
+      },
+      {
+       "name": "dialogue",
+       "type": "string",
+       "value": "CUTLER"
+      },
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch4Started\"},{\"any\":[{\"evidence\":\"T4_RUSK_CONFESS\"},{\"evidence\":\"T4_RUSK_CUTLER\"},{\"flag\":\"knowsLoft\"}]},{\"notFlag\":\"cutlerGone\"}]}"
+      }
+     ]
+    },
+    {
+     "id": 25,
+     "name": "ms_shed4",
+     "type": "interactable",
+     "x": 668,
+     "y": 195,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Woodshed"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch4Started\"},{\"notFlag\":\"cutlerGone\"}]}"
+      },
+      {
+       "name": "lines",
+       "type": "string",
+       "value": "A woodshed with a loft over it, and a ladder-stair up the side to a door with a good padlock on it. Somebody lives up there who does not care for visitors."
+      }
+     ]
+    },
+    {
+     "id": 26,
+     "name": "loftDoor",
+     "type": "door",
+     "x": 668,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "label",
+       "type": "string",
+       "value": "Cutler's loft"
+      },
+      {
+       "name": "verb",
+       "type": "string",
+       "value": "Go up"
+      },
+      {
+       "name": "to",
+       "type": "string",
+       "value": "CUTLER_LOFT"
+      },
+      {
+       "name": "spawn",
+       "type": "string",
+       "value": "fromStreet"
+      },
+      {
+       "name": "phase",
+       "type": "string",
+       "value": "DAY"
+      },
+      {
+       "name": "if",
+       "type": "string",
+       "value": "{\"all\":[{\"flag\":\"ch4Started\"},{\"flag\":\"cutlerGone\"}]}"
+      },
+      {
+       "name": "blockedLines",
+       "type": "string",
+       "value": "Padlocked."
+      }
+     ]
+    },
+    {
+     "id": 27,
+     "name": "fromLoft",
+     "type": "spawn",
+     "x": 668,
+     "y": 225,
+     "width": 0,
+     "height": 0,
+     "rotation": 0,
+     "visible": true,
+     "point": true,
+     "properties": [
+      {
+       "name": "facing",
+       "type": "float",
+       "value": -1
       }
      ]
     }

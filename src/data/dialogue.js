@@ -279,7 +279,8 @@ Object.assign(DIALOGUE, {
     bye: { who: 'finch', text: 'Watch yourself.', next: 'END' },
   } },
 
-  GABLE_DAY: { start: 'a', nodes: {
+  GABLE_DAY: { start: 'start', nodes: {
+    start: { branch: [{ if: { flag: 'ch4Started' }, next: 'g4' }, { next: 'a' }] },
     a: { who: 'gable', text: 'You didn\'t sleep.', again: 'Mister Vance.', next: 'hub' },
     hub: { choices: [
       { text: 'What does the Reverend preach, this time of year?', next: 'vale', once: true },
@@ -315,7 +316,7 @@ Object.assign(DIALOGUE, {
   } },
 
   RUSK: { start: 'start', nodes: {
-    start: { branch: [{ if: { all: [{ flag: 'townFrightened' }, { notFlag: 'ruskWarmed' }] }, next: 'frightened' }, { next: 'a' }] },
+    start: { branch: [{ if: { flag: 'ch4Started' }, next: 'r4' }, { if: { all: [{ flag: 'townFrightened' }, { notFlag: 'ruskWarmed' }] }, next: 'frightened' }, { next: 'a' }] },
     frightened: { who: 'rusk', text: 'You\'re the one told Finch it was the Order. Now my customers buy candles and bolt their doors.', next: 'f_hub' },
     f_hub: { choices: [
       { text: 'Then you want this settled as much as I do.', next: 'f_warm' },
@@ -348,6 +349,7 @@ Object.assign(DIALOGUE, {
 
   VALE: { start: 'start', nodes: {
     start: { branch: [
+      { if: { flag: 'ch4Started' }, next: 'v4' },
       { if: { seen: 'VALE.hub' }, next: 'again' },
       { if: { flag: 'townFrightened' }, next: 'frightened' },
       { if: { flag: 'millKeptClosed' }, next: 'closed' },
@@ -379,7 +381,7 @@ Object.assign(DIALOGUE, {
   } },
 
   ADA: { start: 'start', nodes: {
-    start: { branch: [{ if: { seen: 'ADA.hub' }, next: 'again' }, { next: 'a' }] },
+    start: { branch: [{ if: { flag: 'ch4Started' }, next: 'd4' }, { if: { seen: 'ADA.hub' }, next: 'again' }, { next: 'a' }] },
     again: { who: 'ada', text: 'Mister Vance.', next: 'hub' },
     a: { who: 'ada', text: 'You\'ll be the man Constable Finch sent for.', next: 'a2' },
     a2: { who: 'note', text: 'She says "Finch sent for" carefully, the way you step on ice.', next: 'hub' },
@@ -465,7 +467,7 @@ Object.assign(DIALOGUE, {
   } },
 
   FINCH_OFFICE: { start: 'start', nodes: {
-    start: { branch: [{ if: { seen: 'FINCH_OFFICE.hub' }, next: 'again' }, { if: { trust: { finch: 'COLD' } }, next: 'cold' }, { next: 'a' }] },
+    start: { branch: [{ if: { flag: 'ch4Started' }, next: 'f4' }, { if: { seen: 'FINCH_OFFICE.hub' }, next: 'again' }, { if: { trust: { finch: 'COLD' } }, next: 'cold' }, { next: 'a' }] },
     cold: { who: 'finch', text: 'He goes in the ground at noon. Look at him if you must. You will anyway.', next: 'hub' },
     a: { who: 'finch', text: 'You\'ll want to see him. Mind the canvas; I\'ve only the one.', next: 'hub' },
     again: { who: 'finch', text: 'Vance.', next: 'hub' },
@@ -570,7 +572,237 @@ Object.assign(DIALOGUE, {
   } },
 });
 
+// ======================= Chapter 4: the fourth day =======================
+const choiceOf = (text, next, extra = {}) => Object.assign({ text, next }, extra);
+Object.assign(DIALOGUE, {
+  CH4_OPEN: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'gableAccused' }, next: 'acc' }, { if: { flag: 'gableConfides' }, next: 'conf' }, { next: 'plain' }] },
+    conf: { who: 'note', text: 'Grey light, and a blanket over me that was not there at three. Mrs. Gable is at the hearth, raking out the dead fire, and she does not ask how I came to be on her floor.', next: 'b' },
+    acc: { who: 'note', text: 'Grey light. Mrs. Gable steps round me on her way to the hearth as if I were a chair somebody left out.', next: 'b' },
+    plain: { who: 'note', text: 'Grey light on the parlor floor, and my head full of wet sand. Somebody has put a blanket over me.', next: 'b' },
+    b: { who: 'silas', text: 'Laudanum, and Rusk\'s label on the tin. Whoever went through my coat came up the back stair, and somebody sold them the means. Rusk first.', next: 'c' },
+    c: { who: 'note', text: 'Over the ridge the sky has the colour of an old bruise. The storm that shut the pass is coming back for another look.', next: 'END' },
+  } },
+
+  // in the parlor after the third night's end card ("Sit by the dead fire a while"): wait for the fourth day
+  DAWN_WAIT: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The fire is dead and the house is asleep. First light is a few hours off.', choices: [
+      choiceOf('Sit and wait for first light.', 'go'),
+      choiceOf('Not yet.', 'END'),
+    ] },
+    go: { do: [{ script: 'CH4_OPEN' }], next: 'END' },
+  } },
+
+  CUTLER: { start: 'start', nodes: {
+    start: { branch: [{ if: { seen: 'CUTLER.hub' }, next: 'again' }, { next: 'a' }] },
+    again: { who: 'cutler', text: 'Still here.', next: 'hub' },
+    a: { who: 'note', text: 'A big man at the foot of the loft stair, saddling a grey. A trooper\'s seat, a trooper\'s moustache, and a long knife at his belt: narrow, single-edged, the sheath worn pale.', next: 'a2' },
+    a2: { who: 'cutler', text: 'You\'re the Pinkerton. Mr. Mercer said you\'d come round to me sooner or later.', do: [{ evidence: 'T4_CUTLER' }, { set: { cutlerMet: true } }], next: 'hub' },
+    hub: { choices: [
+      choiceOf('I\'m not a Pinkerton.', 'pink', { once: true }),
+      choiceOf('You lean on Rusk\'s counter.', 'rusk', { once: true }),
+      choiceOf('That\'s a cavalry knife.', 'knife', { once: true }),
+      choiceOf('Where were you, the night the sheriff went missing?', 'night', { once: true }),
+      choiceOf('[Draw the revolver] Stay where you are.', 'gun', { once: true }),
+      choiceOf('Ride careful.', 'bye'),
+    ] },
+    pink: { who: 'cutler', text: 'County, then. It\'s all the same up here. You\'ll go home when the pass opens, and we\'ll still be here.', next: 'hub' },
+    rusk: { who: 'cutler', text: 'Jonah sells. I buy. Mr. Mercer settles the account. That\'s how a town works, mister.', next: 'hub' },
+    knife: { who: 'cutler', text: 'My father\'s. He rode with Mr. Mercer in the war. Most of the men who came up here did.', next: 'knife2' },
+    knife2: { who: 'note', text: 'His thumb goes to the hilt and rests there, the way another man\'s goes to his watch chain.', next: 'hub' },
+    night: { who: 'cutler', text: 'Asleep, like an honest man. Ask anybody who was awake to see me.', next: 'night2' },
+    night2: { who: 'note', text: 'He smiles at that, as if it were a joke he had made before, to someone else.', next: 'hub' },
+    gun: { who: 'note', text: 'The revolver comes out. He looks at it, then at me, and does not stop tightening the girth.', do: [{ threat: 'cutler' }, { set: { cutlerWarned: true } }], next: 'gun2' },
+    gun2: { who: 'cutler', text: 'Three in that, I\'d guess, and none to spare up here. Put it up, mister. You\'ll want them later.', next: 'bye' },
+    bye: { who: 'cutler', text: 'I\'ve work up the ridge. Don\'t follow me up there in this.', do: [{ script: 'CUTLER_RIDES' }], next: 'END' },
+  } },
+
+  CASE_PROMPT_KILLER: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: '_caseDecidable' }, next: 'ready' }, { next: 'unready' }] },
+    ready: { who: 'note', text: 'The storm is coming down the street. Before I go in out of it, I should settle who came up that stair after Hale, and on whose word.', choices: [
+      choiceOf('Settle it now. [Review the case]', 'review'),
+      choiceOf('Not yet. I\'ll go through my notebook first.', 'notebook'),
+      choiceOf('Go in and keep it to myself.', 'open'),
+    ] },
+    unready: { who: 'note', text: 'Supper, and then the ridge. I have not yet worked out who came up the stair after Hale.', choices: [
+      choiceOf('Go through my notebook first.', 'notebook'),
+      choiceOf('Go in and keep it to myself.', 'open'),
+    ] },
+    review: { do: [{ set: { _leaveChoice: 'review' } }], next: 'END' },
+    notebook: { do: [{ set: { _leaveChoice: 'notebook' } }], next: 'END' },
+    open: { do: [{ set: { _leaveChoice: 'open' } }], next: 'END' },
+  } },
+
+  // supper on the fourth evening: with Finch, or, if he went up the ridge after "the woman", with Mrs. Gable
+  AFTER4_CUTLER: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'huntForGuest' }, next: 'g' }, { next: 'f' }] },
+    f: { who: 'note', text: 'Supper by a fire that keeps blowing back down the chimney. Finch eats with his hat on the table beside him.', next: 'f1' },
+    f1: { who: 'silas', text: 'Wade Cutler killed Hale. Up the back stair, with that knife of his. And he did it because Gideon Mercer told him to.', next: 'f2' },
+    f2: { branch: [{ if: { trust: { finch: 'COLD' } }, next: 'fcold' }, { next: 'f3' }] },
+    fcold: { who: 'finch', text: 'Mercer holds the note on my mother\'s house, Vance. You know what you\'re asking.', next: 'f4' },
+    f3: { who: 'finch', text: 'Then I\'ll take him. Tonight.', next: 'f4' },
+    f4: { who: 'silas', text: 'He rode up the ridge this morning with his saddlebags full. Whatever is up there, he means to open it tonight, in the storm.', next: 'END' },
+    g: { who: 'note', text: 'Supper alone, by a fire that keeps blowing back down the chimney. Finch has not come back from the ridge. Mrs. Gable sets two places and takes one away.', next: 'g1' },
+    g1: { who: 'silas', text: 'Cutler killed him, Mrs. Gable. On Mercer\'s word.', next: 'g2' },
+    g2: { who: 'gable', text: 'And the constable is up there, in this, looking for her. With Cutler.', next: 'END' },
+  } },
+  AFTER4_ALONE: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'huntForGuest' }, next: 'g' }, { next: 'f' }] },
+    f: { who: 'note', text: 'Supper by a fire that keeps blowing back down the chimney. Finch eats with his hat on the table beside him.', next: 'f1' },
+    f1: { who: 'silas', text: 'Cutler killed Hale. For his father\'s share, whatever that is.', next: 'f2' },
+    f2: { who: 'finch', text: 'Mr. Mercer\'s foreman. He\'ll want to hear it from me before he hears it in the street.', next: 'f3' },
+    f3: { who: 'note', text: 'He was gone an hour. He came back with Mercer\'s regrets, and a bottle, and less colour than he went with.', next: 'END' },
+    g: { who: 'note', text: 'Supper alone. Finch has not come back from the ridge. Mrs. Gable sets two places and takes one away.', next: 'g1' },
+    g1: { who: 'silas', text: 'Cutler did it, Mrs. Gable. On his own account.', next: 'g2' },
+    g2: { who: 'gable', text: 'Cutler never did a thing on his own account in his life.', next: 'END' },
+  } },
+  AFTER4_MERCER: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'huntForGuest' }, next: 'g' }, { next: 'f' }] },
+    f: { who: 'note', text: 'Supper by a fire that keeps blowing back down the chimney. Finch eats with his hat on the table beside him.', next: 'f1' },
+    f1: { who: 'silas', text: 'Gideon Mercer went up that stair and killed his sheriff himself.', next: 'f2' },
+    f2: { who: 'finch', text: 'Mr. Mercer is sixty-one, Vance, and walks with a stick on the ice.', next: 'f3' },
+    f3: { who: 'silas', text: 'Then he walked carefully.', next: 'f4' },
+    f4: { who: 'note', text: 'Finch says nothing more. Across the street a lamp goes up in Mercer\'s window, and stays up.', next: 'END' },
+    g: { who: 'note', text: 'Supper alone. Finch has not come back from the ridge. Mrs. Gable sets two places and takes one away.', next: 'g1' },
+    g1: { who: 'silas', text: 'Mercer killed him, Mrs. Gable. With his own hand.', next: 'g2' },
+    g2: { who: 'gable', text: 'Then God help her, because she\'s his.', next: 'END' },
+  } },
+  AFTER4_OPEN: { start: 'a', nodes: {
+    a: { branch: [{ if: { flag: 'huntForGuest' }, next: 'g' }, { next: 'f' }] },
+    f: { who: 'note', text: 'Supper by a fire that keeps blowing back down the chimney. Finch eats with his hat on the table beside him.', next: 'f1' },
+    f1: { who: 'finch', text: 'Well?', next: 'f2' },
+    f2: { who: 'silas', text: 'Not here. Not yet.', next: 'END' },
+    g: { who: 'note', text: 'Supper alone. Finch has not come back from the ridge. Mrs. Gable sets two places and takes one away.', next: 'END' },
+  } },
+
+  // after supper: the storm, and what Silas means to do about the ridge
+  CH4_STORM: { start: 'a', nodes: {
+    a: { who: 'note', text: 'The storm comes down off the ridge at full dark, and the Black Ram creaks like a ship.', next: 'b' },
+    b: { branch: [{ if: { evidence: 'T4_GABLE_CLARA' }, next: 'known' }, { if: { evidence: 'T4_FINCH_CONFESS' }, next: 'known' }, { next: 'unknown' }] },
+    known: { who: 'silas', text: 'Clara Mercer is up there, at her mother\'s cabin past the workings. So is Cutler, with forty pounds of powder. I can\'t wait for morning.', next: 'c' },
+    unknown: { who: 'silas', text: 'Clara Mercer is somewhere up on that ridge, and so is Cutler, with forty pounds of powder. I can\'t wait for morning.', next: 'c' },
+    c: { branch: [{ if: { flag: 'huntForGuest' }, next: 'finch' }, { next: 'd' }] },
+    finch: { who: 'note', text: 'And somewhere up there, Finch, with a lantern, calling for a woman whose name he does not know.', next: 'd' },
+    d: { who: 'note', text: 'I fill the lantern and load what I have. Three cartridges. They will have to do.', next: 'END' },
+  } },
+});
+
+// --- the fourth day's turns of existing conversations ---
+Object.assign(DIALOGUE.RUSK.nodes, {
+  r4: { branch: [{ if: { seen: 'RUSK.r4hub' }, next: 'r4again' }, { next: 'r4a' }] },
+  r4a: { who: 'rusk', text: 'You\'re up.', next: 'r4a2' },
+  r4a2: { who: 'note', text: 'He says it the way a man reads a bill he hoped had gone to the wrong house.', next: 'r4hub' },
+  r4again: { who: 'rusk', text: 'What now?', next: 'r4hub' },
+  r4hub: { choices: [
+    choiceOf('Mrs. Gable bought a new tin of coffee from you yesterday.', 'tin', { once: true, if: { evidence: 'EV3_TIN' } }),
+    choiceOf('Your poison register is short a page.', 'reg', { once: true, if: { examined: 'EV4_REGISTER' } }),
+    choiceOf('Can you open a watch?', 'watch', { once: true, if: { all: [{ item: 'WATCH' }, { any: [{ evidence: 'T4_RUSK_CONFESS' }, { evidence: 'T4_RUSK_CUTLER' }] }] } }),
+    choiceOf('That\'s all.', 'r4bye'),
+  ] },
+  tin: { who: 'rusk', text: 'Coffee\'s coffee. Comes up sealed from the railhead. I put my label on it, that\'s all.', next: 'tin2' },
+  tin2: { who: 'note', text: 'His eyes go to the counter, and under it.', next: 'r4hub' },
+  reg: { branch: [{ if: { flag: 'ruskWarmed' }, next: 'conf' }, { next: 'press' }] },
+  conf: { who: 'note', text: 'He takes his hands off the counter. For a while he looks at the stove, as if it might help.', next: 'conf2' },
+  conf2: { who: 'rusk', text: 'Mr. Mercer told me to. He holds the note on this store, the roof over this counter, the boots on my boy. He said it would only make you sleep, so his man could get a paper back from you.', next: 'conf3' },
+  conf3: { who: 'rusk', text: 'His man. Cutler. Wade Cutler, the foreman. It was Cutler scraped my book that day, on this counter, and Cutler fetched the powder after dark. I said it came to me like that. It came to me with Cutler\'s elbow on it.', do: [{ evidence: 'T4_RUSK_CONFESS' }, { set: { ruskConfessed: true } }, { char: { rusk: { trust: 'OPEN' } } }, { log: 'Rusk told me: Mercer ordered the coffee, and Cutler scraped the freight book.' }], next: 'conf4' },
+  conf4: { who: 'rusk', text: 'I\'d have stood up in a court and said so, once. Not now. Not with the pass shut and him across the street.', next: 'r4hub' },
+  press: { who: 'rusk', text: 'Registers get torn. Pages go for spills.', choices: [
+    choiceOf('It was enough to put me under, Jonah, not to kill me. I don\'t think you meant me dead.', 'decent', { if: { examined: 'EV3_CUP' } }),
+    choiceOf('Tell me who, and I\'ll keep your name out of it.', 'deal'),
+    choiceOf('[Draw the revolver] Who, Jonah?', 'gun'),
+    choiceOf('Have it your way.', 'r4hub'),
+  ] },
+  decent: { who: 'rusk', text: '...No. God, no. He said you\'d only sleep.', do: [{ set: { ruskWarmed: true } }], next: 'conf' },
+  deal: { who: 'rusk', text: '...Cutler. Wade Cutler, Mr. Mercer\'s foreman. He leans on my counter when he likes. Ask him about books. Not me.', do: [{ evidence: 'T4_RUSK_CUTLER' }, { log: 'Rusk gave me a name: Wade Cutler, Mercer\'s foreman.' }], next: 'r4hub' },
+  gun: { who: 'note', text: 'The revolver comes out. He goes white to the lips.', do: [{ threat: 'rusk' }], next: 'gun2' },
+  gun2: { who: 'rusk', text: 'Cutler! Wade Cutler! God, put it away!', do: [{ evidence: 'T4_RUSK_CUTLER' }, { set: { ruskFled: true } }, { char: { rusk: { trust: 'COLD' } } }, { log: 'Drew on Rusk. He gave me Cutler\'s name and ran out the back.' }], next: 'gun3' },
+  gun3: { who: 'note', text: 'He is out through the back door before I have the hammer down, into the snow, without his coat.', do: [{ script: 'RUSK_FLEES' }], next: 'END' },
+  watch: { who: 'rusk', text: 'I mend clocks in the winter. Give it here.', next: 'watch2' },
+  watch2: { who: 'note', text: 'He takes the back off with a pin, and is quiet for a while.', do: [{ evidence: 'EV4_WATCH' }], next: 'watch3' },
+  watch3: { who: 'rusk', text: 'Ran down on its own, days back. Somebody turned the hands after. You don\'t bend an arbor like that dropping it.', next: 'r4hub' },
+  r4bye: { who: 'rusk', text: 'Shut the door. The heat.', next: 'END' },
+});
+
+Object.assign(DIALOGUE.FINCH_OFFICE.nodes, {
+  f4: { branch: [{ if: { seen: 'FINCH_OFFICE.f4hub' }, next: 'f4again' }, { if: { trust: { finch: 'COLD' } }, next: 'f4cold' }, { next: 'f4a' }] },
+  f4cold: { who: 'finch', text: 'You\'re still standing. That\'s something, in this town.', next: 'f4hub' },
+  f4a: { who: 'finch', text: 'Vance. Mrs. Gable sent word you were on her floor at first light. I\'ve made coffee. My own.', next: 'f4hub' },
+  f4again: { who: 'finch', text: 'Vance.', next: 'f4hub' },
+  f4hub: { choices: [
+    choiceOf('Who is Wade Cutler?', 'cut', { once: true, if: { any: [{ evidence: 'T4_RUSK_CONFESS' }, { evidence: 'T4_RUSK_CUTLER' }] } }),
+    choiceOf('Clara Mercer sent my telegram.', 'clara', { once: true, if: { evidence: 'EV4_ADA_BOOK' } }),
+    choiceOf('These forms are signed already.', 'forms', { once: true, if: { all: [{ evidence: 'EV3_PAD' }, { notSeen: 'FINCH_OFFICE.forms' }] } }),
+    choiceOf('Number forty-one is missing.', 'f41', { once: true, if: { all: [{ examined: 'EV3_PAD' }, { seen: 'FINCH_OFFICE.forms' }, { notSeen: 'FINCH_OFFICE.f41' }] } }),
+    choiceOf('That\'ll do.', 'f4bye'),
+  ] },
+  cut: { who: 'finch', text: 'Mercer\'s foreman. Came up after the war with his father, who rode with Mercer. Keeps the loft over the woodshed at the east end of the street. Nobody crosses him, Vance, and I\'ve never had cause to try.', do: [{ set: { knowsLoft: true } }], next: 'f4hub' },
+  clara: { who: 'note', text: 'He sits down on the edge of the desk, slowly, like a man much older.', next: 'clara2' },
+  clara2: { who: 'finch', text: 'I knew it the night you came. My name, and words I never wrote. She\'d been in here with Hale, a week before, sitting where you\'re standing.', next: 'clara3' },
+  clara3: { who: 'finch', text: 'I said nothing, because if I said it, her father would hear it by supper. If she\'s anywhere, it\'s her mother\'s old cabin, the observatory, up past the workings.', do: [{ evidence: 'T4_FINCH_CONFESS' }, { set: { knowsObservatory: true } }, { char: { finch: { trust: 'STEADY' } } }, { log: 'Finch told me he guessed Clara sent the telegram, and kept quiet to protect her.' }], next: 'f4hub' },
+  f4bye: { who: 'finch', text: 'Mind the street. The wind\'s getting up.', next: 'END' },
+});
+
+Object.assign(DIALOGUE.GABLE_DAY.nodes, {
+  g4: { branch: [{ if: { flag: 'gableAccused' }, next: 'g4cold' }, { if: { seen: 'GABLE_DAY.g4hub' }, next: 'g4again' }, { if: { flag: 'gableConfides' }, next: 'g4warm' }, { next: 'g4a' }] },
+  g4cold: { who: 'gable', text: 'The constable has my keys, Mister Vance. Ask him what\'s in my rooms.', next: 'END' },
+  g4warm: { who: 'gable', text: 'I bolted the passage myself last night, and showed you I had. This morning the bolt was back.', next: 'g4hub' },
+  g4a: { who: 'gable', text: 'You\'ll want breakfast. You won\'t get coffee.', next: 'g4hub' },
+  g4again: { who: 'gable', text: 'Mister Vance.', next: 'g4hub' },
+  g4hub: { choices: [
+    choiceOf('Somebody came up the back stair last night.', 'stairs', { once: true }),
+    choiceOf('Clara Mercer was your guest.', 'clara', { once: true, if: { any: [{ evidence: 'EV4_ADA_BOOK' }, { flag: 'gableConfides' }, { all: [{ item: 'GLOVE' }, { evidence: 'T3_GABLE_STAIR' }] }] } }),
+    choiceOf('Nothing. Good day.', 'g4bye'),
+  ] },
+  stairs: { who: 'gable', text: 'Then he has a key to my yard gate, or he has my bolt\'s measure. Either way it\'s not a ghost, Mister Vance.', next: 'g4hub' },
+  clara: { who: 'note', text: 'She closes the register, and puts her hand flat on it.', next: 'clara2' },
+  clara2: { who: 'gable', text: 'Clara. Clara Mercer. She paid off my note to her father last winter and asked nothing for it. When she needed a room off the book, she had one.', next: 'clara3' },
+  clara3: { who: 'gable', text: 'She got out down the back stair that night, while they were busy with him. Her mother had a cabin up on the ridge, the old observatory, past the workings. She\'d go there. She always went there.', do: [{ evidence: 'T4_GABLE_CLARA' }, { set: { knowsObservatory: true } }, { char: { gable: { cooperation: 'OPEN' } } }, { log: 'Mrs. Gable told me: Clara was her guest, and fled to her mother\'s cabin on the ridge.' }], next: 'g4hub' },
+  g4bye: { who: 'gable', text: 'Keep out of the wind.', next: 'END' },
+});
+
+Object.assign(DIALOGUE.ADA.nodes, {
+  d4: { branch: [{ if: { seen: 'ADA.d4hub' }, next: 'd4again' }, { if: { flag: 'adaWarned' }, next: 'd4office' }, { next: 'd4a' }] },
+  d4office: { who: 'ada', text: 'You told me to go home. I came down here instead, to the constable\'s stove. It\'s nearer.', next: 'd4hub' },
+  d4a: { who: 'ada', text: 'Still dead, all of it. I\'ve walked a mile of the ridge looking for the next cut.', next: 'd4hub' },
+  d4again: { who: 'ada', text: 'Mister Vance.', next: 'd4hub' },
+  d4hub: { choices: [
+    choiceOf('My telegram was written on form forty-one.', 'f41', { once: true, if: { all: [{ examined: 'EV3_PAD' }, { noEvidence: 'EV4_ADA_BOOK' }] } }),
+    choiceOf('Whose glove is this? [Show it]', 'glove', { once: true, if: { all: [{ item: 'GLOVE' }, { noEvidence: 'EV4_ADA_BOOK' }] } }),
+    choiceOf('Did you see anyone on the ridge this morning?', 'ridge', { once: true }),
+    choiceOf('That\'s all.', 'd4bye'),
+  ] },
+  f41: { who: 'note', text: 'She looks at me a long moment. Then she takes a book out of her coat, the receiving book she would not leave at the station with the line down.', next: 'book' },
+  glove: { who: 'note', text: 'She knows it. I watch her know it. Then she takes a book out of her coat, the receiving book she would not leave at the station with the line down.', next: 'book' },
+  book: { who: 'ada', text: 'I write down who hands it in, Mister Vance. I told you so. Read it, and then forget where you read it.', do: [{ evidence: 'EV4_ADA_BOOK' }], next: 'd4hub' },
+  ridge: { who: 'ada', text: 'A rider on a grey, at first light, going up past the tower toward the workings. Saddlebags, and something long across the pommel.', next: 'd4hub' },
+  d4bye: { who: 'ada', text: 'Go carefully. The wind is turning.', next: 'END' },
+});
+
+Object.assign(DIALOGUE.VALE.nodes, {
+  v4: { branch: [{ if: { seen: 'VALE.v4hub' }, next: 'v4again' }, { next: 'v4a' }] },
+  v4a: { who: 'note', text: 'The Reverend is sweeping snow off Hale\'s new grave, which the wind puts back as fast as he moves it.', next: 'v4hub' },
+  v4again: { who: 'vale', text: 'Mister Vance.', next: 'v4hub' },
+  v4hub: { choices: [
+    choiceOf('Mercer\'s foreman struck a sheriff off his books.', 'tally', { once: true, if: { examined: 'EV4_TALLY' } }),
+    choiceOf('You knew what was in Amos Pell\'s grave.', 'grave', { once: true, if: { all: [{ evidence: 'GRAVE_DISTURBED' }, { notSeen: 'VALE.tally' }] } }),
+    choiceOf('Good day, Reverend.', 'v4bye'),
+  ] },
+  grave: { who: 'vale', text: 'I keep the ground, Mister Vance. I told you.', next: 'grave2' },
+  grave2: { who: 'note', text: 'He does not look at Pell\'s stone. He has not looked at it once.', next: 'v4hub' },
+  tally: { branch: [{ if: { flag: 'valeEmboldened' }, next: 'hard' }, { next: 'soft' }] },
+  hard: { who: 'vale', text: 'The Figure walks the ridge, Mister Vance, and men who follow it do not come down. You told the town so yourself. I only preached it.', do: [{ set: { valeHardened: true } }], next: 'v4hub' },
+  soft: { who: 'note', text: 'The broom stops.', next: 'soft2' },
+  soft2: { who: 'vale', text: 'Mercer told me the Order\'s money lies behind the fall in the old workings. Enough to put a roof on every house in this valley. I preached the Figure to keep fools off the ridge until he could get it out.', next: 'soft3' },
+  soft3: { who: 'vale', text: 'I knew about the powder. I did not know about Hale. Before God, Mister Vance, I did not know.', do: [{ evidence: 'T4_VALE_MONEY' }, { log: 'Vale told me Mercer means to take the Order\'s money from behind the fall.' }], choices: [
+    choiceOf('You didn\'t know they would kill him.', 'turn'),
+    choiceOf('You built the fear they killed him under.', 'harden'),
+  ] },
+  turn: { who: 'vale', text: '...No. But I know now. If you need the town, Mister Vance, I can ring the bell.', do: [{ set: { valeTurned: true } }], next: 'v4hub' },
+  harden: { who: 'vale', text: 'Then let God judge which of us brought this valley more fear.', do: [{ set: { valeHardened: true } }], next: 'v4hub' },
+  v4bye: { who: 'vale', text: 'Keep off the ridge tonight. Whatever is up there.', next: 'END' },
+});
+
 export const SPEAKERS = {
   silas: 'SILAS VANCE', finch: 'CONSTABLE FINCH', gable: 'MRS. GABLE', conductor: 'CONDUCTOR', note: null,
-  rusk: 'JONAH RUSK', vale: 'REVEREND VALE', ada: 'ADA BELL', mercer: 'GIDEON MERCER',
+  rusk: 'JONAH RUSK', vale: 'REVEREND VALE', ada: 'ADA BELL', mercer: 'GIDEON MERCER', cutler: 'WADE CUTLER',
 };

@@ -10,7 +10,7 @@ import { test } from './storyState.js';
 // Silas's current objective: the current step's one-line aim (never how, never the answer).
 // Steps of an earlier chapter never hold Silas back once a later chapter has begun (a case left open on the first
 // night must not keep the third day's aim on the mill). Step ids carry the chapter: H_ (1), H2_ (2), H3_ (3).
-export function chapterOf(s) { return s.flags.ch3Started ? 3 : s.flags.ch2Started ? 2 : 1; }
+export function chapterOf(s) { return s.flags.ch4Started ? 4 : s.flags.ch3Started ? 3 : s.flags.ch2Started ? 2 : 1; }
 const stepChapter = (h) => { const m = /^H(\d)_/.exec(h.id); return m ? +m[1] : 1; };
 export function currentStepOf(s) {
   const ch = chapterOf(s);

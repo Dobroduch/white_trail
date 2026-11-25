@@ -460,15 +460,103 @@ export const EVIDENCE = {
     related: { people: ['RUSK', 'GABLE'], places: ['PARLOR', 'RUSK_STORE'], evidence: ['EV3_CUP'] },
     tags: ['POISON'],
   },
+  // ======================= Chapter 4: the fourth day =======================
+  // ---------------- Rusk's store ----------------
+  EV4_REGISTER: {
+    title: 'Rusk\'s poison register', category: 'DOCUMENT', location: 'RUSK_STORE', importance: 'KEY', chapter: 4,
+    observed: 'Under the counter, the register the law makes a druggist keep: arsenic, strychnine, laudanum, each sale with a date and a name. The last page written on is this month\'s.',
+    detail: 'A page has been cut out close to the binding with a knife. Pressed into the leaf beneath it, where the pen bore down: "Laud", and yesterday\'s date.',
+    interpretation: 'Rusk sold laudanum yesterday, the day my coffee came up from his store, and somebody did not want the sale on paper.',
+    related: { people: ['RUSK'], places: ['RUSK_STORE'], evidence: ['EV3_TIN', 'EV3_CUP'] },
+    tags: ['POISON'],
+  },
+  T4_RUSK_CONFESS: {
+    title: 'Rusk, on the coffee', category: 'TESTIMONY', speaker: 'Jonah Rusk', location: 'RUSK_STORE', chapter: 4,
+    observed: '"Mr. Mercer told me to, and I owe him the roof over this counter. He said it would only make you sleep. It was his man Cutler scraped my book, and Cutler fetched the powder after dark."',
+    interpretation: 'Mercer gave the order, Rusk did it, and Wade Cutler did the rest. Rusk believed I would only sleep.',
+    related: { people: ['RUSK', 'MERCER', 'CUTLER'], places: ['RUSK_STORE'], evidence: ['EV4_REGISTER', 'EV3_TIN', 'STORE_LEDGER'] },
+  },
+  T4_RUSK_CUTLER: {
+    title: 'Rusk, cornered', category: 'TESTIMONY', speaker: 'Jonah Rusk', location: 'RUSK_STORE', chapter: 4,
+    observed: '"Cutler. Wade Cutler, Mr. Mercer\'s foreman. He leans on my counter when he likes. Ask him about books."',
+    interpretation: 'A name, given to get me out of his store. He gave nothing about himself.',
+    related: { people: ['RUSK', 'CUTLER'], places: ['RUSK_STORE'], evidence: ['EV4_REGISTER'] },
+  },
+  EV4_WATCH: {
+    title: 'Hale\'s watch, opened', category: 'PHYSICAL', location: 'RUSK_STORE', importance: 'OPTIONAL', chapter: 4,
+    observed: 'Rusk takes the back off Hale\'s watch at the counter with a pin. The mainspring is let all the way down: it ran until it stopped, days ago. The hands stand at twenty past two, and the arbor under them is bent the way a thumbnail bends it.',
+    interpretation: 'The watch ran down on its own long before the mill. Somebody pushed the hands to twenty past two and broke the glass over them, to fix his death at the hour of the scream.',
+    related: { people: ['HALE', 'RUSK'], places: ['RUSK_STORE', 'SAWMILL'], evidence: ['SAWMILL_WATCH'] },
+    tags: ['BODY'],
+  },
+  // ---------------- Main Street: Wade Cutler ----------------
+  T4_CUTLER: {
+    title: 'Wade Cutler', category: 'TESTIMONY', speaker: 'Wade Cutler', location: 'VILLAGE', chapter: 4,
+    observed: 'Mercer\'s foreman, by the woodshed loft where he sleeps. A trooper\'s seat on a horse and a long knife at his belt: narrow, single-edged, the sheath worn pale. "You\'re the Pinkerton. Mr. Mercer said you\'d come round to me. I\'ve work up the ridge."',
+    interpretation: 'He thinks I am county or Pinkerton. A narrow single-edged knife, and a man who walks like he has done what he is told before.',
+    related: { people: ['CUTLER', 'MERCER'], places: ['VILLAGE'], evidence: [] },
+  },
+  // ---------------- Cutler's loft ----------------
+  EV4_ASHES: {
+    title: 'Paper in the stove', category: 'DOCUMENT', location: 'CUTLER_LOFT', importance: 'KEY', chapter: 4,
+    observed: 'The stove has burned down to a red eye. Pushed to the back of the ash, where the heat never reached it, a half-sheet that curled away before it caught: the torn edge of Mrs. Gable\'s note.',
+    detail: 'Enough is left: "...TOOK ILL. OR THE R..." in block capitals, and under them four strokes and the line through them. The fold is the one she kept it in. This is the note taken from my coat.',
+    interpretation: 'The man who took the note from my coat brought it here to burn it.',
+    related: { people: ['CUTLER', 'GABLE'], places: ['CUTLER_LOFT', 'PARLOR'], evidence: ['EV3_NOTE'] },
+    tags: ['TALLY'],
+  },
+  EV4_TALLY: {
+    title: 'Cutler\'s tally book', category: 'DOCUMENT', location: 'CUTLER_LOFT', importance: 'KEY', chapter: 4, collect: 'TALLY_BOOK',
+    observed: 'A foreman\'s tally book on the shelf over the bunk: men\'s hours, sacks of feed, powder by the stick. Every entry in block capitals.',
+    detail: 'At the back, six sets of initials and five strokes against each. G.M. A.C. H.P. and three more, all struck through but one. And a new line, in fresher ink: N.H., five strokes, struck. I take it.',
+    interpretation: 'The same capitals as the note, and the same count. He keeps the Order\'s shares, and he struck Hale off like a debt paid.',
+    related: { people: ['CUTLER', 'MERCER', 'HALE'], places: ['CUTLER_LOFT'], evidence: ['EV3_NOTE', 'SAWMILL_MARKS', 'SAWMILL_LEDGER'] },
+    tags: ['TALLY'],
+  },
+  EV4_KIT: {
+    title: 'A trooper\'s kit', category: 'PERSONAL', location: 'CUTLER_LOFT', importance: 'OPTIONAL', chapter: 4,
+    observed: 'Under the bunk, a cavalry saddle cracked with age and a grey shell jacket folded small. The buttons are gone from the jacket.',
+    detail: 'The jacket\'s lining has a name inked in it, faded: A. CUTLER, MERCER\'S COMPANY. The same grey as the jacket wrapped round the powder in Amos Pell\'s grave.',
+    interpretation: 'His father rode with Mercer in the war. The powder in the grave went into the ground in a Cutler jacket.',
+    related: { people: ['CUTLER', 'MERCER'], places: ['CUTLER_LOFT', 'GRAVEYARD'], evidence: ['GRAVE_DISTURBED'] },
+    tags: ['WAR'],
+  },
+  // ---------------- The telegram ----------------
+  EV4_ADA_BOOK: {
+    title: 'Ada Bell\'s book', category: 'DOCUMENT', location: 'TELEGRAPH', importance: 'KEY', chapter: 4,
+    observed: 'Ada Bell\'s receiving book from Blackwood: every message handed in, with the time and the form number. My telegram is on form 41, two days before I came. In the margin, in her small hand: "Handed in by Miss C. Mercer. Hooded. Asked me to say nothing."',
+    interpretation: 'Clara Mercer sent for me, on a form Finch had signed in advance. She was alive and free, two days after Hale died.',
+    related: { people: ['ADA', 'CLARA', 'FINCH'], places: ['TELEGRAPH', 'STATION'], evidence: ['EV3_PAD', 'T_ADA_TELEGRAM'] },
+    tags: ['TELEGRAM'],
+  },
+  T4_FINCH_CONFESS: {
+    title: 'Finch, on the telegram', category: 'TESTIMONY', speaker: 'Constable Finch', location: 'FINCH_OFFICE', chapter: 4,
+    observed: '"I knew it the night you came. My name, and words I never wrote. She\'d been in here with Hale, a week before. I said nothing, because if I said it, her father would hear it."',
+    interpretation: 'Finch guessed Clara sent the telegram and kept quiet to protect her. Careless with his forms, not crooked.',
+    related: { people: ['FINCH', 'CLARA', 'HALE'], places: ['FINCH_OFFICE'], evidence: ['EV3_PAD', 'EV4_ADA_BOOK'] },
+  },
+  T4_GABLE_CLARA: {
+    title: 'Mrs. Gable, on Clara', category: 'TESTIMONY', speaker: 'Mrs. Gable', location: 'PARLOR', chapter: 4,
+    observed: '"Clara. Clara Mercer. She paid off my note to her father, last winter, and asked nothing for it. She got out down the back stair that night. Her mother had a cabin up on the ridge, the old observatory, past the workings. She\'d go there."',
+    interpretation: 'Clara was the guest in Room 4. She fled the night Hale died, and she is hiding at her mother\'s cabin on the ridge.',
+    related: { people: ['GABLE', 'CLARA'], places: ['PARLOR', 'ROOM4'], evidence: ['EV3_GLOVE', 'T3_GABLE_STAIR'] },
+  },
+  // ---------------- The chapel ----------------
+  T4_VALE_MONEY: {
+    title: 'Vale, on the Order\'s money', category: 'TESTIMONY', speaker: 'Reverend Vale', location: 'GRAVEYARD', chapter: 4,
+    observed: '"Mercer told me the Order\'s money lies behind the fall in the old workings. Enough to put a roof on every house in the valley. I preached the Figure to keep fools off the ridge till he could get it out. I did not know about Hale. Before God, I did not."',
+    interpretation: 'Vale made the ghost for Mercer, to guard the workings. He knew about the powder. He says he did not know about the murder, and I believe him.',
+    related: { people: ['VALE', 'MERCER'], places: ['GRAVEYARD'], evidence: ['T_VALE_FIGURE', 'GRAVE_DISTURBED'] },
+  },
 };
 
 export const PLACE_NAMES = {
   STATION: 'Blackwood Station', ROAD: 'The road', VILLAGE: "Crow's Hollow", PARLOR: 'Black Ram Hotel',
   ROOM4: 'Room 4', CREEK: 'The creek path', SAWMILL: 'The old sawmill', WHEEL_PIT: 'The wheel pit', RIDGE: 'The ridge',
   RUSK_STORE: 'Rusk\'s store', GRAVEYARD: 'The chapel and the graves', TELEGRAPH: 'The telegraph tower',
-  FINCH_OFFICE: 'The constable\'s office',
+  FINCH_OFFICE: 'The constable\'s office', CUTLER_LOFT: 'Cutler\'s loft',
 };
 export const PEOPLE_NAMES = {
   HALE: 'Sheriff Nathaniel Hale', FINCH: 'Constable Edgar Finch', GABLE: 'Mrs. Gable', CLARA: 'Clara Mercer',
-  RUSK: 'Jonah Rusk', VALE: 'Reverend Elias Vale', ADA: 'Ada Bell', MERCER: 'Gideon Mercer',
+  RUSK: 'Jonah Rusk', VALE: 'Reverend Elias Vale', ADA: 'Ada Bell', MERCER: 'Gideon Mercer', CUTLER: 'Wade Cutler',
 };
