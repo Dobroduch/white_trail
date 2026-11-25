@@ -112,9 +112,16 @@ export class Display {
   ensureSize() {
     if (this.currentKey() !== this.sizeKey) this.resize();
   }
-  currentKey() { return window.innerWidth + 'x' + window.innerHeight + '@' + window.devicePixelRatio + ':' + this.mode + ':' + safeKey(); }
+  // The safe-area insets need a style read (getComputedStyle); every frame that would force a style recalculation, so
+  // they are re-read only every half second (the window size, DPR and mode are checked every frame).
+  currentKey() {
+    const now = performance.now();
+    if (this.safeAt == null || now - this.safeAt > 500 || now < this.safeAt) { this.safeAt = now; this.safeKeyCache = safeKey(); }
+    return window.innerWidth + 'x' + window.innerHeight + '@' + window.devicePixelRatio + ':' + this.mode + ':' + this.safeKeyCache;
+  }
 
   resize() {
+    this.safeAt = null; // a real resize always reads the insets afresh
     this.sizeKey = this.currentKey();
     // ?dpr=N overrides the device pixel ratio (debug / capture tooling only).
     // On touch devices the backing store is capped at 2 device px per CSS px: a 3x phone would otherwise

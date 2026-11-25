@@ -940,3 +940,26 @@ then 21:30, NIGHT, and the **fourth day's end card** ("Sit by the fire a while",
 - At night after the fourth day the parlor is a dead end (front door bolted), as after the third.
 - Cutler is a recolour of the conductor's build; the loft is built from store and hotel tiles. No new audio.
 - The mobile touch playthrough (`mobile.spec.mjs`) was not extended to Chapter 4.
+
+## 26. Quality pass: saves, focus, mobile Chapter 4, performance (2026-11-25)
+
+No new content. Issues found by an audit and new tests, and what was done:
+- **Critical, fixed: an unreadable save was silently replaced.** "Continue" with a corrupt, malformed or
+  outdated save started a new game, and the old data was gone at its first checkpoint. Now the data is copied to
+  `thewhitetrail.save.v1.unreadable` (never deleted), and the player is asked ("This save could not be read. It is
+  kept aside, not deleted. Start a new investigation?"; No is the default and changes nothing). `loadGame` also checks
+  the shape of the fields the game indexes without guarding (scene, items, flags, evidence, deductions, time, phase).
+- **Fixed:** a save whose scene no longer exists resumes on the hotel forecourt instead of failing.
+- **Fixed:** a refused save write (storage full, blocked) was silent; now a hint says so once, and play goes on.
+- **Fixed:** held keyboard keys are released when the tab is hidden or the page is put away (`visibilitychange`,
+  `pagehide`), not only on window blur; touch controls already did this.
+- **Fixed:** the safe-area insets (a `getComputedStyle` read) were re-read every frame; now every half second
+  and on every real resize.
+- **Fixed:** the parlor's bolted front door at night spoke of the third night's stair on every night.
+- Tools: `tools/perf.mjs` (frame intervals, CPU per frame, heap; desktop and phone; 1× and 4× CPU) and
+  `tools/perf-profile.mjs` (CPU profile, heap after GC over a 60-second walk). Results in `test-results/perf/`.
+- Tests: `tests/e2e/robustness.spec.mjs` (7: every checkpoint of chapters 1–4 resumes playable; corrupt, malformed
+  and outdated saves; a missing scene; refused storage; focus lost mid-walk; a hidden tab; keys hammered through a
+  scripted beat); a touch-only Chapter 4 playthrough in `mobile.spec.mjs` (all three phone projects); the layout audit
+  covers the new save message.
+- `docs/QUALITY_GATES.md`: the checklist to run after every chapter.

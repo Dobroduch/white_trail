@@ -57,7 +57,7 @@ for (const size of SIZES) {
           if (sw.leftScaled) errs.push('output transform left scaled');
         }
         // menus and panels
-        const { PauseMenu, SettingsMenu, ControlsHelp, Inventory, DocumentView, EndCard } = await import('/src/ui/menus.js');
+        const { PauseMenu, SettingsMenu, ControlsHelp, Inventory, DocumentView, EndCard, Confirm } = await import('/src/ui/menus.js');
         const { MapView } = await import('/src/ui/mapView.js');
         while (g.overlay) g.popOverlay();
         const panels = [
@@ -65,6 +65,7 @@ for (const size of SIZES) {
           ['inventory', () => { const v = new Inventory(g); v.panelKind = 'inventory'; return v; }], ['map', () => new MapView(g)],
           ['telegram', () => new DocumentView(g, 'TELEGRAM')], ['end card 1', () => new EndCard(g, 1)], ['end card 2', () => new EndCard(g, 2)],
           ['end card 3', () => new EndCard(g, 3)], ['end card 4', () => new EndCard(g, 4)],
+          ['unreadable save', () => new Confirm(g, 'This save could not be read. It is kept aside, not deleted. Start a new investigation?', 'x')],
         ];
         for (const [name, mk] of panels) {
           let o;

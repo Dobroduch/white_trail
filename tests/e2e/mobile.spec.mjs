@@ -305,4 +305,23 @@ test.describe('mobile landscape, touch only', () => {
     await page.screenshot({ path: `test-results/review/mobile-ch3-endcard-${test.info().project.name}.png` });
     await expectClean(page, errors);
   });
+
+  test('chapter 4, touch only: from the third night\'s end card through the fourth day to its end card', async ({ page }) => {
+    test.setTimeout(500_000);
+    const { errors } = await mboot(page);
+    const rep = await page.evaluate(() => {
+      T.useTouch(true);
+      const earlier = [T.fullRun({ conclusion: 'C_STAGED' }), T.fullRun2({ conclusion: 'C2_BLAST' }), T.fullRun3({ conclusion: 'C3_HALE' })].flatMap((r) => r.errors);
+      const r4 = T.fullRun4({ conclusion: 'C4_CUTLER', thorough: true, gun: true });
+      return { earlier, r4, misses: T.touchMisses };
+    });
+    expect(rep.earlier).toEqual([]);
+    expect(rep.r4.errors, rep.r4.steps.join('\n')).toEqual([]);
+    expect(rep.r4.aftermath).toBe('AFTER4_CUTLER');
+    expect(rep.r4.rusk).toBe('fled'); // the revolver drawn and the choice made by tapping
+    expect(rep.misses, 'actions with no touch control').toEqual([]);
+    await page.evaluate(() => { for (let i = 0; i < 150; i++) TWT.update(1 / 60); TWT_TEST.render(); });
+    await page.screenshot({ path: `test-results/review/mobile-ch4-endcard-${test.info().project.name}.png` });
+    await expectClean(page, errors);
+  });
 });

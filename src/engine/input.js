@@ -40,7 +40,10 @@ export class Input {
       for (const fn of this.listeners) fn(e);
     });
     window.addEventListener('keyup', (e) => this.down.delete(e.code));
-    window.addEventListener('blur', () => this.down.clear());
+    // a key held while the window loses focus or the tab is hidden never sees its keyup: forget every held key
+    window.addEventListener('blur', () => this.releaseAll());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.releaseAll(); });
+    window.addEventListener('pagehide', () => this.releaseAll());
     // Optional mouse: positions are kept in client pixels; the game maps them through the
     // display (scale, letterbox, DPR, zoom) so hotspots line up at any window size.
     // Touch taps arrive here too (pointerType 'touch'): a tap is a click.
@@ -71,6 +74,7 @@ export class Input {
     if (this.pressedCodes.has(code)) { this.pendingUp.set(code, 6); return; }
     this.down.delete(code);
   }
+  releaseAll() { this.down.clear(); this.pendingUp.clear(); this.pressedCodes.clear(); }
   releaseVirtual(codes) { for (const c of codes) this.down.delete(c); }
   takeClicks() { const c = this.clicks; this.clicks = []; return c; }
   onKey(fn) { this.listeners.push(fn); }

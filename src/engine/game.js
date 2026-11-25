@@ -10,7 +10,7 @@ import { renderLighting } from '../world/lighting.js';
 import { Silas } from '../entities/silas.js';
 import { NPC } from '../entities/npc.js';
 import { newState, test, apply, advanceTime, timeString } from '../systems/storyState.js';
-import { saveGame, loadGame, hasSave, clearSave, saveSettings } from '../systems/save.js';
+import { saveGame, loadGame, hasSave, clearSave, saveSettings, lastLoadProblem } from '../systems/save.js';
 import { DialogueRunner } from '../systems/dialogue.js';
 import { Cutscene } from '../systems/cutscene.js';
 import { LANTERN, toggleLantern, updateLantern, updateWarmth } from '../systems/survival.js';
@@ -82,7 +82,9 @@ export class Game {
     this.state.scene = this.scene.id;
     this.state.playerX = Math.round(this.player.x);
     this.state.facing = this.player.facing;
-    saveGame(this.state);
+    // a refused write (storage full, blocked, private mode) is said once, quietly; play goes on
+    if (!saveGame(this.state)) { if (!this.saveFailedShown) { this.saveFailedShown = true; this.hud.hint('My progress could not be saved: this browser is not keeping it. The game goes on.', 9); } }
+    else this.saveFailedShown = false;
   }
 
   // ---------------- modes ----------------
@@ -119,7 +121,14 @@ export class Game {
   }
   continueGame() {
     const s = loadGame();
-    if (!s) { this.newGame(); return; }
+    // A save that cannot be read is set aside (systems/save.js), never quietly replaced by a new game.
+    if (!s) {
+      if (lastLoadProblem()) this.pushOverlay(new Confirm(this, 'This save could not be read. It is kept aside, not deleted. Start a new investigation?', 'confirmNewAfterBadSave'));
+      else this.newGame();
+      return;
+    }
+    // a scene that no longer exists (a level renamed or removed since the save): resume at the hotel instead
+    if (!SCENES[s.scene]) { console.warn(`[save] saved scene "${s.scene}" not found; resuming at the Black Ram`); s.scene = 'BLACK_RAM_EXTERIOR'; s.playerX = null; }
     this.state = s;
     this.startPlay(s.scene, null, s.playerX, s.facing);
     // A save made on the first night's end card (this build or the previous one) resumes there, so the story goes on
@@ -333,7 +342,7 @@ export class Game {
       else if (act === 'controls') this.pushOverlay(new ControlsHelp(this));
       return;
     }
-    if (act === 'confirmNew') { this.newGame(); return; }
+    if (act === 'confirmNew' || act === 'confirmNewAfterBadSave') { this.newGame(); return; }
     if (typeof act === 'string' && act.startsWith('commit:')) { // confirmed in the case review
       this.popOverlay();
       if (commit(this.state, act.slice(7))) {
