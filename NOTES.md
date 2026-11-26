@@ -1051,3 +1051,40 @@ how he ended; hints `H5_RIDGE`, `H5_CABIN`, `H5_WORKINGS`, `H5_FALL`.
 - In practice the "document" half of the evidence standard is always met (Chapter 4 cannot end without the tally book
   and Ada's book); what decides Exposed is the witness.
 - The last card names Clara, Mercer and Cutler only; Vale, Rusk, Mrs. Gable, Finch and Ada appear only in the epilogues.
+
+## 28. The deduction board (2026-11-26)
+
+The notebook's Deductions page is now a board (`src/ui/deductionBoard.js`), in the manner of a detective's evidence
+board, replacing the list of open threads and the clue picker. The rules in `caseSystem.js` and the data in
+`caseData.js` are unchanged; only how the player works them is new.
+
+**Layout (one question at a time; Q or a tap on "1 of N ▸" for the next).**
+- *Top row:* the accounts on the table (the case's conclusions, once every deduction they rest on is formed). One
+  mark per reading the account rests on, filled while Silas reads it that way; a supported account gets a red inner
+  edge. Selecting one draws its threads down to those deductions: firm where the reading agrees, dashed where not.
+- *Middle row:* every thread of the question, in authored order so cards never jump: an open question ("?", dashed
+  card) or an established deduction with its reading under it ("◂ Moved ▸").
+- *Clue rows:* every clue bearing on the question, up to six a row. Red strings join each deduction to the clues it
+  rests on, and each open question (dashed) to the clue that raised it.
+- *Note strip:* what the selected card says, and what E would do; or what the last attempt came to.
+
+**Linking is the player's own.** Pick up a clue (E, a tap, or a press) and put it to another clue, or to an open
+question (E, a tap, or a drag and release). Two clues that make one of a deduction's pairs form it; a clue put to an
+open question answers it as before (`connect`). Anything else is refused with no hint and no cost (the forgiving
+option chosen); the clue stays in hand to try against another. E on a deduction reads it the other way; E on a
+supported account asks for confirmation and commits from the board. C still opens the formal review (and the
+end-of-night prompt still uses it).
+
+**Controls.** Arrows move between cards (Up / Down between rows to the nearest card, Left / Right along a row; past
+the end of a row they turn the notebook page, as before). Esc puts a held clue down before it closes the notebook.
+Mouse: hover highlights, click picks up and links, drag from one card to another links. Touch: a tap picks up a clue
+or links it to the one in hand; a second tap uses a deduction or an account. `Input` now records pointer releases and
+the drag position (`input.releases`, `input.drag`). On touch the note strip names taps, not keys (`touchText.js`).
+
+**Tests and tools.** `T.deduce(a, b)` drives the board with real input (arrows and E, or taps in touch mode) via the
+new `T.boardTo(id)`. `sweepNotebook` draws each card selected, held, and refused. `case.spec.mjs` covers a refused
+pair, answering an open question with a clue, and the board's row order.
+
+**Not done / limits.**
+- No zoom or free placement: cards are laid out by the board, not dragged to stay where dropped.
+- A question with more than twelve clues would give three short clue rows; none has more than twelve today.

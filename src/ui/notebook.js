@@ -4,10 +4,10 @@
 //               and the questions he can decide.
 //   CLUES       the clues bearing on the current question, one short line each. A clue says which open question it
 //               raises, and can be opened to read the notes behind it (what was seen, the closer look, his reading).
-//   DEDUCTIONS  the current question as a plain list: first what is still open ("?"), then what is established. An
-//               open question is answered by choosing the clue that does; the page says whether anything found so
-//               far could (if not, the answer is still out there). An established fact can be read more than one
-//               way. C reviews the case: the readings add up to an account Silas may commit to.
+//   DEDUCTIONS  the deduction board for the current question (ui/deductionBoard.js): the clues pinned to the page,
+//               what they raise and settle, and the accounts the readings add up to. Silas links clues himself,
+//               reads each deduction one way or the other, and can commit to an account from the board. C still
+//               opens the formal review.
 //   PEOPLE      a portrait, a line, and what Silas has learned about each person, contradictions included.
 //   MAP         opens the hand-drawn map (it keeps its own panel and button).
 // Data: data/caseData.js (clues, threads, readings), data/evidence.js (the notes), data/notebookData.js.
@@ -18,21 +18,21 @@ import { STATEMENTS, DEDUCTIONS, CONCLUSIONS } from '../data/caseData.js';
 import { test, timeString } from '../systems/storyState.js';
 import {
   questions, question, knownStatements, statementText, clueRecords, clueUnexamined, filedUnder, deductionsFor,
-  threadsFor, threadClues, threadAnswerable, connect, readingOf, cycleReading, hasReadings, readingsOffered,
-  readingUnlocked, conclusionsFor, committed, caseOfQuestion, unread, markRead,
+  threadsFor, threadClues, conclusionsFor, committed, unread, markRead,
 } from '../systems/caseSystem.js';
 import { objectiveFor, chapterOf } from '../systems/hints.js';
 import { getSprite } from '../engine/assets.js';
 import { CaseReview } from './caseReview.js';
 import { touchify } from './touchText.js';
+import { DeductionBoard, NOT_AN_ANSWER } from './deductionBoard.js';
+export { NOT_AN_ANSWER };
 
 export const TABS = ['CASE', 'CLUES', 'DEDUCTIONS', 'PEOPLE', 'MAP'];
 const KEY_TABS = 4; // Left / Right cycle the first four; MAP is opened by tapping its tab (or M)
 const ROWS = 14;
 const CAT = { PHYSICAL: 'Physical trace', DOCUMENT: 'Document', PERSONAL: 'Personal object', ENVIRONMENT: 'Environment', TESTIMONY: 'Said to me' };
 // Where the left-hand list ends and the right-hand page begins, per page (UI units).
-const SPLIT = { CASE: 122, CLUES: 122, PEOPLE: 122, DEDUCTIONS: 160 };
-export const NOT_AN_ANSWER = 'That does not answer it.';
+const SPLIT = { CASE: 122, CLUES: 122, PEOPLE: 122 };
 // The questions in working order: the ones Silas can decide now, newest (this chapter's) first; then the ones still
 // open that cannot be decided yet; the decided ones last.
 export function orderedQuestions(s) {
@@ -47,9 +47,12 @@ export class Notebook {
   constructor(game) {
     this.game = game; this.tab = 0; this.sel = 0; this.scroll = 0; this.result = null; this.q = null;
     this.inspect = null; // { sid, i }: reading the notes behind one clue
-    this.pick = null; // deduction id: choosing the clue that answers an open thread
     this.fresh = null; // { id, t }: a deduction just formed (inked in)
+    this.board = new DeductionBoard(this);
   }
+  get pick() { return this.board.held; } // (older tests and tools ask whether something is in hand)
+  canDecide(q) { return isCase(this.s, q); }
+  orderedCount() { const qs = orderedQuestions(this.s); return { n: qs.length, i: Math.max(0, qs.findIndex((q) => q.id === this.q)) }; }
 
   tabName() { return TABS[this.tab]; }
   get s() { return this.game.state; }
@@ -64,9 +67,10 @@ export class Notebook {
       if (u.some((k) => STATEMENTS[k])) this.tab = 1;
       else if (u.length) this.tab = 2;
     }
-    this.sel = 0; this.scroll = 0; this.result = null; this.inspect = null; this.pick = null;
+    this.sel = 0; this.scroll = 0; this.result = null; this.inspect = null; this.board.reset();
     this.pickQuestion();
     this.fixSel(1);
+    if (TABS[this.tab] === 'DEDUCTIONS') this.boardStart();
     this.game.audio.sfx('page');
   }
 
@@ -89,9 +93,20 @@ export class Notebook {
     if (qs.length < 2) return;
     const i = qs.findIndex((q) => q.id === this.q);
     this.q = qs[(i + 1) % qs.length].id;
-    this.sel = 0; this.scroll = 0; this.result = null; this.pick = null;
+    this.sel = 0; this.scroll = 0; this.result = null; this.board.reset();
     this.fixSel(1);
+    if (TABS[this.tab] === 'DEDUCTIONS') this.boardStart();
     this.game.audio.sfx('page');
+  }
+  // On the board, start on what is new (an open question or a fresh deduction), else the first open question, else
+  // the first clue.
+  boardStart() {
+    const ids = this.board.ids(), u = new Set(unread(this.s));
+    const isNew = (id) => { const [k, x] = id.split(':'); return (k === 'T' && u.has('T_' + x)) || (k === 'D' && u.has(x)); };
+    let i = ids.findIndex(isNew);
+    if (i < 0) i = ids.findIndex((id) => id.startsWith('T:'));
+    if (i < 0) i = ids.findIndex((id) => id.startsWith('S:'));
+    this.sel = Math.max(0, i);
   }
 
   people() { return PEOPLE.filter((p) => test(p.if, this.s)).map((p) => p.id); }
@@ -113,24 +128,6 @@ export class Notebook {
     const ids = knownStatements(s, this.q).filter((id) => filedUnder(s, id) === this.q);
     return ['H:' + this.q, ...ids.map((id) => 'S:' + id)];
   }
-  // The board's entries for the current question: what is still open first, then what is established.
-  boardNodes() {
-    const s = this.s;
-    if (!this.q) return [];
-    const ts = threadsFor(s, this.q);
-    const open = ts.filter((d) => !s.deductions.includes(d)), formed = ts.filter((d) => s.deductions.includes(d));
-    return [...open.map((d) => 'T:' + d), ...formed.map((d) => 'D:' + d)];
-  }
-  boardRows() {
-    const nodes = this.boardNodes();
-    const open = nodes.filter((n) => n.startsWith('T:')), formed = nodes.filter((n) => n.startsWith('D:'));
-    return ['H:' + this.q, ...(open.length ? ['H:open', ...open] : []), ...(formed.length ? ['H:known', ...formed] : [])];
-  }
-  pickRows() {
-    const s = this.s;
-    const shown = threadClues(s, this.pick).slice(0, 1);
-    return knownStatements(s, this.q).filter((x) => !shown.includes(x)).map((x) => 'P:' + x);
-  }
   caseRows() {
     const s = this.s;
     return ['overview', ...orderedQuestions(s).filter((q) => isCase(s, q)).map((q) => 'Q:' + q.id), 'telegram', 'timeline'];
@@ -140,13 +137,14 @@ export class Notebook {
     switch (TABS[tab]) {
       case 'CASE': return this.caseRows();
       case 'CLUES': return this.clueRows();
-      case 'DEDUCTIONS': return this.pick ? this.pickRows() : this.boardRows();
+      case 'DEDUCTIONS': return this.board.ids();
       case 'PEOPLE': return this.people();
       default: return [];
     }
   }
   selectable(id) { return typeof id === 'string' && !id.startsWith('H:'); }
   fixSel(dir) {
+    if (TABS[this.tab] === 'DEDUCTIONS') return;
     const list = this.listFor(this.tab);
     if (!list.length) { this.sel = 0; return; }
     this.sel = Math.max(0, Math.min(this.sel, list.length - 1));
@@ -160,26 +158,35 @@ export class Notebook {
     if (input.pressed('notebook')) { this.game.audio.sfx('page'); return 'close'; }
     if (input.pressed('pause') || input.pressed('back')) {
       if (this.inspect) { this.inspect = null; this.game.audio.sfx('page'); return null; }
-      if (this.pick) { this.pick = null; this.sel = Math.max(0, this.boardRows().indexOf("T:" + this.pickFrom)); this.game.audio.sfx("page"); return null; }
+      if (this.board.held && name === 'DEDUCTIONS') { this.board.putDown(); return null; }
       this.game.audio.sfx('page');
       return 'close';
     }
     const tabTo = (t) => {
       if (TABS[t] === 'MAP') { this.game.openPanel('map'); return; }
-      this.tab = t; this.sel = 0; this.scroll = 0; this.result = null; this.inspect = null; this.pick = null;
-      this.fixSel(1); this.game.audio.sfx('page');
+      this.tab = t; this.sel = 0; this.scroll = 0; this.result = null; this.inspect = null; this.board.reset();
+      this.fixSel(1); if (TABS[t] === 'DEDUCTIONS') this.boardStart(); this.game.audio.sfx('page');
     };
     const tap = this.tapAt(input);
-    if (tap && tap.tab != null) { if (tap.tab !== this.tab || this.inspect || this.pick) tabTo(tap.tab); return null; }
+    if (tap && tap.tab != null) { if (tap.tab !== this.tab || this.inspect) tabTo(tap.tab); return null; }
     if (this.inspect) return this.updateInspect(input, tap);
+    if (name === 'DEDUCTIONS') {
+      if (tap && tap.btn === 'question') { this.cycleQuestion(); return null; }
+      if (input.pressed('question') && !this.board.held) { this.cycleQuestion(); return null; }
+      if (input.pressed('caseReview')) { this.board.putDown(); this.openReview(this.q); return null; }
+      const r = this.board.update(input, tap);
+      if (r === 'tabLeft') tabTo((this.tab + KEY_TABS - 1) % KEY_TABS);
+      if (r === 'tabRight') tabTo((Math.min(this.tab, KEY_TABS - 1) + 1) % KEY_TABS);
+      return null;
+    }
     if (input.pressed('left')) { tabTo((this.tab + KEY_TABS - 1) % KEY_TABS); return null; }
     if (input.pressed('right')) { tabTo((Math.min(this.tab, KEY_TABS - 1) + 1) % KEY_TABS); return null; }
-    if (input.pressed('question') && (name === 'DEDUCTIONS' || name === 'CLUES') && !this.pick) this.cycleQuestion();
+    if (input.pressed('question') && name === 'CLUES') this.cycleQuestion();
     if (input.pressed('caseReview')) { this.openReview(this.q); return null; }
     const list = this.listFor(this.tab);
     // mouse / touch: tap a line to select it, tap it again to use it (like E); tap the question's header for the next
     if (tap && tap.i != null && tap.i < list.length) {
-      if (!this.selectable(list[tap.i])) { if (/^H:Q_/.test(list[tap.i]) && !this.pick) this.cycleQuestion(); return null; }
+      if (!this.selectable(list[tap.i])) { if (/^H:Q_/.test(list[tap.i])) this.cycleQuestion(); return null; }
       if (tap.i !== this.sel) {
         this.sel = tap.i; this.game.audio.sfx('tick');
         // tapping the first / last visible line scrolls the list on by one, so a finger can page through it
@@ -225,6 +232,7 @@ export class Notebook {
       if (!u) return true;
       const t = (this.tabRects || []).findIndex((r) => inR(u, r));
       if (t >= 0) { hit = { tab: t }; return false; }
+      if (this.qRect && TABS[this.tab] === 'DEDUCTIONS' && !this.inspect && inR(u, this.qRect)) { hit = { btn: 'question' }; return false; }
       const b = (this.btnRects || []).find((r) => inR(u, r));
       if (b) { hit = { btn: b.act }; return false; }
       const row = (this.rowRects || []).find((r) => inR(u, r));
@@ -243,28 +251,6 @@ export class Notebook {
       return;
     }
     if (tab === 'CLUES' && k === 'S') { this.inspect = { sid: rest, i: 0 }; this.game.audio.sfx('page'); return; }
-    if (tab === 'DEDUCTIONS') {
-      if (k === 'T') { this.pickFrom = rest; this.pick = rest; this.sel = 0; this.result = null; this.game.audio.sfx('page'); return; }
-      if (k === 'D') return this.flipReading(rest);
-      if (k === 'P') return this.tryAnswer(rest);
-    }
-  }
-
-  tryAnswer(sid) {
-    const s = this.s;
-    const did = this.pick;
-    const r = connect(s, did, sid);
-    if (!r.ok) { this.result = { ok: false, text: NOT_AN_ANSWER }; this.game.audio.sfx('refuse'); return; }
-    this.pick = null;
-    markRead(s, 'T_' + did);
-    this.sel = Math.max(0, this.boardRows().indexOf('D:' + did));
-    if (r.fresh) {
-      const n = readingsOffered(s, did).length;
-      this.result = { ok: true, text: `${DEDUCTIONS[did].title}.${hasReadings(did) ? (n > 1 ? ' It can be read more than one way; E on it to choose.' : ' E on it to say how I read it.') : ''}`, id: did };
-      this.fresh = { id: did, t: 0 };
-      this.game.audio.sfx('pen');
-      this.game.checkpoint();
-    }
   }
 
   openReview(qid) {
@@ -275,25 +261,12 @@ export class Notebook {
     this.game.audio.sfx('page');
   }
 
-  flipReading(did) {
-    const s = this.s;
-    if (!hasReadings(did)) { this.result = { ok: true, text: 'That much is settled; there is only one way to read it.' }; return; }
-    const caseId = caseOfQuestion(DEDUCTIONS[did].q);
-    if (caseId && committed(s, caseId)) { this.result = { ok: false, text: 'I have already acted on my reading of this.' }; this.game.audio.sfx('refuse'); return; }
-    const offered = readingsOffered(s, did);
-    if (offered.length === 1 && readingOf(s, did) === offered[0]) { this.result = { ok: true, text: 'No other way of reading it comes to mind. Not yet.' }; return; }
-    if (cycleReading(s, did)) {
-      this.result = { ok: true, text: `I read it as: ${DEDUCTIONS[did].readings[readingOf(s, did)].label.toLowerCase()}.` };
-      this.game.audio.sfx('pen');
-      this.game.checkpointSoon = true;
-    }
-  }
-
   // The boxes text must stay inside (UI units): the page, and on the two-column pages each column. Used by the
   // layout audit (tools/harness.js auditText).
   textBox() {
     const page = { name: 'the notebook page', x: 8, y: 6, w: 304, h: 168 };
     const name = TABS[this.tab];
+    if (name === 'DEDUCTIONS' && !this.inspect) return [page, { name: 'the board', x: 12, y: 29, w: 296, h: 136 }];
     if (this.inspect || !SPLIT[name]) return [page];
     const sp = SPLIT[name];
     return [page, { name: 'the list column', x: 12, y: 33, w: sp - 12, h: 132 }, { name: 'the right-hand page', x: sp + 1, y: 33, w: 307 - sp, h: 132 }];
@@ -313,7 +286,7 @@ export class Notebook {
     text(ctx, `S. Vance — ${this.game.scene.name.toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase())}, ${timeString(s.time)}`, 16, 15, UI.inkDim);
     font(ctx, 5.2, { bold: true });
     let tx = 16;
-    this.tabRects = []; this.rowRects = []; this.btnRects = [];
+    this.tabRects = []; this.rowRects = []; this.btnRects = []; this.qRect = null;
     const u = unread(s);
     const dot = { CLUES: u.some((k) => STATEMENTS[k]), DEDUCTIONS: u.some((k) => !STATEMENTS[k]) };
     TABS.forEach((t, i) => {
@@ -327,16 +300,17 @@ export class Notebook {
     ctx.fillStyle = UI.rule; ctx.fillRect(14, 30, 292, 0.6);
     const name = TABS[this.tab];
     if (this.inspect) this.drawInspect(ctx);
+    else if (name === 'DEDUCTIONS') this.board.draw(ctx);
     else this.drawListAndDetail(ctx, name);
     if (!this.game.touchUI()) { // touch: the button bar sits here
       font(ctx, 4.3, { italic: true });
       const many = questions(s).length > 1 ? '    Q  next question' : '';
       const foot = this.inspect ? 'Left / Right  turn the page    E / Esc  back to the clues'
-        : this.pick ? 'Up / Down  choose a clue    E  try it    Esc  back'
+        : name === 'DEDUCTIONS' && this.board.held ? 'Arrows  choose    E  put them together    Esc  put it down'
           : {
             CASE: 'Up / Down  choose    E  open    Left / Right  pages    N  close',
             CLUES: `Up / Down  choose    E  read my notes${many}    Left / Right  pages`,
-            DEDUCTIONS: `Up / Down  choose    E  answer it · change my reading${many}    C  decide`,
+            DEDUCTIONS: `Arrows  move    E  pick up · link · read · decide${many}    C  review`,
             PEOPLE: 'Up / Down  choose    Left / Right  pages    N  close',
           }[name] || '';
       text(ctx, foot, UI_CX, 170, UI.inkDim, 'center');
@@ -367,7 +341,7 @@ export class Notebook {
     const lw = split - 16; // the list's row width
     ctx.fillStyle = UI.rule; ctx.fillRect(split, 34, 0.6, 128);
     const real = list.filter((x) => this.selectable(x));
-    if (!real.length && !this.pick) {
+    if (!real.length) {
       if (list[0] && list[0].startsWith('H:Q_')) this.drawQuestionHeader(ctx, list[0], 41, lw);
       font(ctx, 5.2, { italic: true });
       const empty = { CLUES: 'Nothing yet that bears on it.', PEOPLE: 'No one yet.', DEDUCTIONS: 'Nothing raises a question here yet. What I find will.' }[name] || 'Nothing recorded yet.';
@@ -403,11 +377,9 @@ export class Notebook {
     if (list.length > ROWS) { font(ctx, 4.4, { italic: true }); text(ctx, this.scroll + ROWS < list.length ? '▼ more' : '', split - 4, 162, UI.inkDim, 'right'); }
     const id = list[this.sel];
     const d = new Detail(ctx, split + 6, 40, 304 - split - 6);
-    if (this.pick) return this.drawPicker(ctx, d);
     if (name === 'CASE') return this.detailCase(d, id);
     if (name === 'PEOPLE') return this.detailPerson(d, id);
     if (name === 'CLUES') return id && id.startsWith('S:') ? this.detailClue(d, id.slice(2)) : null;
-    if (name === 'DEDUCTIONS') return this.detailBoard(d, id);
   }
   // The current question at the head of the Clues and Deductions lists: its short name, and (with more than one) the
   // way to turn to the next.
@@ -526,48 +498,6 @@ export class Notebook {
     d.y = Math.max(PY + PH + 8, y + 3);
     const notes = (p.notes || []).filter((n) => test(n.if, s));
     if (notes.length) { d.heading('WHAT I KNOW'); for (const n of notes.slice(-6)) d.bullet(n.text, 4.9); }
-  }
-
-  // ---------------- the deductions page ----------------
-  // The right-hand page for the selected entry of the current question.
-  detailBoard(d, sel) {
-    const s = this.s;
-    if (!sel || sel.startsWith('H:')) return;
-    const [k, id] = sel.split(':');
-    const dd = DEDUCTIONS[id];
-    if (k === 'T') {
-      markRead(s, 'T_' + id);
-      d.title(dd.ask, 5.6);
-      d.heading('IT CAME FROM');
-      for (const x of threadClues(s, id).slice(0, 1)) d.bullet(STATEMENTS[x].label, 4.8);
-      // where the answer is: among the clues already found, or still out there to be found
-      if (threadAnswerable(s, id)) d.para('I may already have what answers it.', { italic: true, size: 4.8, col: '#4a3020' });
-      else d.para('Nothing I have found answers it yet. Somewhere out there, something will.', { italic: true, size: 4.8, col: UI.inkDim });
-      d.hintLine(this.game.touchUI() ? 'Tap it again to choose the clue that answers it.' : 'E: choose the clue that answers it.');
-    } else if (k === 'D') {
-      markRead(s, id);
-      d.title(dd.title, 5.6);
-      d.para(dd.text, { size: 4.8 });
-      if (dd.readings) {
-        d.heading('HOW I READ IT');
-        const cur = readingOf(s, id);
-        for (const key of Object.keys(dd.readings)) if (readingUnlocked(s, id, key)) d.choice(key === cur, dd.readings[key].label, null);
-        const locked = Object.keys(dd.readings).length - readingsOffered(s, id).length;
-        if (locked && d.y < 150) d.hintLine('Another reading may come to mind, if I find more.');
-        else if (readingsOffered(s, id).length > 1 && d.y < 150) d.hintLine(this.game.touchUI() ? 'Tap it again to read it the other way.' : 'E: read it the other way.');
-      }
-    }
-    if (this.result && d.y < 152) d.para(this.resultText(), { italic: true, size: 4.6, col: this.result.ok ? UI.ink : UI.inkRed });
-  }
-
-  // Choosing the clue that answers an open question: the clues are the list on the left; this is the right-hand page.
-  drawPicker(ctx, d) {
-    const dd = DEDUCTIONS[this.pick];
-    d.heading('WHICH CLUE ANSWERS IT?');
-    d.title(dd.ask, 5.4);
-    if (!this.pickRows().length) d.para('Nothing else I know bears on it.', { italic: true, size: 4.8, col: UI.inkDim });
-    if (this.result && !this.result.ok) d.para(this.resultText(), { italic: true, size: 4.8, col: UI.inkRed });
-    void ctx;
   }
 }
 

@@ -26,6 +26,8 @@ export class Input {
     this.anyPressed = false;
     this.listeners = [];
     this.clicks = [];
+    this.releases = []; // pointer releases this step (client px): the end of a drag on the deduction board
+    this.drag = null; // where a pressed pointer (mouse or finger) is now, while it is held down
     this.pendingUp = new Map(); // virtual key -> steps until it is released (see virtualUp)
     this.pointer = null; // last known pointer position in client (CSS) pixels
     this.onFullscreen = null;
@@ -50,12 +52,19 @@ export class Input {
     target.addEventListener('pointerdown', (e) => {
       this.anyPressed = true;
       this.lastPointerType = e.pointerType || 'mouse';
-      if (e.button === 0) this.clicks.push({ x: e.clientX, y: e.clientY });
+      if (e.button === 0) { this.clicks.push({ x: e.clientX, y: e.clientY }); this.drag = { x: e.clientX, y: e.clientY }; }
       for (const fn of this.listeners) fn({ code: 'Pointer', pointerType: e.pointerType });
     });
     // A finger has no hover: only mouse/pen movement updates the hover position.
-    window.addEventListener('pointermove', (e) => { if (e.pointerType !== 'touch') this.pointer = { x: e.clientX, y: e.clientY }; });
-    window.addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') this.pointer = null; });
+    window.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'touch') this.pointer = { x: e.clientX, y: e.clientY };
+      if (this.drag) this.drag = { x: e.clientX, y: e.clientY };
+    });
+    window.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'touch') this.pointer = null;
+      if (this.drag) { this.releases.push({ x: e.clientX, y: e.clientY }); this.drag = null; }
+    });
+    window.addEventListener('pointercancel', () => { this.drag = null; });
     document.addEventListener('pointerleave', () => { this.pointer = null; });
   }
   // On-screen (touch) controls press the same key codes the keyboard does, so every system that reads
@@ -83,7 +92,7 @@ export class Input {
   consume(action) { for (const c of MAP[action]) this.pressedCodes.delete(c); }
   // Call at the end of each fixed update step.
   endStep() {
-    this.pressedCodes.clear(); this.anyPressed = false; this.clicks.length = 0;
+    this.pressedCodes.clear(); this.anyPressed = false; this.clicks.length = 0; this.releases.length = 0;
     if (this.pendingUp.size) for (const [c, n] of this.pendingUp) { if (n <= 1) { this.pendingUp.delete(c); this.down.delete(c); } else this.pendingUp.set(c, n - 1); }
   }
   clearAll() { this.pressedCodes.clear(); }

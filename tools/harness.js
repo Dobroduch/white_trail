@@ -9,7 +9,7 @@
 // touch-only playthrough proves every action it needed has a touch control. Walking holds the walk pads.
 import { UI_OX, UI_OY, UI_DEV } from '/src/engine/display.js'; // live bindings: current after every resize
 import { DEDUCTIONS } from '/src/data/caseData.js';
-import { threadsFor, threadClues, questions } from '/src/systems/caseSystem.js';
+import { questions } from '/src/systems/caseSystem.js';
 
 export function install() {
   const G = () => window.TWT;
@@ -119,32 +119,43 @@ export function install() {
       g.render();
       return T.info();
     },
-    // Notebook open on the Deductions board (the question already chosen): answer the question that clues a and b
-    // settle together, with real Up/Down/E input: select its open thread, E, choose the clue it does not already show,
-    // E. With no such pair, the thread raised by a is answered with b (and refused). Returns whether it formed.
+    // Notebook open on the Deductions board (the question already chosen): put clue a to clue b with real input.
+    // Keyboard: arrows to a's card, E (picks it up), arrows to b's card, E (links). Touch: tap a, tap b. A pair that
+    // settles nothing is refused (nb.result.ok false) and the clue is put down again. Returns whether it formed.
     deduce(a, b) {
       const g = G(), nb = g.notebook, s = g.state;
-      if (nb.pick) T.press('Escape', 1);
-      const pairOf = (d) => DEDUCTIONS[d].pairs.some((p) => p.includes(a) && p.includes(b));
-      const ts = threadsFor(s, nb.q);
-      const did = ts.find(pairOf) || ts.find((d) => !s.deductions.includes(d) && threadClues(s, d)[0] === a) || ts.find((d) => !s.deductions.includes(d) && threadClues(s, d).includes(a));
-      if (!did) return false;
-      if (s.deductions.includes(did)) return true;
-      const go = (id) => {
-        const i = nb.listFor(nb.tab).indexOf(id);
-        if (i < 0) return false;
-        for (let k = 0; k < 60 && nb.sel !== i; k++) T.press(nb.sel < i ? 'ArrowDown' : 'ArrowUp', 1);
-        return nb.sel === i;
-      };
-      if (!go('T:' + did)) return false;
-      T.press('KeyE', 1);
-      const shown = threadClues(s, did)[0];
-      const pick = shown === b ? a : b;
-      if (!nb.pick || !go('P:' + pick)) { if (nb.pick) T.press('Escape', 1); return false; }
-      T.press('KeyE', 1);
-      const ok = s.deductions.includes(did);
-      if (nb.pick) T.press('Escape', 1); // refused: back to the board
-      return ok;
+      const did = Object.keys(DEDUCTIONS).find((d) => DEDUCTIONS[d].q === nb.q && DEDUCTIONS[d].pairs.some((p) => p.includes(a) && p.includes(b)));
+      if (did && s.deductions.includes(did)) return true;
+      if (nb.board.held) T.press('Escape', 1);
+      if (!T.boardTo('S:' + a)) return false;
+      if (!T.touch) T.press('KeyE', 1);
+      if (nb.board.held !== 'S:' + a) return false;
+      if (!T.boardTo('S:' + b)) { T.press('Escape', 1); return false; }
+      if (!T.touch) T.press('KeyE', 1);
+      if (nb.board.held) T.press('Escape', 1); // refused: put it down
+      return !!did && s.deductions.includes(did);
+    },
+    // Select a card on the deduction board with real input: keyboard arrows (Up / Down between rows, Left / Right
+    // along one), or in touch mode a tap on the card (which, for a clue, also picks it up, or links it to the one held).
+    boardTo(id) {
+      const g = G(), nb = g.notebook, bd = nb.board;
+      g.render();
+      const target = () => bd.cards.find((c) => c.id === id);
+      if (!target()) return false;
+      if (T.touch) {
+        const c = target(), pt = uiToClient(c.x + c.w / 2, c.y + c.h / 2);
+        tapCanvas(pt.x, pt.y); T.touchTaps++; T.step(2); g.render();
+        return true; // (a tap that links moves the selection on to what it formed)
+      }
+      for (let k = 0; k < 40; k++) {
+        const cur = bd.cards[nb.sel], t = target();
+        if (!cur || !t) return false;
+        if (cur.id === id) return true;
+        if (cur.row !== t.row) T.press(cur.row < t.row ? 'ArrowDown' : 'ArrowUp', 1);
+        else T.press(cur.col < t.col ? 'ArrowRight' : 'ArrowLeft', 1);
+        g.render();
+      }
+      return false;
     },
     // Open the notebook's Deductions board on question qid (real input: tabs by Left/Right, questions by Q).
     toBoard(qid) {
@@ -927,18 +938,18 @@ export function install() {
           for (let qi = 0; qi < qs; qi++) {
             const list = nb.listFor(t);
             for (let i = 0; i < list.length; i++) {
-              nb.sel = i; nb.inspect = null; nb.pick = null; nb.result = null;
+              nb.sel = i; nb.inspect = null; nb.board.held = null; nb.result = null;
               draw(`tab ${nb.tabName()} q ${nb.q} row ${list[i]}`);
               const id = list[i];
               if (typeof id !== 'string') continue;
-              if (id.startsWith('S:')) { // every page of the notes behind the clue
+              if (id.startsWith('S:') && nb.tabName() === 'CLUES') { // every page of the notes behind the clue
                 for (let p = 0; p < 8; p++) { nb.inspect = { sid: id.slice(2), i: p }; draw(`notes ${id} p${p}`); }
                 nb.inspect = null;
               }
-              if (id.startsWith('T:')) { // the picker, and a wrong answer
-                nb.pick = id.slice(2); nb.pickFrom = nb.pick; nb.sel = 0; draw(`pick ${id}`);
-                nb.result = { ok: false, text: 'That does not answer it.' }; draw(`pick refused ${id}`);
-                nb.pick = null; nb.result = null;
+              if (nb.tabName() === 'DEDUCTIONS' && /^[ST]:/.test(id)) { // held, and a refused link
+                nb.board.held = id; draw(`held ${id}`);
+                nb.result = { ok: false, text: 'Those two do not connect. Not that I can see.' }; draw(`refused ${id}`);
+                nb.board.held = null; nb.result = null;
               }
               if (id.startsWith('D:')) { nb.result = { ok: true, text: 'I read it as: something.' }; draw(`reading ${id}`); nb.result = null; }
             }

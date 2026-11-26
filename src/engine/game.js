@@ -350,6 +350,7 @@ export class Game {
         this.audio.sfx('pen');
         this.checkpoint();
         if (this.overlay instanceof CaseReview) this.overlay.onCommitted();
+        else if (this.overlay && this.overlay.isNotebook) this.notebook.result = { ok: true, text: 'Then that is what I will act on.' }; // from the board
       }
       return;
     }

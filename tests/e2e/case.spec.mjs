@@ -174,7 +174,7 @@ test.describe('journal pages', () => {
     await expectClean(page, errors);
   });
 
-  test('Clues and the board show one question at a time; clues open onto their notes; the board lists what is open, then what is established', async ({ page }) => {
+  test('Clues and the board show one question at a time; clues open onto their notes; on the board, clues linked by hand settle what they raise', async ({ page }) => {
     const { errors } = await boot(page, { test: '1', scene: 'SAWMILL', phase: 'NIGHT' });
     const r = await page.evaluate(() => {
       const g = TWT, s = g.state, nb = g.notebook;
@@ -194,14 +194,21 @@ test.describe('journal pages', () => {
       nb.sel = out.clues.indexOf('S:S_SCREAM'); T.press('KeyE', 1);
       out.inspect = nb.inspect && nb.inspect.sid; T.press('ArrowRight', 1); out.page = nb.inspect && nb.inspect.i;
       T.press('Escape', 1); out.back = !nb.inspect && g.overlay && g.overlay.panelKind === 'notebook';
-      // the board: open questions first, answered one by one
+      // the board: clue put to clue, one deduction at a time
       T.toBoard('Q_HALE');
       out.q = nb.q;
-      const count = () => ({ open: nb.boardNodes().filter((x) => x.startsWith('T:')).length, formed: nb.boardNodes().filter((x) => x.startsWith('D:')).length });
+      out.start = nb.board.ids()[nb.sel]; // it opens on an open question
+      const nodes = () => nb.board.ids().filter((x) => /^[TD]:/.test(x));
+      const count = () => ({ open: nodes().filter((x) => x.startsWith('T:')).length, formed: nodes().filter((x) => x.startsWith('D:')).length });
       out.counts = [count()];
       for (const [a, b] of [['S_LITTLE_BLOOD', 'S_HOISTED'], ['S_MARKS', 'S_LEDGER'], ['S_SCREAM', 'S_TRACKS']]) { T.deduce(a, b); out.counts.push(count()); }
-      out.nodes = nb.boardNodes();
-      T.press('KeyQ', 1); out.q2 = nb.q; out.nodes2 = nb.boardNodes();
+      out.nodes = nodes();
+      // a pair that settles nothing is refused, and nothing is formed or lost
+      out.refused = T.deduce('S_MISSING', 'S_LEDGER'); out.refusedMsg = nb.result && nb.result.text; out.afterRefusal = count();
+      // a clue put to an open question answers it: "When did he die?" taken up, then the clue that answers it
+      T.boardTo('T:D_LONG_DEAD'); T.press('KeyE', 1); out.heldQ = nb.board.held;
+      T.boardTo('S:S_OLD_BLOOD'); T.press('KeyE', 1); out.answered = TWT.state.deductions.includes('D_LONG_DEAD');
+      T.press('KeyQ', 1); out.q2 = nb.q; out.nodes2 = nodes();
       T.press('KeyQ', 1);
       out.rows = nb.listFor(nb.tab); TWT_TEST.render();
       return out;
@@ -215,14 +222,17 @@ test.describe('journal pages', () => {
     expect(r.clues2).toContain('S:S_BOARDS');
     expect([r.inspect, r.page, r.back]).toEqual(['S_SCREAM', 1, true]);
     expect(r.q).toBe('Q_HALE');
+    expect(r.start).toMatch(/^T:/);
     expect(r.counts).toEqual([{ open: 4, formed: 0 }, { open: 3, formed: 1 }, { open: 2, formed: 2 }, { open: 1, formed: 3 }]);
     expect(r.nodes).not.toContain('T:D_WHERE_KEPT'); // the wheel pit's question is raised only by the wheel pit
     expect(r.nodes.some((x) => x.includes('S_BOARDS') || x.includes('UNWRITTEN'))).toBe(false);
+    expect([r.refused, r.refusedMsg, r.afterRefusal]).toEqual([false, 'Those two do not connect. Not that I can see.', { open: 1, formed: 3 }]);
+    expect([r.heldQ, r.answered]).toEqual(['T:D_LONG_DEAD', true]);
     expect(r.q2).toBe('Q_ROOM4');
     expect(r.nodes2).toContain('T:D_UNWRITTEN_GUEST');
-    // open questions first, then what is established; no clue cards on the board
-    expect(r.rows.indexOf('H:open')).toBeLessThan(r.rows.indexOf('H:known'));
-    expect(r.rows.some((x) => x.startsWith('S:'))).toBe(false);
+    // accounts across the top, then what is raised and settled, then the clues pinned below
+    const kinds = r.rows.map((x) => x[0]);
+    expect(kinds.join('')).toMatch(/^A*[TD]+S+$/);
     await page.screenshot({ path: 'test-results/review/board.png' });
     await expectClean(page, errors);
   });
