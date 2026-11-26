@@ -21,7 +21,7 @@ const night = ({ opt, mutate }) => {
   T.resume(window.__ch4end, mutate ? new Function('st', mutate) : null);
   const r = T.fullRun5(opt);
   const s = TWT.state;
-  return { errors: r.errors, steps: r.steps, ending: r.ending, fuseLit: r.fuseLit, flags: s.flags, shots: s.consequences.shotsFired, killed: s.consequences.peopleKilled, clara: s.chars.clara, cutler: s.chars.cutler, loaded: s.revolver.loaded };
+  return { errors: r.errors, steps: r.steps, ending: r.ending, fuseLit: r.fuseLit, flags: s.flags, seen: Object.keys(s.seen).filter((k) => /^(RECKONING|AFTER_BLAST)./.test(k)), shots: s.consequences.shotsFired, killed: s.consequences.peopleKilled, clara: s.chars.clara, cutler: s.chars.cutler, loaded: s.revolver.loaded };
 };
 const shot = async (page, name) => {
   await page.evaluate(() => { for (let i = 0; i < 150; i++) TWT.update(1 / 60); TWT_TEST.render(); });
@@ -66,6 +66,25 @@ test.describe('chapter 5 — the fourth night', () => {
     // ...but Clara's word alone is a witness: the same night with her "all the way" is exposed
     r = await page.evaluate(night, { opt: { clara: 'yes', cutler: 'fire' }, mutate: "delete st.evidence.T4_FINCH_CONFESS; st.flags.ruskConfessed = false;" });
     expect(r.ending).toBe('EXPOSED');
+    // no Clara, Rusk or Finch, but Cutler taken alive, and I had settled it on Mercer's word: he will not hang alone
+    r = await page.evaluate(night, { opt: { clara: 'no' }, mutate: "delete st.evidence.T4_FINCH_CONFESS; st.flags.ruskConfessed = false;" });
+    expect(r.errors, r.steps.join('\n')).toEqual([]);
+    expect(r.ending).toBe('EXPOSED');
+    // ...which is the Chapter 4 verdict's doing: without killerKnown the same night is buried
+    r = await page.evaluate(night, { opt: { clara: 'no' }, mutate: "delete st.evidence.T4_FINCH_CONFESS; st.flags.ruskConfessed = false; st.flags.killerKnown = false;" });
+    expect(r.ending).toBe('BURIED');
+    expect(r.seen).not.toContain('RECKONING.npAlone');
+    // Finch kept watch on the lane (watchGrave): the fuse lit, Clara held at the fall, no bell, the revolver held;
+    // Finch hears the blast and digs her out
+    r = await page.evaluate(night, { opt: { clara: 'yes' }, mutate: 'st.flags.knowsObservatory = false; st.flags.cutlerWarned = true; st.flags.valeTurned = false;' });
+    expect(r.errors, r.steps.join('\n')).toEqual([]);
+    expect(r.fuseLit).toBe(true);
+    expect(r.flags).toMatchObject({ watchGrave: true, finchCame: true, workingsBlown: true });
+    expect(r.flags.claraLost).toBeFalsy();
+    expect(r.ending).toBe('EXPOSED');
+    // and without the watch, that night is the fall
+    r = await page.evaluate(night, { opt: {}, mutate: 'st.flags.knowsObservatory = false; st.flags.cutlerWarned = true; st.flags.valeTurned = false; st.flags.watchGrave = false;' });
+    expect(r.ending).toBe('FALL');
     // not knowing the way to the cabin: Clara went to the workings herself; the cabin path is lost in the snow
     r = await page.evaluate(night, { opt: {}, mutate: "st.flags.knowsObservatory = false;" });
     expect(r.errors, r.steps.join('\n')).toEqual([]);
@@ -100,6 +119,11 @@ test.describe('chapter 5 — the fourth night', () => {
     expect(r.ending).toBe('EXPOSED');
     expect(r.flags).toMatchObject({ bellRang: true, townCame: true, workingsBlown: true });
     expect(r.flags.claraLost).toBeFalsy();
+    // no witness, and I had told the town Cutler did it on his own account: Mercer throws it back at me
+    r = await page.evaluate(night, { opt: { cutler: 'fire', clara: 'no' }, mutate: "st.flags.valeTurned = false; st.flags.ruskConfessed = false; delete st.evidence.T4_FINCH_CONFESS;" });
+    expect(r.errors, r.steps.join('\n')).toEqual([]);
+    expect(r.ending).toBe('BURIED');
+    expect(r.seen).toContain('RECKONING.npAlone');
     await expectClean(page, errors);
   });
 

@@ -804,7 +804,9 @@ Object.assign(DIALOGUE.VALE.nodes, {
 
 // ======================= Chapter 5: the fourth night =======================
 // The proof Silas can carry down (Mystery Bible §8, Q8: one living witness and one document).
-const WITNESS = { any: [{ all: [{ flag: 'claraTestifies' }, { notFlag: 'claraLost' }] }, { all: [{ flag: 'ruskConfessed' }, { notFlag: 'ruskFled' }] }, { evidence: 'T4_FINCH_CONFESS' }] };
+const WITNESS = { any: [{ all: [{ flag: 'claraTestifies' }, { notFlag: 'claraLost' }] }, { all: [{ flag: 'ruskConfessed' }, { notFlag: 'ruskFled' }] }, { evidence: 'T4_FINCH_CONFESS' },
+  // settled on "Cutler, on Mercer's word" and took him alive: Cutler will not hang alone
+  { all: [{ flag: 'killerKnown' }, { flag: 'cutlerTaken' }, { notFlag: 'cutlerShot' }] }] };
 const DOCUMENT = { any: [{ item: 'TALLY_BOOK' }, { evidence: 'EV4_ADA_BOOK' }, { all: [{ examined: 'EV5_PAYROLL' }, { evidence: 'SAWMILL_LEDGER' }] }] };
 export const PROOF = { all: [WITNESS, DOCUMENT] };
 const CLARA_AT_CABIN = { all: [{ flag: 'knowsObservatory' }, { notFlag: 'huntForGuest' }] };
@@ -938,7 +940,9 @@ Object.assign(DIALOGUE, {
 
   // after the blast (the fuse burning, the revolver held): who comes out from under it
   AFTER_BLAST: { start: 'a', nodes: {
-    a: { branch: [{ if: { flag: 'claraWithSilas' }, next: 'with' }, { if: { flag: 'valeTurned' }, next: 'town' }, { next: 'lost' }] },
+    a: { branch: [{ if: { flag: 'claraWithSilas' }, next: 'with' }, { if: { flag: 'valeTurned' }, next: 'town' }, { if: { all: [{ flag: 'watchGrave' }, { notFlag: 'huntForGuest' }] }, next: 'watch' }, { next: 'lost' }] },
+    watch: { who: 'note', text: 'The fall came down between me and Clara, and the dark was full of stone dust. I dug with my hands. Then a lantern in the mouth behind me: Finch, and the two men he had kept on the chapel lane since I told him what Cutler meant to do.', do: [{ set: { workingsBlown: true, finchCame: true } }], next: 'watch2' },
+    watch2: { who: 'note', text: 'They had heard the blast from the grave. Between the four of us we had her out before the lamp burned down, white with dust and alive.', do: [{ log: 'Finch kept watch on the lane, as I asked. He heard the blast and helped dig Clara out.' }], next: 'cut' },
     with: { who: 'note', text: 'I had Clara down behind the chest when the fall came. The roof came down where Cutler had stood, and the chest, and the drift beyond it, and the dark was full of stone dust.', do: [{ set: { workingsBlown: true } }], next: 'with2' },
     with2: { who: 'note', text: 'When the lamp would burn again she was beside me, coughing, alive. The chest was under twenty feet of the mountain.', next: 'cut' },
     town: { who: 'note', text: 'The fall came down between me and Clara, and the dark was full of stone dust. I dug with my hands. Then there were lanterns in the mouth behind me: Vale, and twenty men from the town with picks and shovels.', do: [{ set: { workingsBlown: true, townCame: true } }], next: 'town2' },
@@ -969,7 +973,9 @@ Object.assign(DIALOGUE, {
     ] },
     take: { branch: [{ if: PROOF, next: 'proof' }, { next: 'noproof' }] },
     proof: { who: 'note', text: 'He looked at his daughter for a long time. Then he set the bag down on the chest, and held out his hands for the rope.', do: [{ set: { mercerTaken: true } }, { log: 'Took Gideon Mercer down off the ridge with the proof.' }, { script: 'ENDING_EXPOSED' }], next: 'END' },
-    noproof: { who: 'mercer', text: 'On whose word, Mister Vance? A dead man\'s book, and a stranger\'s notebook? I hold the note on every house in that valley. Bring me down, and see who stands up.', next: 'noproof2' },
+    noproof: { who: 'mercer', text: 'On whose word, Mister Vance? A dead man\'s book, and a stranger\'s notebook? I hold the note on every house in that valley. Bring me down, and see who stands up.', next: 'np1' },
+    np1: { branch: [{ if: { flag: 'cutlerAlone' }, next: 'npAlone' }, { next: 'noproof2' }] },
+    npAlone: { who: 'mercer', text: 'You stood in that town and told them Wade did it on his own account. They believed you. So will the judge.', next: 'noproof2' },
     noproof2: { who: 'note', text: 'He was right, and he knew it. Nobody I had would stand up in front of a county judge and say it.', do: [{ set: { noProof: true } }, { log: 'Had no witness who would stand up. Mercer walked down ahead of me.' }, { script: 'ENDING_BURIED' }], next: 'END' },
     let: { who: 'note', text: 'He did not thank me. He picked up the bag, and went out past his daughter into the storm without looking at her.', do: [{ set: { letMercerGo: true } }, { log: 'Let Gideon Mercer go with the gold.' }, { script: 'ENDING_BURIED' }], next: 'END' },
   } },

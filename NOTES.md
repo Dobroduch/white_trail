@@ -1034,6 +1034,15 @@ how he ended; hints `H5_RIDGE`, `H5_CABIN`, `H5_WORKINGS`, `H5_FALL`.
   (`test-results/perf/ch5.json`, one run): median frame gap 9.7 ms in every scenario including the ridge and the
   workings; at 4× throttling at most 0.1% of frames over 33 ms on the new scenes.
 
+**Earlier outcomes wired in (2026-11-26).**
+- `killerKnown` (Chapter 4: "Cutler, on Mercer's word"): Cutler taken alive (not shot) counts as a witness in
+  `WITNESS`, which makes EXPOSED likelier, as §8 asked. Without that verdict, Cutler alive still does not count.
+- `cutlerAlone`: with no proof, Mercer throws the verdict back at Silas (`RECKONING.npAlone`). Lines only.
+- `watchGrave` (Chapter 2: the blast warning): if Finch is not on the ridge (`huntForGuest`) and no bell rang, Finch
+  hears the blast from the lane and helps dig Clara out (`AFTER_BLAST.watch`, `finchCame`). That turns a FALL into a
+  survivable blast.
+- Tests: `chapter5.spec.mjs` covers all three, including the night without each flag.
+
 **Not done / limits.**
 - The workings are built from the wheel pit's masonry tiles: they read as a stone-lined adit rather than raw rock.
 - Clara is a recolour of Ada's build; no new animation for the shot or the blast beyond the sound, a fade and the
