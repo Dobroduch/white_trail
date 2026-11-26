@@ -1088,3 +1088,32 @@ pair, answering an open question with a clue, and the board's row order.
 **Not done / limits.**
 - No zoom or free placement: cards are laid out by the board, not dragged to stay where dropped.
 - A question with more than twelve clues would give three short clue rows; none has more than twelve today.
+
+## 29. Showing clues in conversation (2026-11-26)
+
+Key confrontations no longer hand Silas the accusing line as a choice. Instead the conversation offers
+**[Show him / her something from my notebook]**: the notebook's Clues page opens over the conversation (one question at
+a time, Q for the next), and E (or a second tap) shows the selected clue. The right clue gets the old reaction; any other
+gets a dry reply in the speaker's voice and the choices again; Esc (Back) puts the notebook away with nothing said.
+
+**Where.**
+- *Mrs. Gable, third day:* the button under the bed; the stair behind the wardrobe (only once the button and the
+  panel have been looked at closely; before that Silas holds back: "Not yet…").
+- *Rusk, fourth day:* the new tin; the page cut from his register.
+- *Finch, fourth day:* Ada's book (Clara sent the telegram); form 41 (first "signed already", then "missing").
+- *Mrs. Gable, fourth day:* Ada's book. The plain "Clara Mercer was your guest." stays for the gableConfides and
+  glove routes.
+- *Ada Bell:* form 41. The glove stays an item shown directly.
+- *Vale:* Cutler's tally book (only once read closely; before that Silas holds back); the powder in Pell's grave.
+- Chapter 1 is unchanged: its clues need a closer look that the old choices did not, so converting them would narrow
+  that night's paths.
+
+**How.** A choice may carry `present: { q, wrong, accept: [{ clue, next, if, once, else }] }` (built by `showChoice`
+in `dialogue.js`). `DialogueRunner.choose` opens the picker through `game.openPresent`; `present(sid)` follows the first
+accepted, unspent entry whose `if` holds, else that entry's `else`, else `wrong`. Each reaction starts with a short
+Silas line saying what he shows. Showing is recorded as `seen['<dialogue>.shown.<clue>']`. While the picker is open the
+other panels (I, M) wait. Number keys now reach nine choices (a hub can hold six).
+
+**Tools.** `validate.mjs` checks every present spec (clues exist, nodes exist, the wrong reply exists).
+`T.pickChoice(order)` takes `'show:CLUE'` entries and `T.showClue(sid)` works the picker with real input (keys or
+taps); the fullRun scripts use them. `sweepNotebook` draws the picker for every question and row. Three hints reworded.

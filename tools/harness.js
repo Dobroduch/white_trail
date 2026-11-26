@@ -9,7 +9,7 @@
 // touch-only playthrough proves every action it needed has a touch control. Walking holds the walk pads.
 import { UI_OX, UI_OY, UI_DEV } from '/src/engine/display.js'; // live bindings: current after every resize
 import { DEDUCTIONS } from '/src/data/caseData.js';
-import { questions } from '/src/systems/caseSystem.js';
+import { questions, filedUnder, statementKnown } from '/src/systems/caseSystem.js';
 
 export function install() {
   const G = () => window.TWT;
@@ -33,7 +33,7 @@ export function install() {
       const g = G();
       if (!T.touch) { g.input.pressedCodes.add(code); g.input.anyPressed = true; return true; }
       g.render(); // the touch layer shows the controls for what is on screen now
-      const m = /^Digit([1-5])$/.exec(code);
+      const m = /^Digit([1-9])$/.exec(code);
       if (m && g.dialogue.active && g.dialogue.choices) {
         const r = (g.dialogueView.choiceRects || [])[Number(m[1]) - 1];
         if (r) { const p = uiToClient(r.x + r.w / 2, r.y + r.h / 2); tapCanvas(p.x, p.y); T.touchTaps++; return true; }
@@ -134,6 +134,42 @@ export function install() {
       if (!T.touch) T.press('KeyE', 1);
       if (nb.board.held) T.press('Escape', 1); // refused: put it down
       return !!did && s.deductions.includes(did);
+    },
+    // In a conversation's choices: pick by the start of each choice text, in order of preference; 'show:CLUE' picks
+    // "[Show … something from my notebook]" and shows that clue, if it would land now (else the next preference).
+    // With nothing matching, the last choice.
+    pickChoice(order) {
+      const g = G(), r = g.dialogue, s = g.state;
+      const c = r.choices.map((x) => x.text);
+      for (const o of order) {
+        if (o.startsWith('show:')) {
+          const sid = o.slice(5);
+          if (!statementKnown(s, sid) || !filedUnder(s, sid)) continue;
+          const i = r.choices.findIndex((ch) => ch.present && r.presentLive(ch.present, sid));
+          if (i < 0) continue;
+          T.key('Digit' + (i + 1)); g.update(1 / 60);
+          T.showClue(sid);
+          return;
+        }
+        const i = c.findIndex((t) => t.startsWith(o));
+        if (i >= 0) { T.key('Digit' + (i + 1)); return; }
+      }
+      T.key('Digit' + c.length);
+    },
+    // The clue picker open over a conversation: turn to the clue's question (Q), choose it (Up / Down) and show it
+    // (E), with real input or, in touch mode, the touch controls. Returns whether it was shown.
+    showClue(sid) {
+      const g = G(), nb = g.notebook;
+      g.render();
+      if (!nb.presentSpec) return false;
+      const qid = filedUnder(g.state, sid);
+      for (let k = 0; k < 10 && nb.q !== qid; k++) T.press('KeyQ', 1);
+      const i = nb.clueRows().indexOf('S:' + sid);
+      if (i < 0) { T.press('Escape', 1); return false; }
+      for (let k = 0; k < 40 && nb.sel !== i; k++) T.press(nb.sel < i ? 'ArrowDown' : 'ArrowUp', 1);
+      g.render();
+      T.press('KeyE', 1);
+      return !nb.presentSpec;
     },
     // Select a card on the deduction board with real input: keyboard arrows (Up / Down between rows, Left / Right
     // along one), or in touch mode a tap on the card (which, for a clue, also picks it up, or links it to the one held).
@@ -340,10 +376,7 @@ export function install() {
         T.press('KeyE');
         for (let i = 0; i < 4000 && (g.dialogue.active || g.cutsceneBlocking()); i++) {
           if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
-            const c = g.dialogue.choices.map((x) => x.text);
-            let idx = -1;
-            for (const o of order) { idx = c.findIndex((t) => t.startsWith(o)); if (idx >= 0) break; }
-            T.key('Digit' + ((idx >= 0 ? idx : c.length - 1) + 1));
+            T.pickChoice(order);
           } else if (g.dialogue.active && i % 5 === 0) T.key('KeyE');
           g.update(1 / 60);
         }
@@ -460,10 +493,7 @@ export function install() {
         T.press('KeyE');
         for (let i = 0; i < 5000 && (g.dialogue.active || g.cutsceneBlocking()); i++) {
           if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
-            const c = g.dialogue.choices.map((x) => x.text);
-            let idx = -1;
-            for (const o of order) { idx = c.findIndex((t) => t.startsWith(o)); if (idx >= 0) break; }
-            T.key('Digit' + ((idx >= 0 ? idx : c.length - 1) + 1));
+            T.pickChoice(order);
           } else if (g.dialogue.active && i % 5 === 0) T.key('KeyE');
           g.update(1 / 60);
         }
@@ -527,7 +557,7 @@ export function install() {
       if (thorough) { look(44, 2); check('a grey kid glove on the stair', s.items.includes('GLOVE')); }
       door(20);
       // ---- Mrs. Gable, shown what Silas knows ----
-      talk(276, ['This was under the bed', 'Your wardrobe has', 'Who was she', 'Whose glove', 'Nothing. Good day']);
+      talk(276, ['show:S3_BUTTON', 'show:S3_STAIR', 'Who was she', 'Whose glove', 'Nothing. Good day']);
       check('Mrs. Gable tells of the back stair and hands over the note', !!s.evidence.T3_GABLE_STAIR && !!s.evidence.EV3_NOTE && s.items.includes('GABLE_NOTE'));
       for (let i = 0; i < 400 && !s.flags.ch3DuskReady; i++) g.update(1 / 60);
       T.talkThrough();
@@ -600,10 +630,7 @@ export function install() {
         T.press('KeyE');
         for (let i = 0; i < 6000 && (g.dialogue.active || g.cutsceneBlocking()); i++) {
           if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
-            const c = g.dialogue.choices.map((x) => x.text);
-            let idx = -1;
-            for (const o of order) { idx = c.findIndex((t) => t.startsWith(o)); if (idx >= 0) break; }
-            T.key('Digit' + ((idx >= 0 ? idx : c.length - 1) + 1));
+            T.pickChoice(order);
           } else if (g.dialogue.active && i % 5 === 0) T.key('KeyE');
           g.update(1 / 60);
         }
@@ -624,7 +651,7 @@ export function install() {
       check('nothing carried or recorded was lost', before.items.every((i) => s.items.includes(i)) && Object.keys(s.evidence).length >= before.evidence);
       check('the third night is cleared away (no cup, no pot)', !g.interactables().some((i) => i.ref && ['pl_cup', 'pl_tin', 'pl_pot'].includes(i.ref.id)) && !g.props.some((p) => p.id === 'coffeePot'));
       check('Mrs. Gable is downstairs again', g.npcs.some((n) => n.id === 'gable'));
-      if (thorough && !s.flags.gableAccused) talk(276, ['Somebody came up', 'Clara Mercer was', 'Nothing']);
+      if (thorough && !s.flags.gableAccused) talk(276, ['Somebody came up', 'Clara Mercer was', 'show:S4_BOOK', 'Nothing']);
       // ---- out, west to Rusk's ----
       door(18);
       T.walkTo(6); leave('left');
@@ -633,9 +660,9 @@ export function install() {
       check('into Rusk\'s store', g.scene.id === 'RUSK_STORE');
       look(181, 2);
       check('the poison register: a page cut out', s.evidence.EV4_REGISTER && s.evidence.EV4_REGISTER.examined);
-      const ruskOrder = gun ? ['Mrs. Gable bought', 'Your poison register', '[Draw the revolver]', 'That\'s all']
-        : thorough ? ['Mrs. Gable bought', 'Your poison register', 'It was enough', 'Can you open', 'That\'s all']
-          : ['Your poison register', 'Tell me who', 'That\'s all'];
+      const ruskOrder = gun ? ['show:S3_TIN', 'show:S4_REGISTER', '[Draw the revolver]', 'That\'s all']
+        : thorough ? ['show:S3_TIN', 'show:S4_REGISTER', 'It was enough', 'Can you open', 'That\'s all']
+          : ['show:S4_REGISTER', 'Tell me who', 'That\'s all'];
       talk(229, ruskOrder);
       T.talkThrough(); T.step(60);
       check('Rusk gives up Cutler\'s name', !!(s.evidence.T4_RUSK_CONFESS || s.evidence.T4_RUSK_CUTLER));
@@ -670,8 +697,8 @@ export function install() {
       check('the pad: form 41 torn out', s.evidence.EV3_PAD && s.evidence.EV3_PAD.examined);
       const adaHere = g.npcs.some((n) => n.id === 'ada');
       check('Ada Bell is at Finch\'s stove only if I sent her home', adaHere === !!s.flags.adaWarned);
-      if (adaHere) talk(64, ['My telegram was', 'Did you see', 'That\'s all']);
-      if (thorough && g.npcs.some((n) => n.id === 'finch')) talk(100, ['Who is Wade', 'Clara Mercer sent', 'That\'ll do']);
+      if (adaHere) talk(64, ['show:S4_PAD', 'Did you see', 'That\'s all']);
+      if (thorough && g.npcs.some((n) => n.id === 'finch')) talk(100, ['Who is Wade', 'show:S4_BOOK', 'That\'ll do']);
       door(21);
       // ---- up to the tower for Ada, if she is there; the Reverend on the way ----
       if (!adaHere) {
@@ -679,17 +706,17 @@ export function install() {
         check('up the chapel lane', g.scene.id === 'GRAVEYARD');
         T.walkTo(506); leave('right');
         check('up to the tower', g.scene.id === 'TELEGRAPH' && g.npcs.some((n) => n.id === 'ada'));
-        talk(235, ['My telegram was', 'Did you see', 'That\'s all']);
+        talk(235, ['show:S4_PAD', 'Did you see', 'That\'s all']);
         T.walkTo(6); leave('left');
-        if (thorough) talk(139, ['Mercer\'s foreman struck', 'You didn\'t know', 'Good day']);
+        if (thorough) talk(139, ['show:S4_HAND', 'You didn\'t know', 'Good day']);
         T.walkTo(6); leave('left');
-      } else if (thorough) { door(373); talk(139, ['Mercer\'s foreman struck', 'You didn\'t know', 'Good day']); T.walkTo(6); leave('left'); }
+      } else if (thorough) { door(373); talk(139, ['show:S4_HAND', 'You didn\'t know', 'Good day']); T.walkTo(6); leave('left'); }
       check('Ada\'s book: handed in by Miss C. Mercer', !!s.evidence.EV4_ADA_BOOK);
       if (thorough && !s.flags.valeEmboldened) check('Vale on the Order\'s money, and turned', !!s.evidence.T4_VALE_MONEY && s.flags.valeTurned);
       for (let i = 0; i < 400 && !s.flags.ch4DuskReady; i++) g.update(1 / 60);
       T.talkThrough();
       check('the storm comes on once the day\'s work is done', s.flags.ch4DuskReady && s.time.h >= 16);
-      if (thorough && g.scene.id === 'VILLAGE' && !s.flags.huntForGuest) { door(43); talk(100, ['Clara Mercer sent', 'Who is Wade', 'That\'ll do']); check('Finch owns up about the telegram', !!s.evidence.T4_FINCH_CONFESS && s.flags.knowsObservatory); door(21); }
+      if (thorough && g.scene.id === 'VILLAGE' && !s.flags.huntForGuest) { door(43); talk(100, ['show:S4_BOOK', 'Who is Wade', 'That\'ll do']); check('Finch owns up about the telegram', !!s.evidence.T4_FINCH_CONFESS && s.flags.knowsObservatory); door(21); }
       // ---- the notebook ----
       if (conclusion) {
         T.toBoard('Q_KILLER');
@@ -955,6 +982,16 @@ export function install() {
             }
             if (nb.cycleQuestion) nb.cycleQuestion();
           }
+        }
+        // the clue picker shown over a conversation ("[Show … something from my notebook]"), every question and row
+        if (nb.openPresent) {
+          nb.openPresent({ accept: [], wrong: 'none' }, 'gable');
+          for (let qi = 0; qi < Math.max(1, questions(g.state).length); qi++) {
+            const rows = nb.clueRows();
+            for (let i = 0; i < rows.length; i++) { nb.sel = i; draw(`present q ${nb.q} row ${rows[i]}`); }
+            nb.cycleQuestion();
+          }
+          nb.closePresent(); nb.open();
         }
         // the case review for each question that can be decided
         for (const q of (nb.caseRows ? nb.caseRows() : []).filter((x) => String(x).startsWith('Q:'))) {

@@ -86,7 +86,7 @@ test.describe('chapter 3 — the third day and night', () => {
       T.walkTo(276); T.press('KeyE');
       for (let i = 0; i < 5000 && (g.dialogue.active || g.cutsceneBlocking()); i++) {
         if (g.dialogue.active && g.dialogue.choices && g.dialogueView.shown >= (g.dialogue.lastText || '').length) {
-          const c = g.dialogue.choices.map((x) => x.text); let idx = c.findIndex((t) => t.startsWith('Your wardrobe')); if (idx < 0) idx = c.length - 1; T.key('Digit' + (idx + 1));
+          T.pickChoice(['show:S3_STAIR']); // the stair behind the wardrobe, shown from the notebook
         } else if (g.dialogue.active && i % 5 === 0) T.key('KeyE');
         g.update(1 / 60);
       }
@@ -129,7 +129,17 @@ test.describe('chapter 3 — the third day and night', () => {
       g.dialogue.start('GABLE_DAY');
       const choicesOf = () => { for (let i = 0; i < 400 && !g.dialogue.choices; i++) { if (i % 5 === 0) T.key('KeyE'); g.update(1 / 60); } return g.dialogue.choices ? g.dialogue.choices.map((c) => c.text) : []; };
       const out = { first: choicesOf() };
-      T.key('Digit' + (out.first.findIndex((t) => t.startsWith('This was under the bed')) + 1));
+      // shown the wrong thing from the notebook (the register): a dry answer, and back to the choices
+      T.key('Digit' + (out.first.findIndex((t) => t.startsWith('[Show her')) + 1)); g.update(1 / 60);
+      out.picker = !!g.notebook.presentSpec && g.overlay && g.overlay.presenting === true;
+      out.shownWrong = T.showClue('S_REGISTER'); out.wrong = g.dialogue.lastText;
+      choicesOf();
+      // put away without showing anything: the choices again, nothing said
+      T.key('Digit' + (g.dialogue.choices.findIndex((c) => c.present) + 1)); g.update(1 / 60); T.press('Escape', 1);
+      out.cancelled = !g.overlay && g.dialogue.active && !!g.dialogue.choices;
+      // the button: what she says to it
+      T.pickChoice(['show:S3_BUTTON']);
+      out.btn = !!s.seen['GABLE_DAY.showBtn'];
       out.afterButton = choicesOf();
       out.note = !!s.evidence.EV3_NOTE;
       for (let i = 0; i < 400 && g.dialogue.active; i++) { if (g.dialogue.choices) T.key('Digit' + g.dialogue.choices.length); else if (i % 5 === 0) T.key('KeyE'); g.update(1 / 60); }
@@ -143,8 +153,9 @@ test.describe('chapter 3 — the third day and night', () => {
       out.truthOnTable2 = cs.conclusionsFor(s, 'Q_ROOM4').find((c) => c.id === 'C3_HALE').available;
       return out;
     });
-    expect(r.first).toContain('This was under the bed in Room 4. [Show the button]');
+    expect(r.first).toContain('[Show her something from my notebook]');
     expect(r.first).not.toContain('Your wardrobe has a back to it.');
+    expect([r.picker, r.shownWrong, r.wrong, r.cancelled, r.btn]).toEqual([true, true, 'I keep a hotel, Mister Vance, not a lost-property office.', true, true]);
     expect(r.note).toBe(false);
     expect(r.offered).toEqual({ here: ['LATER'], stair: ['FLED'], guest: ['REAL', 'NONE'] });
     expect(r.truthOnTable).toBe(false);

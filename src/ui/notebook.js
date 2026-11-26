@@ -25,6 +25,7 @@ import { getSprite } from '../engine/assets.js';
 import { CaseReview } from './caseReview.js';
 import { touchify } from './touchText.js';
 import { DeductionBoard, NOT_AN_ANSWER } from './deductionBoard.js';
+import { SPEAKERS } from '../data/dialogue.js';
 export { NOT_AN_ANSWER };
 
 export const TABS = ['CASE', 'CLUES', 'DEDUCTIONS', 'PEOPLE', 'MAP'];
@@ -50,6 +51,37 @@ export class Notebook {
     this.fresh = null; // { id, t }: a deduction just formed (inked in)
     this.board = new DeductionBoard(this);
   }
+  // ---------------- showing a clue in conversation ----------------
+  // Opened over a conversation by its "[Show something from my notebook]" choice (game.openPresent): the Clues page,
+  // one question at a time as ever, where E (or a second tap) shows the clue instead of opening its notes.
+  openPresent(spec, who) {
+    this.presentSpec = spec; this.presentWho = who;
+    this.open('CLUES');
+    if (spec.q && questions(this.s).some((q) => q.id === spec.q)) { this.q = spec.q; this.sel = 0; this.fixSel(1); }
+  }
+  closePresent() { this.presentSpec = null; this.presentWho = null; }
+  updatePresent(input) {
+    if (input.pressed('pause') || input.pressed('back') || input.pressed('notebook')) return 'presentCancel';
+    const tap = this.tapAt(input);
+    if (tap && tap.btn === 'cancel') return 'presentCancel';
+    if (input.pressed('question')) this.cycleQuestion();
+    const list = this.clueRows();
+    if (tap && tap.i != null && tap.i < list.length) {
+      if (!this.selectable(list[tap.i])) { if (/^H:Q_/.test(list[tap.i])) this.cycleQuestion(); return null; }
+      if (tap.i !== this.sel) { this.sel = tap.i; this.game.audio.sfx('tick'); if (tap.i >= this.scroll + ROWS - 1 && tap.i < list.length - 1) this.scroll++; else if (tap.i <= this.scroll && this.scroll > 0) this.scroll--; return null; }
+      return list[this.sel].startsWith('S:') ? 'present:' + list[this.sel].slice(2) : null;
+    }
+    if (list.length) {
+      if (input.pressed('up')) { this.sel = (this.sel + list.length - 1) % list.length; this.fixSel(-1); this.game.audio.sfx('tick'); }
+      if (input.pressed('down')) { this.sel = (this.sel + 1) % list.length; this.fixSel(1); this.game.audio.sfx('tick'); }
+      this.sel = Math.min(this.sel, list.length - 1);
+      if (this.sel < this.scroll) this.scroll = this.sel;
+      if (this.sel >= this.scroll + ROWS) this.scroll = this.sel - ROWS + 1;
+      if (input.pressed('interact') && list[this.sel] && list[this.sel].startsWith('S:')) return 'present:' + list[this.sel].slice(2);
+    }
+    return null;
+  }
+
   get pick() { return this.board.held; } // (older tests and tools ask whether something is in hand)
   canDecide(q) { return isCase(this.s, q); }
   orderedCount() { const qs = orderedQuestions(this.s); return { n: qs.length, i: Math.max(0, qs.findIndex((q) => q.id === this.q)) }; }
@@ -155,6 +187,7 @@ export class Notebook {
   update(input) {
     if (this.fresh) { this.fresh.t += 1 / 60; if (this.fresh.t > 2) this.fresh = null; }
     const name = TABS[this.tab];
+    if (this.presentSpec) return this.updatePresent(input);
     if (input.pressed('notebook')) { this.game.audio.sfx('page'); return 'close'; }
     if (input.pressed('pause') || input.pressed('back')) {
       if (this.inspect) { this.inspect = null; this.game.audio.sfx('page'); return null; }
@@ -289,7 +322,11 @@ export class Notebook {
     this.tabRects = []; this.rowRects = []; this.btnRects = []; this.qRect = null;
     const u = unread(s);
     const dot = { CLUES: u.some((k) => STATEMENTS[k]), DEDUCTIONS: u.some((k) => !STATEMENTS[k]) };
-    TABS.forEach((t, i) => {
+    if (this.presentSpec) {
+      const who = SPEAKERS[this.presentWho];
+      spaced(ctx, who ? `SHOW ${who} …` : 'SHOW WHICH CLUE?', 16, 25, UI.inkRed, 0.5);
+      font(ctx, 5.2, { bold: true });
+    } else TABS.forEach((t, i) => {
       const label = t === 'MAP' ? 'MAP ›' : t;
       const w = spaced(ctx, label, tx, 25, i === this.tab ? UI.inkRed : UI.inkDim, 0.5);
       this.tabRects.push({ x: tx - 4, y: 16, w: w + 9, h: 13 });
@@ -304,6 +341,7 @@ export class Notebook {
     else this.drawListAndDetail(ctx, name);
     if (!this.game.touchUI()) { // touch: the button bar sits here
       font(ctx, 4.3, { italic: true });
+      if (this.presentSpec) { text(ctx, `Up / Down  choose    E  show it${questions(s).length > 1 ? '    Q  next question' : ''}    Esc  not now`, UI_CX, 170, UI.inkDim, 'center'); return; }
       const many = questions(s).length > 1 ? '    Q  next question' : '';
       const foot = this.inspect ? 'Left / Right  turn the page    E / Esc  back to the clues'
         : name === 'DEDUCTIONS' && this.board.held ? 'Arrows  choose    E  put them together    Esc  put it down'
@@ -443,6 +481,7 @@ export class Notebook {
     if (raises.length) { d.heading('IT RAISES'); for (const x of raises.slice(0, 2)) d.bullet(DEDUCTIONS[x].ask, 4.8); }
     else if (shows.length) { d.heading('IT HELPED ESTABLISH'); for (const x of shows.slice(0, 2)) d.bullet(DEDUCTIONS[x].title, 4.8); }
     if (clueUnexamined(s, sid) && d.y < 150) d.hintLine('There is something there I have not looked at closely.');
+    if (this.presentSpec) { if (d.y < 156) d.hintLine(this.game.touchUI() ? 'Tap it again to show it.' : 'E: show it.'); return; }
     const recs = clueRecords(s, sid);
     if (recs.length && d.y < 156) d.hintLine(this.game.touchUI() ? 'Tap it again to read my notes.' : 'E: read my notes on it.');
   }

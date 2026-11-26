@@ -35,8 +35,8 @@ export class DialogueView {
       const n = r.choices.length;
       if (input.pressed('up')) { this.sel = (this.sel + n - 1) % n; this.game.audio.sfx('tick'); }
       if (input.pressed('down')) { this.sel = (this.sel + 1) % n; this.game.audio.sfx('tick'); }
-      const nums = ['one', 'two', 'three', 'four', 'five'];
-      for (let i = 0; i < Math.min(n, 5); i++) if (input.pressed(nums[i])) { this.pick(i); return; }
+      const nums = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+      for (let i = 0; i < Math.min(n, 9); i++) if (input.pressed(nums[i])) { this.pick(i); return; }
       if (input.pressed('confirm') && this.t > 0.15) { this.pick(this.sel); return; }
     } else if (input.pressed('confirm')) {
       if (!revealed) this.shown = full;

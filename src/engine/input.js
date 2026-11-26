@@ -16,6 +16,7 @@ const MAP = {
   confirm: ['Enter', 'KeyE', 'Space', 'NumpadEnter'],
   back: ['Escape', 'Backspace'],
   one: ['Digit1'], two: ['Digit2'], three: ['Digit3'], four: ['Digit4'], five: ['Digit5'],
+  six: ['Digit6'], seven: ['Digit7'], eight: ['Digit8'], nine: ['Digit9'],
 };
 const PREVENT = new Set(['Tab', 'Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Backspace']);
 

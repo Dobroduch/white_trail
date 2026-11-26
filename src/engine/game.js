@@ -333,6 +333,9 @@ export class Game {
   handleOverlayAction(act) {
     const o = this.overlay;
     if (!act) return;
+    // the clue picker over a conversation: a clue shown, or put away
+    if (typeof act === 'string' && act.startsWith('present:')) { this.popOverlay(); this.notebook.closePresent(); this.audio.sfx('page'); this.dialogue.present(act.slice(8)); return; }
+    if (act === 'presentCancel') { this.popOverlay(); this.notebook.closePresent(); this.audio.sfx('page'); this.dialogue.cancelPresent(); return; }
     if (o instanceof TitleMenu) {
       if (act === 'continue') { this.audio.unlock(); this.continueGame(); }
       else if (act === 'new') {
@@ -394,6 +397,14 @@ export class Game {
     const nb = this.notebook;
     return { update: (input) => nb.update(input), draw: (ctx) => nb.draw(ctx), textBox: () => nb.textBox(), isNotebook: true, panelKind: 'notebook' };
   }
+  // A conversation's "[Show something from my notebook]": the notebook's clues, to pick the one to show.
+  openPresent(spec) {
+    const r = this.dialogue, who = (r.speakerNpc && r.speakerNpc.id) || (r.lastWho !== 'note' && r.lastWho !== 'silas' ? r.lastWho : null);
+    this.notebook.openPresent(spec, who);
+    const o = this.notebookOverlay();
+    o.presenting = true;
+    this.pushOverlay(o);
+  }
 
   // Notebook / Inventory / Map: three separate panels with their own buttons and keys. Only one is
   // open at a time; asking for another switches to it, asking for the open one closes it.
@@ -402,6 +413,7 @@ export class Game {
     const cur = this.overlay;
     const curKind = cur && cur.panelKind;
     if (cur && !curKind) return false; // pause menu, telegram, confirm... stay on top
+    if (cur && cur.presenting) return false; // showing a clue mid-conversation: the other panels wait
     if (curKind) {
       this.popOverlay();
       if (curKind === kind) { this.audio.sfx('page'); return true; }
@@ -477,7 +489,7 @@ export class Game {
 
     this.handleHudButtons();
     const ov = this.overlay;
-    if (ov && ov.panelKind) {
+    if (ov && ov.panelKind && !ov.presenting) {
       // switching straight from one panel to another (N / I / M)
       for (const k of ['notebook', 'inventory', 'map']) {
         if (k !== ov.panelKind && input.pressed(k)) { this.openPanel(k); return; }

@@ -41,7 +41,22 @@ for (const [id, d] of Object.entries(DIALOGUE)) {
     const w = `${id}.${nid}`;
     if (n.who) ok(n.who in SPEAKERS, `${w}: unknown speaker ${n.who}`);
     if (n.next) ok(n.next === 'END' || d.nodes[n.next], `${w}: next -> ${n.next} missing`);
-    for (const c of n.choices || []) { ok(c.next === 'END' || d.nodes[c.next], `${w}: choice -> ${c.next} missing`); walkConds(c.if, w); }
+    for (const c of n.choices || []) {
+      walkConds(c.if, w);
+      if (!c.present) { ok(c.next === 'END' || d.nodes[c.next], `${w}: choice -> ${c.next} missing`); continue; }
+      // a clue shown from the notebook: every clue it accepts exists and can be shown (filed under a question), every
+      // reaction node exists, and the shown-the-wrong-thing reply exists
+      const p = c.present;
+      ok(d.nodes[p.wrong], `${w}: present wrong -> ${p.wrong} missing`);
+      ok(!p.q || QUESTIONS.some((q) => q.id === p.q), `${w}: present q ${p.q} unknown`);
+      ok((p.accept || []).length, `${w}: present accepts nothing`);
+      for (const a of p.accept || []) {
+        for (const cl of [].concat(a.clue)) ok(STATEMENTS[cl], `${w}: present clue ${cl} unknown`);
+        ok(d.nodes[a.next], `${w}: present -> ${a.next} missing`);
+        if (a.else) ok(d.nodes[a.else], `${w}: present else -> ${a.else} missing`);
+        walkConds(a.if, w);
+      }
+    }
     for (const b of n.branch || []) { ok(d.nodes[b.next], `${w}: branch -> ${b.next} missing`); walkConds(b.if, w); }
     ok(n.next || n.choices || n.branch, `${w}: dead end (no next/choices/branch)`);
     walkEffects(n.do, w);

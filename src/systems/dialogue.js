@@ -84,12 +84,37 @@ export class DialogueRunner {
   choose(i) {
     if (!this.active || !this.choices || !this.choices[i]) return;
     const c = this.choices[i];
+    // "[Show something from my notebook]": the clue picker opens over the conversation (game.openPresent); the
+    // conversation waits on this node until a clue is shown (present) or the picker is put away (cancelPresent).
+    if (c.present) { this.presenting = c.present; this.game.openPresent && this.game.openPresent(c.present); return; }
     this.lastText = null;
     this.visit(c.next);
   }
 
+  // ---------------- showing a clue ----------------
+  // A choice's `present` spec: { accept: [{ clue: id | [ids], next, if?, once? (default true), else? }], wrong }.
+  // Shown a clue, the first entry naming it that is not spent and whose `if` holds leads on; an entry that names it
+  // but whose `if` fails leads to its `else`, if it has one; anything else gets the speaker's `wrong` reply.
+  presentLive(spec, sid) {
+    const s = this.game.state;
+    return (spec.accept || []).find((a) => [].concat(a.clue).includes(sid) && !(a.once !== false && s.seen[this.id + '.' + a.next]) && test(a.if, s)) || null;
+  }
+  present(sid) {
+    const spec = this.presenting;
+    this.presenting = null;
+    if (!spec || !this.active) return;
+    const s = this.game.state;
+    const live = this.presentLive(spec, sid);
+    this.lastText = null;
+    if (live) { s.seen[this.id + '.shown.' + sid] = true; return this.visit(live.next); }
+    const near = (spec.accept || []).find((a) => [].concat(a.clue).includes(sid) && a.else && !(a.once !== false && s.seen[this.id + '.' + a.next]));
+    this.visit(near ? near.else : spec.wrong);
+  }
+  cancelPresent() { this.presenting = null; }
+
   finish() {
     this.active = false;
+    this.presenting = null;
     this.node = null;
     this.choices = null;
     const cb = this.onEnd;

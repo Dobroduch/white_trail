@@ -287,14 +287,21 @@ Object.assign(DIALOGUE, {
       { text: 'What lies up past the chapel?', next: 'up', once: true },
       { text: 'Who buys at Rusk\'s after dark?', next: 'rusk', once: true, if: { evidence: 'T_RUSK_FREIGHT' } },
       { text: 'Somebody laid a rug in my room.', next: 'rug', once: true, if: { evidence: 'ROOM4_RUG' } },
-      { text: 'This was under the bed in Room 4. [Show the button]', next: 'btn', once: true, if: { all: [{ evidence: 'EV3_BUTTON' }, { noEvidence: 'T3_GABLE_STAIR' }] } },
-      { text: 'Your wardrobe has a back to it.', next: 'stair', once: true, if: { all: [{ examined: 'EV3_PANEL' }, { evidence: 'EV3_BUTTON' }] } },
+      { text: '[Show her something from my notebook]', present: { q: 'Q_ROOM4', wrong: 'showNo', accept: [
+        { clue: 'S3_BUTTON', next: 'showBtn', if: { noEvidence: 'T3_GABLE_STAIR' } },
+        { clue: 'S3_STAIR', next: 'showStair', if: { all: [{ examined: 'EV3_PANEL' }, { evidence: 'EV3_BUTTON' }] }, else: 'stairNotYet' },
+      ] } },
       { text: 'Who was she?', next: 'who', once: true, if: { evidence: 'T3_GABLE_STAIR' } },
       { text: 'Whose glove is this? [Show it]', next: 'glove', once: true, if: { evidence: 'EV3_GLOVE' } },
       { text: 'Nothing. Good day.', next: 'bye' },
     ] },
     rug: { who: 'gable', text: 'The floors are cold in the mornings, Mister Vance.', next: 'rug2' },
     rug2: { who: 'note', text: 'She turns a page of the register she has already read.', do: [{ set: { askedGableRug: true } }], next: 'hub' },
+    // shown from the notebook
+    showBtn: { who: 'silas', text: 'This was under the bed in Room 4.', next: 'btn' },
+    showStair: { who: 'silas', text: 'Your wardrobe has a back to it.', next: 'stair' },
+    stairNotYet: { who: 'note', text: 'Not yet. I would want something of whoever used that stair before I put it to her.', next: 'hub' },
+    showNo: { who: 'gable', text: 'I keep a hotel, Mister Vance, not a lost-property office.', next: 'hub' },
     btn: { who: 'gable', text: 'Buttons come off, Mister Vance. Coats come through my rooms.', next: 'btn2' },
     btn2: { who: 'note', text: 'She doesn\'t ask whose.', next: 'hub' },
     stair: { who: 'note', text: 'She sets the pen down. For a while she looks at the door to the kitchen passage, not at me.', next: 'stair2' },
@@ -574,6 +581,8 @@ Object.assign(DIALOGUE, {
 
 // ======================= Chapter 4: the fourth day =======================
 const choiceOf = (text, next, extra = {}) => Object.assign({ text, next }, extra);
+// "[Show him something from my notebook]": the notebook's clues open over the conversation (systems/dialogue.js present)
+const showChoice = (whom, spec) => ({ text: `[Show ${whom} something from my notebook]`, present: spec });
 Object.assign(DIALOGUE, {
   CH4_OPEN: { start: 'a', nodes: {
     a: { branch: [{ if: { flag: 'gableAccused' }, next: 'acc' }, { if: { flag: 'gableConfides' }, next: 'conf' }, { next: 'plain' }] },
@@ -694,11 +703,16 @@ Object.assign(DIALOGUE.RUSK.nodes, {
   r4a2: { who: 'note', text: 'He says it the way a man reads a bill he hoped had gone to the wrong house.', next: 'r4hub' },
   r4again: { who: 'rusk', text: 'What now?', next: 'r4hub' },
   r4hub: { choices: [
-    choiceOf('Mrs. Gable bought a new tin of coffee from you yesterday.', 'tin', { once: true, if: { evidence: 'EV3_TIN' } }),
-    choiceOf('Your poison register is short a page.', 'reg', { once: true, if: { examined: 'EV4_REGISTER' } }),
+    showChoice('him', { q: 'Q_COFFEE', wrong: 'showNo', accept: [
+      { clue: 'S3_TIN', next: 'showTin' },
+      { clue: 'S4_REGISTER', next: 'showReg' },
+    ] }),
     choiceOf('Can you open a watch?', 'watch', { once: true, if: { all: [{ item: 'WATCH' }, { any: [{ evidence: 'T4_RUSK_CONFESS' }, { evidence: 'T4_RUSK_CUTLER' }] }] } }),
     choiceOf('That\'s all.', 'r4bye'),
   ] },
+  showTin: { who: 'silas', text: 'Mrs. Gable bought a new tin of coffee from you yesterday.', next: 'tin' },
+  showReg: { who: 'silas', text: 'Your poison register is short a page.', next: 'reg' },
+  showNo: { who: 'rusk', text: 'I sell nails and flour, mister. I don\'t know what that\'s meant to be.', next: 'r4hub' },
   tin: { who: 'rusk', text: 'Coffee\'s coffee. Comes up sealed from the railhead. I put my label on it, that\'s all.', next: 'tin2' },
   tin2: { who: 'note', text: 'His eyes go to the counter, and under it.', next: 'r4hub' },
   reg: { branch: [{ if: { flag: 'ruskWarmed' }, next: 'conf' }, { next: 'press' }] },
@@ -730,11 +744,17 @@ Object.assign(DIALOGUE.FINCH_OFFICE.nodes, {
   f4again: { who: 'finch', text: 'Vance.', next: 'f4hub' },
   f4hub: { choices: [
     choiceOf('Who is Wade Cutler?', 'cut', { once: true, if: { any: [{ evidence: 'T4_RUSK_CONFESS' }, { evidence: 'T4_RUSK_CUTLER' }] } }),
-    choiceOf('Clara Mercer sent my telegram.', 'clara', { once: true, if: { evidence: 'EV4_ADA_BOOK' } }),
-    choiceOf('These forms are signed already.', 'forms', { once: true, if: { all: [{ evidence: 'EV3_PAD' }, { notSeen: 'FINCH_OFFICE.forms' }] } }),
-    choiceOf('Number forty-one is missing.', 'f41', { once: true, if: { all: [{ examined: 'EV3_PAD' }, { seen: 'FINCH_OFFICE.forms' }, { notSeen: 'FINCH_OFFICE.f41' }] } }),
+    showChoice('him', { q: 'Q_TELEGRAM', wrong: 'showNo', accept: [
+      { clue: 'S4_BOOK', next: 'showBook' },
+      { clue: 'S4_PAD', next: 'showForms', if: { notSeen: 'FINCH_OFFICE.forms' } },
+      { clue: 'S4_PAD', next: 'showF41', if: { notSeen: 'FINCH_OFFICE.f41' } },
+    ] }),
     choiceOf('That\'ll do.', 'f4bye'),
   ] },
+  showBook: { who: 'silas', text: 'Clara Mercer sent my telegram.', next: 'clara' },
+  showForms: { who: 'silas', text: 'These forms are signed already.', next: 'forms' },
+  showF41: { who: 'silas', text: 'Number forty-one is missing.', next: 'f41' },
+  showNo: { who: 'finch', text: 'I\'ve seen it, Vance. I don\'t see what it\'s got to do with me.', next: 'f4hub' },
   cut: { who: 'finch', text: 'Mercer\'s foreman. Came up after the war with his father, who rode with Mercer. Keeps the loft over the woodshed at the east end of the street. Nobody crosses him, Vance, and I\'ve never had cause to try.', do: [{ set: { knowsLoft: true } }], next: 'f4hub' },
   clara: { who: 'note', text: 'He sits down on the edge of the desk, slowly, like a man much older.', next: 'clara2' },
   clara2: { who: 'finch', text: 'I knew it the night you came. My name, and words I never wrote. She\'d been in here with Hale, a week before, sitting where you\'re standing.', next: 'clara3' },
@@ -750,9 +770,14 @@ Object.assign(DIALOGUE.GABLE_DAY.nodes, {
   g4again: { who: 'gable', text: 'Mister Vance.', next: 'g4hub' },
   g4hub: { choices: [
     choiceOf('Somebody came up the back stair last night.', 'stairs', { once: true }),
-    choiceOf('Clara Mercer was your guest.', 'clara', { once: true, if: { any: [{ evidence: 'EV4_ADA_BOOK' }, { flag: 'gableConfides' }, { all: [{ item: 'GLOVE' }, { evidence: 'T3_GABLE_STAIR' }] }] } }),
+    choiceOf('Clara Mercer was your guest.', 'clara', { once: true, if: { any: [{ flag: 'gableConfides' }, { all: [{ item: 'GLOVE' }, { evidence: 'T3_GABLE_STAIR' }] }] } }),
+    showChoice('her', { q: 'Q_TELEGRAM', wrong: 'showNo4', accept: [
+      { clue: 'S4_BOOK', next: 'showBook', if: { notSeen: 'GABLE_DAY.clara' } },
+    ] }),
     choiceOf('Nothing. Good day.', 'g4bye'),
   ] },
+  showBook: { who: 'silas', text: 'Ada Bell wrote down who handed in my telegram. Clara Mercer was your guest.', next: 'clara' },
+  showNo4: { who: 'gable', text: 'You\'ve shown me a great many things this week, Mister Vance. That one tells me nothing.', next: 'g4hub' },
   stairs: { who: 'gable', text: 'Then he has a key to my yard gate, or he has my bolt\'s measure. Either way it\'s not a ghost, Mister Vance.', next: 'g4hub' },
   clara: { who: 'note', text: 'She closes the register, and puts her hand flat on it.', next: 'clara2' },
   clara2: { who: 'gable', text: 'Clara. Clara Mercer. She paid off my note to her father last winter and asked nothing for it. When she needed a room off the book, she had one.', next: 'clara3' },
@@ -766,11 +791,15 @@ Object.assign(DIALOGUE.ADA.nodes, {
   d4a: { who: 'ada', text: 'Still dead, all of it. I\'ve walked a mile of the ridge looking for the next cut.', next: 'd4hub' },
   d4again: { who: 'ada', text: 'Mister Vance.', next: 'd4hub' },
   d4hub: { choices: [
-    choiceOf('My telegram was written on form forty-one.', 'f41', { once: true, if: { all: [{ examined: 'EV3_PAD' }, { noEvidence: 'EV4_ADA_BOOK' }] } }),
+    showChoice('her', { q: 'Q_TELEGRAM', wrong: 'showNo', accept: [
+      { clue: 'S4_PAD', next: 'showF41', if: { noEvidence: 'EV4_ADA_BOOK' } },
+    ] }),
     choiceOf('Whose glove is this? [Show it]', 'glove', { once: true, if: { all: [{ item: 'GLOVE' }, { noEvidence: 'EV4_ADA_BOOK' }] } }),
     choiceOf('Did you see anyone on the ridge this morning?', 'ridge', { once: true }),
     choiceOf('That\'s all.', 'd4bye'),
   ] },
+  showF41: { who: 'silas', text: 'My telegram was written on form forty-one.', next: 'f41' },
+  showNo: { who: 'ada', text: 'I take down what comes over the wire, Mister Vance. That didn\'t.', next: 'd4hub' },
   f41: { who: 'note', text: 'She looks at me a long moment. Then she takes a book out of her coat, the receiving book she would not leave at the station with the line down.', next: 'book' },
   glove: { who: 'note', text: 'She knows it. I watch her know it. Then she takes a book out of her coat, the receiving book she would not leave at the station with the line down.', next: 'book' },
   book: { who: 'ada', text: 'I write down who hands it in, Mister Vance. I told you so. Read it, and then forget where you read it.', do: [{ evidence: 'EV4_ADA_BOOK' }], next: 'd4hub' },
@@ -783,10 +812,16 @@ Object.assign(DIALOGUE.VALE.nodes, {
   v4a: { who: 'note', text: 'The Reverend is sweeping snow off Hale\'s new grave, which the wind puts back as fast as he moves it.', next: 'v4hub' },
   v4again: { who: 'vale', text: 'Mister Vance.', next: 'v4hub' },
   v4hub: { choices: [
-    choiceOf('Mercer\'s foreman struck a sheriff off his books.', 'tally', { once: true, if: { examined: 'EV4_TALLY' } }),
-    choiceOf('You knew what was in Amos Pell\'s grave.', 'grave', { once: true, if: { all: [{ evidence: 'GRAVE_DISTURBED' }, { notSeen: 'VALE.tally' }] } }),
+    showChoice('him', { q: 'Q_KILLER', wrong: 'showNo', accept: [
+      { clue: 'S4_HAND', next: 'showTally', if: { examined: 'EV4_TALLY' }, else: 'tallyNotYet' },
+      { clue: 'S2_CACHE', next: 'showGrave', if: { notSeen: 'VALE.tally' } },
+    ] }),
     choiceOf('Good day, Reverend.', 'v4bye'),
   ] },
+  showTally: { who: 'silas', text: 'Mercer\'s foreman struck a sheriff off his books.', next: 'tally' },
+  tallyNotYet: { who: 'note', text: 'Not yet. I have not read that book closely enough to put it to a man of God.', next: 'v4hub' },
+  showGrave: { who: 'silas', text: 'You knew what was in Amos Pell\'s grave.', next: 'grave' },
+  showNo: { who: 'vale', text: 'The Lord sees a great deal, Mister Vance. I see less. What is it?', next: 'v4hub' },
   grave: { who: 'vale', text: 'I keep the ground, Mister Vance. I told you.', next: 'grave2' },
   grave2: { who: 'note', text: 'He does not look at Pell\'s stone. He has not looked at it once.', next: 'v4hub' },
   tally: { branch: [{ if: { flag: 'valeEmboldened' }, next: 'hard' }, { next: 'soft' }] },
