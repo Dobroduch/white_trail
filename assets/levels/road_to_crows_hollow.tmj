@@ -5570,7 +5570,7 @@
       {
        "name": "if",
        "type": "string",
-       "value": "{\"all\":[{\"notFlag\":\"lanternOn\"},{\"phase\":\"EVENING\"}]}"
+       "value": "{\"phase\":\"EVENING\"}"
       }
      ]
     }

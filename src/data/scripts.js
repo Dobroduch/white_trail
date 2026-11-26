@@ -64,7 +64,7 @@ export const SCRIPTS = {
   ROAD_ENTER: [
     { ambient: true },
     { wait: 1.2 },
-    { hint: 'It is dark past the station lamps. F — light the lantern.', dur: 8 },
+    { ifLanternOff: true, hint: 'It is dark past the station lamps. F — light the lantern.', dur: 8 },
   ],
 
   VILLAGE_WATCHER: [
